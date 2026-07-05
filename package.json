@@ -2,6 +2,22 @@
 	"name": "@lewishowles/lint-config",
 	"version": "0.1.0",
 	"description": "Shared oxlint configuration for Lewis Howles projects",
+	"keywords": [
+		"lint",
+		"oxlint",
+		"config",
+		"shared",
+		"eslint",
+		"stylistic"
+	],
+	"homepage": "https://github.com/lewishowles/lint-config#readme",
+	"bugs": "https://github.com/lewishowles/lint-config/issues",
+	"license": "MIT",
+	"author": "Lewis Howles",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/lewishowles/lint-config.git"
+	},
 	"type": "module",
 	"exports": {
 		"./base.json": "./base.json",
@@ -24,5 +40,8 @@
 	},
 	"publishConfig": {
 		"access": "public"
+	},
+	"engines": {
+		"node": ">=20"
 	}
 }

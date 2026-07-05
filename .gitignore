@@ -1,2 +1,9 @@
-node_modules/
-bun.lock
+# npm
+node_modules
+.npmrc
+
+# macOS files
+.DS_Store
+
+# Editor directories and files
+.vscode/
