@@ -1,13 +1,13 @@
 {
 	"name": "@lewishowles/lint-config",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Shared oxlint configuration for Lewis Howles projects",
 	"keywords": [
+		"config",
+		"eslint",
 		"lint",
 		"oxlint",
-		"config",
 		"shared",
-		"eslint",
 		"stylistic"
 	],
 	"homepage": "https://github.com/lewishowles/lint-config#readme",
@@ -18,28 +18,28 @@
 		"type": "git",
 		"url": "git+https://github.com/lewishowles/lint-config.git"
 	},
-	"type": "module",
-	"exports": {
-		"./base.json": "./base.json",
-		"./vue.json": "./vue.json"
-	},
 	"files": [
 		"base.json",
 		"vue.json",
 		"README.md"
 	],
-	"peerDependencies": {
-		"@stylistic/eslint-plugin": "*",
-		"vite-plus": "*"
+	"type": "module",
+	"exports": {
+		"./base.json": "./base.json",
+		"./vue.json": "./vue.json"
 	},
-	"devDependencies": {
-		"publint": "^0.3.21"
+	"publishConfig": {
+		"access": "public"
 	},
 	"scripts": {
 		"publint": "publint"
 	},
-	"publishConfig": {
-		"access": "public"
+	"devDependencies": {
+		"publint": "^0.3.21"
+	},
+	"peerDependencies": {
+		"@stylistic/eslint-plugin": "*",
+		"vite-plus": "*"
 	},
 	"engines": {
 		"node": ">=20"
