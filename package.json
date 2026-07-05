@@ -1,0 +1,28 @@
+{
+	"name": "@lewishowles/lint-config",
+	"version": "0.1.0",
+	"description": "Shared oxlint configuration for Lewis Howles projects",
+	"type": "module",
+	"exports": {
+		"./base.json": "./base.json",
+		"./vue.json": "./vue.json"
+	},
+	"files": [
+		"base.json",
+		"vue.json",
+		"README.md"
+	],
+	"peerDependencies": {
+		"@stylistic/eslint-plugin": "*",
+		"vite-plus": "*"
+	},
+	"devDependencies": {
+		"publint": "^0.3.21"
+	},
+	"scripts": {
+		"publint": "publint"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

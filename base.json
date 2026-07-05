@@ -1,0 +1,55 @@
+{
+	"plugins": ["oxc", "typescript", "unicorn"],
+	"jsPlugins": [
+		"@stylistic/eslint-plugin",
+		{
+			"name": "vite-plus",
+			"specifier": "vite-plus/oxlint-plugin"
+		}
+	],
+	"categories": {
+		"correctness": "error"
+	},
+	"env": {
+		"builtin": true,
+		"browser": true
+	},
+	"rules": {
+		"no-case-declarations": "error",
+		"no-empty": "error",
+		"no-fallthrough": "error",
+		"no-prototype-builtins": "error",
+		"no-redeclare": "error",
+		"no-regex-spaces": "error",
+		"no-undef": "error",
+		"no-unexpected-multiline": "error",
+		"no-useless-assignment": "error",
+		"preserve-caught-error": "error",
+
+		"@stylistic/no-confusing-arrow": "error",
+		"@stylistic/padding-line-between-statements": [
+			"error",
+			{ "blankLine": "always", "prev": "const", "next": "let" },
+			{ "blankLine": "always", "prev": "let", "next": "const" },
+			{ "blankLine": "always", "prev": "*", "next": "break" },
+			{ "blankLine": "always", "prev": ["const", "let"], "next": "*" },
+			{ "blankLine": "always", "prev": "*", "next": "return" },
+			{ "blankLine": "any", "prev": "const", "next": "const" },
+			{ "blankLine": "any", "prev": "let", "next": "let" },
+			{ "blankLine": "always", "prev": "multiline-const", "next": "*" },
+			{ "blankLine": "always", "prev": "*", "next": "multiline-const" }
+		],
+
+		"vite-plus/prefer-vite-plus-imports": "error"
+	},
+	"overrides": [
+		{
+			"files": ["vite.config.*", "vitest.config.*", "playwright*.config.*"],
+			"env": { "node": true }
+		}
+	],
+	"options": {
+		"typeAware": false,
+		"typeCheck": false
+	}
+}
