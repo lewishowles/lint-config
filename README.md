@@ -88,10 +88,10 @@ Plugins are additive and deduplicated — your local plugins are added to the sh
 
 ## Layers
 
-| Layer | File | Contents |
-|-------|------|----------|
+| Layer  | File        | Contents                                                                                                                                                                                                                              |
+| ------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `base` | `base.json` | Correctness rules, `@stylistic` formatting rules, `vite-plus/prefer-vite-plus-imports`, `oxc` + `typescript` + `unicorn` plugins, browser env, node env for config files (`vite.config.*`, `vitest.config.*`, `playwright*.config.*`) |
-| `vue` | `vue.json` | Extends `base`. Adds `vue` plugin, Vue compiler macros as globals, Vue-specific rules |
+| `vue`  | `vue.json`  | Extends `base`. Adds `vue` plugin, Vue compiler macros as globals, Vue-specific rules                                                                                                                                                 |
 
 ## What stays repo-local
 
@@ -102,8 +102,36 @@ Plugins are additive and deduplicated — your local plugins are added to the sh
 
 ## Merge semantics
 
-When a consumer stub adds its own `rules` or `overrides` on top of a shared layer:
+When a consumer stub extends a shared layer:
 
 - **Rules** shallow-merge by key — the consumer's value wins for any rule defined in both
-- **Overrides** are additive — both shared and local overrides apply
-- **Plugins** are additive — both shared and local plugins are loaded (deduplicated)
+- **Overrides** are additive — both shared and local `overrides` entries apply, including any `env` declared inside an override block
+- **Plugins** are additive — both shared and local `plugins`/`jsPlugins` are loaded (deduplicated)
+
+### Known oxlint limitation: top-level `env`, `globals`, and `ignorePatterns` don't merge through `extends`
+
+oxlint currently drops top-level `env`, `globals`, and `ignorePatterns` from an extended config file entirely — they only take effect if declared directly in the file oxlint is invoked with. This is an open upstream bug: [oxc-project/oxc#20087](https://github.com/oxc-project/oxc/issues/20087) (open as of oxlint 1.72.0).
+
+In practice this means:
+
+- `base.json`'s `env` (`builtin`, `browser`) and `vue.json`'s Vue macro `globals` (`defineProps`, `defineEmits`, etc.) will **not** reach a consumer that only does `{ "extends": ["./node_modules/@lewishowles/lint-config/vue.json"] }` — every global from the shared layer will be flagged by `no-undef`.
+- Any `ignorePatterns` this package might declare would be silently dropped the same way, so it deliberately ships none — see "What stays repo-local" below.
+
+Until this is fixed upstream, redeclare the `env`/`globals` you need directly in your project's `.oxlintrc.json`, even though `base.json`/`vue.json` already declare them:
+
+```json
+{
+	"extends": ["./node_modules/@lewishowles/lint-config/vue.json"],
+	"env": { "builtin": true, "browser": true },
+	"globals": {
+		"defineEmits": "readonly",
+		"defineExpose": "readonly",
+		"defineModel": "readonly",
+		"defineOptions": "readonly",
+		"defineProps": "readonly",
+		"defineSlots": "readonly",
+		"withDefaults": "readonly"
+	},
+	"ignorePatterns": ["**/dist/*", ".codebase-memory/**"]
+}
+```
