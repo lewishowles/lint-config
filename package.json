@@ -1,6 +1,6 @@
 {
 	"name": "@lewishowles/lint-config",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Shared oxlint configuration for Lewis Howles projects",
 	"keywords": [
 		"config",
