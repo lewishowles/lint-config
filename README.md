@@ -135,3 +135,18 @@ Until this is fixed upstream, redeclare the `env`/`globals` you need directly in
 	"ignorePatterns": ["**/dist/*", ".codebase-memory/**"]
 }
 ```
+
+### Known limitation: `vite-plus`'s `lint` config field requires resolved objects, not string paths
+
+Raw oxlint (CLI, editor integrations) accepts `"extends": ["./node_modules/@lewishowles/lint-config/vue.json"]` as string paths and resolves them at load time. `vite-plus`, when a project routes its oxlint config through `vite.config.js`'s `lint` field (importing `.oxlintrc.json` as JSON and handing it to `vp check`/`vp lint`), does not resolve string paths in `extends`: every entry, at every nesting level, must already be a plain object. This means `vue.json`'s own internal `extends: ["./base.json"]` also breaks one level deeper.
+
+If your project uses `vite-plus`'s `lint` field rather than raw oxlint, resolve the chain yourself in `vite.config.js`:
+
+```js
+import base from "@lewishowles/lint-config/base.json" with { type: "json" };
+import vue from "@lewishowles/lint-config/vue.json" with { type: "json" };
+
+const lint = { ...vue, extends: [base, ...(vue.extends ?? [])] };
+```
+
+`.oxlintrc.json` itself should stay untouched (string `extends`) for raw oxlint/editor consumption; this only applies to the `vite-plus` config path.
