@@ -8,7 +8,7 @@ Shared oxlint configuration for Lewis Howles projects. One package that every re
 bun add -d @lewishowles/lint-config @stylistic/eslint-plugin vite-plus
 ```
 
-`@stylistic/eslint-plugin` and `vite-plus` are peer dependencies — they must be installed in the consuming project so oxlint can resolve the JS plugins from `node_modules`.
+`@stylistic/eslint-plugin` and `vite-plus` are peer dependencies: they must be installed in the consuming project so oxlint can resolve the JS plugins from `node_modules`.
 
 ## Usage
 
@@ -32,7 +32,7 @@ Create a `.oxlintrc.json` in your project root that extends the appropriate laye
 }
 ```
 
-The Vue layer extends `base.json` internally — you only need to extend `vue.json`.
+The Vue layer extends `base.json` internally, so you only need to extend `vue.json`.
 
 ## Customising
 
@@ -40,7 +40,7 @@ Your `.oxlintrc.json` stub can override rules, add ignore patterns, add override
 
 ### Overriding a rule
 
-To change the severity or options of a rule defined in the shared layer, redeclare it in your stub — your value wins:
+To change the severity or options of a rule defined in the shared layer, redeclare it in your stub: your value wins.
 
 ```json
 {
@@ -64,7 +64,7 @@ Ignore patterns are repo-specific, so they always live in your stub:
 
 ### Adding overrides
 
-Overrides are additive — shared overrides (if any) still apply, and your local ones are appended:
+Overrides are additive: shared overrides (if any) still apply, and your local ones are appended.
 
 ```json
 {
@@ -84,7 +84,7 @@ Overrides are additive — shared overrides (if any) still apply, and your local
 
 ### Adding plugins
 
-Plugins are additive and deduplicated — your local plugins are added to the shared ones. Note that oxlint only supports its built-in plugin names (`oxc`, `typescript`, `unicorn`, `vue`, etc.) — there is no `playwright` or `vitest` plugin. Test-file-specific behaviour is handled via `overrides`, not plugins.
+Plugins are additive and deduplicated: your local plugins are added to the shared ones. Note that oxlint only supports its built-in plugin names (`oxc`, `typescript`, `unicorn`, `vue`, etc.); there is no `playwright` or `vitest` plugin. Test-file-specific behaviour is handled via `overrides`, not plugins.
 
 ## Layers
 
@@ -95,27 +95,27 @@ Plugins are additive and deduplicated — your local plugins are added to the sh
 
 ## What stays repo-local
 
-- `ignorePatterns` — every repo has different build output and tool directories
-- `overrides` for repo-specific directories (e.g. `bin/**/*.js`, `src/cli/**/*.js`, `src/playwright/**/*.js`) — the file paths differ per repo, so they can't be generalised
+- `ignorePatterns`, since every repo has different build output and tool directories
+- `overrides` for repo-specific directories (e.g. `bin/**/*.js`, `src/cli/**/*.js`, `src/playwright/**/*.js`), since the file paths differ per repo and can't be generalised
 - Test-file rule relaxations (e.g. turning off `vite-plus/prefer-vite-plus-imports` in `*.d.ts`)
-- Additional plugins — only repos that need them
+- Additional plugins, only for repos that need them
 
 ## Merge semantics
 
 When a consumer stub extends a shared layer:
 
-- **Rules** shallow-merge by key — the consumer's value wins for any rule defined in both
-- **Overrides** are additive — both shared and local `overrides` entries apply, including any `env` declared inside an override block
-- **Plugins** are additive — both shared and local `plugins`/`jsPlugins` are loaded (deduplicated)
+- **Rules** shallow-merge by key: the consumer's value wins for any rule defined in both
+- **Overrides** are additive: both shared and local `overrides` entries apply, including any `env` declared inside an override block
+- **Plugins** are additive: both shared and local `plugins`/`jsPlugins` are loaded (deduplicated)
 
 ### Known oxlint limitation: top-level `env`, `globals`, and `ignorePatterns` don't merge through `extends`
 
-oxlint currently drops top-level `env`, `globals`, and `ignorePatterns` from an extended config file entirely — they only take effect if declared directly in the file oxlint is invoked with. This is an open upstream bug: [oxc-project/oxc#20087](https://github.com/oxc-project/oxc/issues/20087) (open as of oxlint 1.72.0).
+oxlint currently drops top-level `env`, `globals`, and `ignorePatterns` from an extended config file entirely: they only take effect if declared directly in the file oxlint is invoked with. This is an open upstream bug: [oxc-project/oxc#20087](https://github.com/oxc-project/oxc/issues/20087) (open as of oxlint 1.72.0).
 
 In practice this means:
 
-- `base.json`'s `env` (`builtin`, `browser`) and `vue.json`'s Vue macro `globals` (`defineProps`, `defineEmits`, etc.) will **not** reach a consumer that only does `{ "extends": ["./node_modules/@lewishowles/lint-config/vue.json"] }` — every global from the shared layer will be flagged by `no-undef`.
-- Any `ignorePatterns` this package might declare would be silently dropped the same way, so it deliberately ships none — see "What stays repo-local" below.
+- `base.json`'s `env` (`builtin`, `browser`) and `vue.json`'s Vue macro `globals` (`defineProps`, `defineEmits`, etc.) will **not** reach a consumer that only does `{ "extends": ["./node_modules/@lewishowles/lint-config/vue.json"] }`: every global from the shared layer will be flagged by `no-undef`.
+- Any `ignorePatterns` this package might declare would be silently dropped the same way, so it deliberately ships none. See "What stays repo-local" below.
 
 Until this is fixed upstream, redeclare the `env`/`globals` you need directly in your project's `.oxlintrc.json`, even though `base.json`/`vue.json` already declare them:
 
