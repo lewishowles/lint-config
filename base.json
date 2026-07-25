@@ -25,6 +25,12 @@
     "no-unexpected-multiline": "error",
     "no-useless-assignment": "error",
     "preserve-caught-error": "error",
+    "sort-imports": [
+      "error",
+      {
+        "ignoreDeclarationSort": true
+      }
+    ],
 
     "@stylistic/no-confusing-arrow": "error",
     "@stylistic/padding-line-between-statements": [

@@ -90,8 +90,14 @@ Plugins are additive and deduplicated: your local plugins are added to the share
 
 | Layer  | File        | Contents                                                                                                                                                                                                                              |
 | ------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `base` | `base.json` | Correctness rules, `@stylistic` formatting rules, `vite-plus/prefer-vite-plus-imports`, `oxc` + `typescript` + `unicorn` plugins, browser env, node env for config files (`vite.config.*`, `vitest.config.*`, `playwright*.config.*`) |
+| `base` | `base.json` | Correctness rules, named-import member sorting, `@stylistic` formatting rules, `vite-plus/prefer-vite-plus-imports`, `oxc` + `typescript` + `unicorn` plugins, browser env, node env for config files (`vite.config.*`, `vitest.config.*`, `playwright*.config.*`) |
 | `vue`  | `vue.json`  | Extends `base`. Adds `vue` plugin, Vue compiler macros as globals, Vue-specific rules                                                                                                                                                 |
+
+### Import sorting ownership
+
+The base layer sorts named members within each import declaration. It sets `ignoreDeclarationSort: true` because Oxlint reports declaration-row ordering but does not auto-fix it.
+
+Consumers that want import declaration rows sorted should enable Oxfmt's `sortImports` option in their local `.oxfmtrc.json`. This keeps member sorting in the shared Oxlint layer and declaration ordering in the formatter that can fix it.
 
 ## What stays repo-local
 
