@@ -25,6 +25,155 @@ function getCommentToTokenGap(sourceCode, comment, next) {
 }
 
 /**
+ * Return continuation comments indexed by their group leader.
+ *
+ * @param  {object[][]}  lineCommentGroups
+ *     The adjacent line-comment groups.
+ * @returns  {object}
+ *     The continuation comments and their leaders.
+ */
+function getLineCommentContinuations(lineCommentGroups) {
+	const continuationComments = new Set();
+	const continuationsByLeader = new Map();
+
+	for (const group of lineCommentGroups) {
+		if (group.length < 2) {
+			continue;
+		}
+
+		const [leader, ...continuations] = group;
+
+		continuationsByLeader.set(leader, continuations);
+
+		for (const continuation of continuations) {
+			continuationComments.add(continuation);
+		}
+	}
+
+	return { continuationComments, continuationsByLeader };
+}
+
+/**
+ * Return indentation relative to a comment's current indentation.
+ *
+ * @param  {string}  indentation
+ *     The line indentation.
+ * @param  {string}  commentIndent
+ *     The leading comment's current indentation.
+ * @returns  {string}
+ *     The indentation to preserve after reindenting.
+ */
+function getRelativeIndent(indentation, commentIndent) {
+	return indentation.startsWith(commentIndent)
+		? indentation.slice(commentIndent.length)
+		: indentation;
+}
+
+/**
+ * Reindent every line of a leading comment.
+ *
+ * @param  {object}  sourceCode
+ *     The Oxlint source code object.
+ * @param  {object}  comment
+ *     The leading comment token.
+ * @param  {string}  commentIndent
+ *     The comment's current indentation.
+ * @param  {string}  expectedIndent
+ *     The documented code's indentation.
+ * @returns  {string}
+ *     The reindented comment text.
+ */
+function getReindentedCommentText(sourceCode, comment, commentIndent, expectedIndent) {
+	return getCommentText(sourceCode, comment)
+		.split(/\r\n|\n|\r/)
+		.map((line, lineIndex) => {
+			if (lineIndex === 0) {
+				return `${expectedIndent}${line}`;
+			}
+
+			const lineIndent = line.match(/^[ \t]*/)[0];
+			const relativeIndent = getRelativeIndent(lineIndent, commentIndent);
+
+			return `${expectedIndent}${relativeIndent}${line.slice(lineIndent.length)}`;
+		})
+		.join(getNewline(sourceCode.text));
+}
+
+/**
+ * Return replacements that align a leading comment group with its code.
+ *
+ * @param  {object}  sourceCode
+ *     The Oxlint source code object.
+ * @param  {object}  comment
+ *     The leading comment token.
+ * @param  {object[]}  continuations
+ *     The comment group's continuation tokens.
+ * @param  {string}  actualIndent
+ *     The comment's current indentation.
+ * @param  {string}  expectedIndent
+ *     The documented code's indentation.
+ * @returns  {object[]}
+ *     The indentation replacements.
+ */
+function getCommentIndentationFixes(
+	sourceCode,
+	comment,
+	continuations,
+	actualIndent,
+	expectedIndent,
+) {
+	if (actualIndent === expectedIndent) {
+		return [];
+	}
+
+	const fixes = [
+		{
+			range: [getLineStart(sourceCode, comment.range[0]), comment.range[1]],
+			text: getReindentedCommentText(sourceCode, comment, actualIndent, expectedIndent),
+		},
+	];
+
+	for (const continuation of continuations) {
+		const continuationIndent = getLineIndent(sourceCode, continuation.range[0]) ?? "";
+		const relativeIndent = getRelativeIndent(continuationIndent, actualIndent);
+
+		fixes.push({
+			range: [getLineStart(sourceCode, continuation.range[0]), continuation.range[1]],
+			text: `${expectedIndent}${relativeIndent}${getCommentText(sourceCode, continuation)}`,
+		});
+	}
+
+	return fixes;
+}
+
+/**
+ * Return the replacement that places a final leading comment against its code.
+ *
+ * @param  {object}  sourceCode
+ *     The Oxlint source code object.
+ * @param  {object}  comment
+ *     The leading comment token.
+ * @param  {object}  next
+ *     The documented source token.
+ * @param  {object|undefined}  followingComment
+ *     The next comment token.
+ * @param  {string}  expectedIndent
+ *     The documented code's indentation.
+ * @returns  {object|null}
+ *     The gap replacement, or null when none is needed.
+ */
+function getCommentGapFix(sourceCode, comment, next, followingComment, expectedIndent) {
+	if (followingComment !== undefined && followingComment.range[0] <= next.range[0]) {
+		return null;
+	}
+
+	const gap = getCommentToTokenGap(sourceCode, comment, next);
+	const desiredGap = `${getNewline(sourceCode.text)}${expectedIndent}`;
+
+	return gap === desiredGap ? null : { range: [comment.range[1], next.range[0]], text: desiredGap };
+}
+
+/**
  * Create the immediate-comment-placement rule.
  *
  * @returns  {object}
@@ -40,14 +189,8 @@ export default {
 		return {
 			Program() {
 				const comments = context.sourceCode.getAllComments();
-
-				const lineCommentGroups = getLineCommentGroups(context.sourceCode);
-
-				const continuationComments = new Set(lineCommentGroups.flatMap((group) => group.slice(1)));
-				const continuationsByLeader = new Map(
-					lineCommentGroups
-						.filter((group) => group.length > 1)
-						.map((group) => [group[0], group.slice(1)]),
+				const { continuationComments, continuationsByLeader } = getLineCommentContinuations(
+					getLineCommentGroups(context.sourceCode),
 				);
 
 				for (const [index, comment] of comments.entries()) {
@@ -68,57 +211,25 @@ export default {
 						continue;
 					}
 
-					const fixes = [];
-
-					if (actualIndent !== expectedIndent) {
-						const commentText = getCommentText(context.sourceCode, comment);
-						const indentedComment = commentText
-							.split(/\r\n|\n|\r/)
-							.map((line, lineIndex) => {
-								if (lineIndex === 0) {
-									return `${expectedIndent}${line}`;
-								}
-
-								const lineIndent = line.match(/^[ \t]*/)[0];
-								const relativeIndent = lineIndent.startsWith(actualIndent)
-									? lineIndent.slice(actualIndent.length)
-									: lineIndent;
-
-								return `${expectedIndent}${relativeIndent}${line.slice(lineIndent.length)}`;
-							})
-							.join(getNewline(context.sourceCode.text));
-
-						fixes.push({
-							range: [getLineStart(context.sourceCode, comment.range[0]), comment.range[1]],
-							text: indentedComment,
-						});
-
-						for (const continuation of continuationsByLeader.get(comment) ?? []) {
-							const continuationIndent =
-								getLineIndent(context.sourceCode, continuation.range[0]) ?? "";
-							const relativeIndent = continuationIndent.startsWith(actualIndent)
-								? continuationIndent.slice(actualIndent.length)
-								: continuationIndent;
-
-							fixes.push({
-								range: [
-									getLineStart(context.sourceCode, continuation.range[0]),
-									continuation.range[1],
-								],
-								text: `${expectedIndent}${relativeIndent}${getCommentText(context.sourceCode, continuation)}`,
-							});
-						}
-					}
+					const fixes = getCommentIndentationFixes(
+						context.sourceCode,
+						comment,
+						continuationsByLeader.get(comment) ?? [],
+						actualIndent,
+						expectedIndent,
+					);
 
 					const followingComment = comments[index + 1];
-					const isFinalComment =
-						followingComment === undefined || followingComment.range[0] > next.range[0];
-					const gap = getCommentToTokenGap(context.sourceCode, comment, next);
-					const newline = getNewline(context.sourceCode.text);
-					const desiredGap = `${newline}${expectedIndent}`;
+					const gapFix = getCommentGapFix(
+						context.sourceCode,
+						comment,
+						next,
+						followingComment,
+						expectedIndent,
+					);
 
-					if (isFinalComment && gap !== desiredGap) {
-						fixes.push({ range: [comment.range[1], next.range[0]], text: desiredGap });
+					if (gapFix !== null) {
+						fixes.push(gapFix);
 					}
 
 					if (fixes.length === 0) {

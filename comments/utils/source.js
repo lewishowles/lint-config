@@ -52,9 +52,9 @@ export function getMinimalCommentReplacement(comment, commentText, formattedComm
 	let end = 0;
 
 	while (
-		commentText.at(-end - 1) === formattedComment.at(-end - 1) &&
 		end < commentText.length - start &&
-		end < formattedComment.length - start
+		end < formattedComment.length - start &&
+		commentText.at(-end - 1) === formattedComment.at(-end - 1)
 	) {
 		end += 1;
 	}

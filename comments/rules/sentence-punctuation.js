@@ -31,19 +31,19 @@ function replaceLineCommentValue(sourceCode, comment, value) {
  *
  * @param  {string}  line
  *     The block-comment line.
- * @param  {Function}  format
- *     The sentence formatter.
+ * @param  {function}  formatProse
+ *     The formatter for the line's prose.
  * @returns  {string}
  *     The formatted block-comment line.
  */
-function formatBlockCommentLine(line, format) {
+function formatBlockCommentLine(line, formatProse) {
 	const marker = line.match(/^\s*\*\s?/);
 
 	if (marker === null) {
 		return line;
 	}
 
-	return `${marker[0]}${format(line.slice(marker[0].length).trim())}`;
+	return `${marker[0]}${formatProse(line.slice(marker[0].length).trim())}`;
 }
 
 /**
