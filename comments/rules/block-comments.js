@@ -1,4 +1,4 @@
-import { formatJSDocComment, isJSDoc } from "../utils/jsdoc.js";
+import { formatJSDocBlockStructure, isJSDoc } from "../utils/jsdoc.js";
 import { getCommentText, replaceMinimalComment } from "../utils/source.js";
 
 /**
@@ -27,10 +27,7 @@ export default {
 						continue;
 					}
 
-					const formattedComment = formatJSDocComment(context.sourceCode, comment, {
-						normaliseTags: false,
-						wrap: false,
-					});
+					const formattedComment = formatJSDocBlockStructure(context.sourceCode, comment);
 
 					if (formattedComment === commentText) {
 						continue;

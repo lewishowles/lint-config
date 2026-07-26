@@ -1,5 +1,5 @@
 import { addTerminalPunctuation, capitaliseSentence, formatSentence } from "../utils/wrap.js";
-import { formatJSDocComment, isJSDoc } from "../utils/jsdoc.js";
+import { formatJSDocPunctuation, isJSDoc } from "../utils/jsdoc.js";
 import {
 	getCommentText,
 	getLineCommentGroups,
@@ -198,12 +198,7 @@ export default {
 
 					const commentText = getCommentText(context.sourceCode, comment);
 					const formattedComment = isJSDoc(commentText)
-						? formatJSDocComment(context.sourceCode, comment, {
-								addPunctuation: true,
-								normaliseTagSeparator: false,
-								normaliseTags: false,
-								wrap: false,
-							})
+						? formatJSDocPunctuation(context.sourceCode, comment)
 						: formatOrdinaryBlockComment(context.sourceCode, comment);
 
 					if (formattedComment !== commentText) {

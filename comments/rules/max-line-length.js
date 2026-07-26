@@ -1,4 +1,4 @@
-import { formatJSDocComment, isJSDoc } from "../utils/jsdoc.js";
+import { formatJSDocWrapping, isJSDoc } from "../utils/jsdoc.js";
 
 import {
 	getCommentText,
@@ -103,7 +103,7 @@ export default {
 						comment.type === "Line"
 							? formatLineComment(context.sourceCode, comment)
 							: isJSDoc(commentText)
-								? formatJSDocComment(context.sourceCode, comment, { normaliseTags: false })
+								? formatJSDocWrapping(context.sourceCode, comment)
 								: formatBlockComment(context.sourceCode, comment);
 
 					if (formattedComment === null || formattedComment === commentText) {

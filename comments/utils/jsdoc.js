@@ -190,8 +190,8 @@ function formatUnwrappedProse(lines, addPunctuation) {
 	const result = lines.map((line) => line.trim());
 	let paragraphStart = null;
 
-	for (let index = 0; index <= result.length; index += 1) {
-		if (index < result.length && result[index] !== "") {
+	for (let index = 0; index < result.length; index += 1) {
+		if (result[index] !== "") {
 			if (paragraphStart === null) {
 				paragraphStart = index;
 			}
@@ -207,6 +207,11 @@ function formatUnwrappedProse(lines, addPunctuation) {
 		paragraphStart = null;
 	}
 
+	if (paragraphStart !== null && addPunctuation) {
+		result[paragraphStart] = capitaliseSentence(result[paragraphStart]);
+		result[result.length - 1] = addTerminalPunctuation(result[result.length - 1]);
+	}
+
 	return result;
 }
 
@@ -219,16 +224,10 @@ function formatUnwrappedProse(lines, addPunctuation) {
  *     The available content width.
  * @param  {boolean}  addPunctuation
  *     Whether to format each paragraph as a sentence.
- * @param  {boolean}  wrap
- *     Whether to wrap paragraphs.
  * @returns  {string[]}
  *     Formatted prose content lines.
  */
-function formatProse(lines, width, addPunctuation, wrap) {
-	if (!wrap) {
-		return formatUnwrappedProse(lines, addPunctuation);
-	}
-
+function formatProse(lines, width, addPunctuation) {
 	const result = [];
 	let paragraph = [];
 
@@ -441,57 +440,198 @@ function formatTagDescriptions(lines, width, addPunctuation) {
 }
 
 /**
- * Format a JSDoc block comment.
+ * Return the details needed to format a JSDoc block comment.
  *
  * @param  {object}  sourceCode
  *     The Oxlint source code object.
  * @param  {object}  comment
  *     The JSDoc comment token.
- * @param  {object}  options
- *     Formatting options.
- * @returns  {string}
- *     The formatted comment text.
+ * @returns  {object}
+ *     The JSDoc content and layout details.
  */
-export function formatJSDocComment(sourceCode, comment, options = {}) {
+function getJSDocFormattingContext(sourceCode, comment) {
 	const commentText = getCommentText(sourceCode, comment);
 	const indent = getLineIndent(sourceCode, comment.range[0]) ?? "";
 	const newline = getNewline(sourceCode.text);
 	const width = Math.max(1, 80 - indent.length - 3);
 	const content = getJSDocContent(commentText);
 	const { proseLines, tagLines } = splitJSDocContent(content);
-	const normaliseTagSeparator = options.normaliseTagSeparator !== false;
-	const hasTagSeparator = proseLines.at(-1)?.trim() === "";
-	const prose = formatProse(
+
+	return {
+		hasTagSeparator: proseLines.at(-1)?.trim() === "",
+		indent,
+		newline,
 		proseLines,
-		width,
-		options.addPunctuation === true,
-		options.wrap !== false,
-	);
-	const tags = formatTags(
 		tagLines,
-		Math.max(1, width - 4),
-		options.addPunctuation === true,
-		options.normaliseTags === true,
-	);
-	const outputLines = [...prose];
+		width,
+	};
+}
 
-	if (tags.length > 0) {
-		if (
-			outputLines.length > 0 &&
-			outputLines.at(-1) !== "" &&
-			(normaliseTagSeparator || hasTagSeparator)
-		) {
-			outputLines.push("");
-		}
-
-		outputLines.push(...tags);
+/**
+ * Append tags after a blank line when the JSDoc format requires one.
+ *
+ * @param  {string[]}  outputLines
+ *     The formatted prose lines.
+ * @param  {string[]}  tags
+ *     The formatted tag lines.
+ */
+function appendJSDocTags(outputLines, tags) {
+	if (tags.length === 0) {
+		return;
 	}
+
+	if (outputLines.length > 0 && outputLines.at(-1) !== "") {
+		outputLines.push("");
+	}
+
+	outputLines.push(...tags);
+}
+
+/**
+ * Append tags while retaining the source's existing separator state.
+ *
+ * @param  {string[]}  outputLines
+ *     The formatted prose lines.
+ * @param  {string[]}  tags
+ *     The formatted tag lines.
+ * @param  {boolean}  hasTagSeparator
+ *     Whether the source had a prose-to-tag separator.
+ */
+function appendJSDocTagsWithExistingSeparator(outputLines, tags, hasTagSeparator) {
+	if (tags.length === 0) {
+		return;
+	}
+
+	if (hasTagSeparator) {
+		appendJSDocTags(outputLines, tags);
+		return;
+	}
+
+	outputLines.push(...tags);
+}
+
+/**
+ * Render a JSDoc block comment from its formatted content.
+ *
+ * @param  {object}  formattingContext
+ *     The JSDoc layout details.
+ * @param  {string[]}  outputLines
+ *     The formatted prose and tag lines.
+ * @returns  {string}
+ *     The formatted comment text.
+ */
+function renderJSDocComment(formattingContext, outputLines) {
+	const { indent, newline } = formattingContext;
 
 	return [
 		`${indent}/**`,
 		...outputLines.map((line) => (line === "" ? `${indent} *` : `${indent} * ${line}`)),
 		`${indent} */`,
 	].join(newline);
+}
+
+/**
+ * Format JSDoc block structure and delimiters.
+ *
+ * @param  {object}  sourceCode
+ *     The Oxlint source code object.
+ * @param  {object}  comment
+ *     The JSDoc comment token.
+ * @returns  {string}
+ *     The formatted comment text.
+ */
+export function formatJSDocBlockStructure(sourceCode, comment) {
+	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
+	const prose = formatUnwrappedProse(formattingContext.proseLines, false);
+	const tags = formatTags(
+		formattingContext.tagLines,
+		Math.max(1, formattingContext.width - 4),
+		false,
+		false,
+	);
+	const outputLines = [...prose];
+
+	appendJSDocTags(outputLines, tags);
+
+	return renderJSDocComment(formattingContext, outputLines);
+}
+
+/**
+ * Format JSDoc tag spacing, order, and grouping.
+ *
+ * @param  {object}  sourceCode
+ *     The Oxlint source code object.
+ * @param  {object}  comment
+ *     The JSDoc comment token.
+ * @returns  {string}
+ *     The formatted comment text.
+ */
+export function formatJSDocTagFormatting(sourceCode, comment) {
+	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
+	const prose = formatProse(formattingContext.proseLines, formattingContext.width, false);
+	const tags = formatTags(
+		formattingContext.tagLines,
+		Math.max(1, formattingContext.width - 4),
+		false,
+		true,
+	);
+	const outputLines = [...prose];
+
+	appendJSDocTagsWithExistingSeparator(outputLines, tags, formattingContext.hasTagSeparator);
+
+	return renderJSDocComment(formattingContext, outputLines);
+}
+
+/**
+ * Format JSDoc sentence capitalisation and punctuation.
+ *
+ * @param  {object}  sourceCode
+ *     The Oxlint source code object.
+ * @param  {object}  comment
+ *     The JSDoc comment token.
+ * @returns  {string}
+ *     The formatted comment text.
+ */
+export function formatJSDocPunctuation(sourceCode, comment) {
+	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
+	const prose = formatUnwrappedProse(formattingContext.proseLines, true);
+	const tags = formatTags(
+		formattingContext.tagLines,
+		Math.max(1, formattingContext.width - 4),
+		true,
+		false,
+	);
+	const outputLines = [...prose];
+
+	appendJSDocTagsWithExistingSeparator(outputLines, tags, formattingContext.hasTagSeparator);
+
+	return renderJSDocComment(formattingContext, outputLines);
+}
+
+/**
+ * Format JSDoc prose and tags to the configured line width.
+ *
+ * @param  {object}  sourceCode
+ *     The Oxlint source code object.
+ * @param  {object}  comment
+ *     The JSDoc comment token.
+ * @returns  {string}
+ *     The formatted comment text.
+ */
+export function formatJSDocWrapping(sourceCode, comment) {
+	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
+	const prose = formatProse(formattingContext.proseLines, formattingContext.width, false);
+	const tags = formatTags(
+		formattingContext.tagLines,
+		Math.max(1, formattingContext.width - 4),
+		false,
+		false,
+	);
+	const outputLines = [...prose];
+
+	appendJSDocTags(outputLines, tags);
+
+	return renderJSDocComment(formattingContext, outputLines);
 }
 
 /**

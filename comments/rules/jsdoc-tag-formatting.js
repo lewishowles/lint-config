@@ -1,4 +1,4 @@
-import { formatJSDocComment, hasTargetJSDocTag, isJSDoc } from "../utils/jsdoc.js";
+import { formatJSDocTagFormatting, hasTargetJSDocTag, isJSDoc } from "../utils/jsdoc.js";
 import { getCommentText, replaceMinimalComment } from "../utils/source.js";
 
 /**
@@ -27,10 +27,7 @@ export default {
 						continue;
 					}
 
-					const formattedComment = formatJSDocComment(context.sourceCode, comment, {
-						normaliseTagSeparator: false,
-						normaliseTags: true,
-					});
+					const formattedComment = formatJSDocTagFormatting(context.sourceCode, comment);
 
 					if (formattedComment === commentText) {
 						continue;
