@@ -5,7 +5,6 @@ import {
 	getLineCommentGroups,
 	getLineIndent,
 	getNewline,
-	isDirectiveComment,
 	replaceMinimalComment,
 } from "../utils/source.js";
 
@@ -63,11 +62,7 @@ function formatLineCommentGroup(sourceCode, comments) {
 	const firstText = firstComment.value.trim();
 	const lastText = lastComment.value.trim();
 
-	if (
-		firstText === "" ||
-		firstText.startsWith("@") ||
-		/^(?:eslint|oxlint|istanbul|c8)-/.test(firstText)
-	) {
+	if (firstText === "" || firstText.startsWith("@")) {
 		return null;
 	}
 
@@ -142,11 +137,9 @@ function formatOrdinaryBlockComment(sourceCode, comment) {
 		.filter(Boolean)
 		.join(" ");
 
-	return [
-		"/*",
-		`${indentation} * ${formatSentence(paragraphs)}`,
-		`${indentation} */`,
-	].join(getNewline(sourceCode.text));
+	return ["/*", `${indentation} * ${formatSentence(paragraphs)}`, `${indentation} */`].join(
+		getNewline(sourceCode.text),
+	);
 }
 
 /**
@@ -164,13 +157,7 @@ export default {
 	createOnce(context) {
 		return {
 			Program() {
-				for (const comments of getLineCommentGroups(context.sourceCode)) {
-					const commentGroup = comments.filter((comment) => !isDirectiveComment(comment));
-
-					if (commentGroup.length === 0) {
-						continue;
-					}
-
+				for (const commentGroup of getLineCommentGroups(context.sourceCode)) {
 					const formattedGroup = formatLineCommentGroup(context.sourceCode, commentGroup);
 
 					if (formattedGroup) {

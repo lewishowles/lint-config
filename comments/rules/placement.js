@@ -5,7 +5,6 @@ import {
 	getLineIndent,
 	getLineStart,
 	getNewline,
-	isDirectiveComment,
 	isLeadingComment,
 } from "../utils/source.js";
 
@@ -42,9 +41,7 @@ export default {
 			Program() {
 				const comments = context.sourceCode.getAllComments();
 
-				const lineCommentGroups = getLineCommentGroups(context.sourceCode).map((group) =>
-					group.filter((comment) => !isDirectiveComment(comment)),
-				);
+				const lineCommentGroups = getLineCommentGroups(context.sourceCode);
 
 				const continuationComments = new Set(lineCommentGroups.flatMap((group) => group.slice(1)));
 				const continuationsByLeader = new Map(

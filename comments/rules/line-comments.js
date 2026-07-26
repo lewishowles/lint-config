@@ -3,7 +3,6 @@ import {
 	getLineCommentGroups,
 	getLineIndent,
 	getLineStart,
-	isDirectiveComment,
 } from "../utils/source.js";
 
 /**
@@ -21,9 +20,7 @@ export default {
 	createOnce(context) {
 		return {
 			Program() {
-				for (const comments of getLineCommentGroups(context.sourceCode)) {
-					const commentGroup = comments.filter((comment) => !isDirectiveComment(comment));
-
+				for (const commentGroup of getLineCommentGroups(context.sourceCode)) {
 					if (commentGroup.length < 2) {
 						continue;
 					}

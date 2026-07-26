@@ -10,6 +10,10 @@ ruleTester.run("comments/line-comments", rule, {
 			name: "keeps wrapped continuation lines aligned",
 			code: "// Close the dialog when focus moves outside the component and restore focus\n// to the original trigger.\nonClickOutside(dialog, closeDialog);",
 		},
+		{
+			name: "treats comments separated by a directive as standalone",
+			code: "// First comment.\n// oxlint-disable-next-line comments/line-comments\n  // Second comment.\nconst value = 1;",
+		},
 	],
 	invalid: [
 		{

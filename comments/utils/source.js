@@ -190,6 +190,10 @@ export function getLineCommentGroups(sourceCode) {
 	const groups = [];
 
 	for (const comment of comments) {
+		if (isDirectiveComment(comment)) {
+			continue;
+		}
+
 		const group = groups.at(-1);
 		const previousComment = group?.at(-1);
 		const gap = previousComment

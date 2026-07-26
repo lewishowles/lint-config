@@ -53,6 +53,15 @@ registerDialog();`,
 				"// oxlint-disable-next-line comments/sentence-punctuation\n// Explain the value across two lines and\n// continue on the second line.\nconst value = 1;",
 		},
 		{
+			name: "does not treat comments separated by a directive as continuations",
+			code: "if (isReady) {\n\t// First comment.\n\t// oxlint-disable-next-line comments/line-comments\n  // Second comment.\n\trunTask();\n}",
+			errors: [
+				{ message: "Comment must be immediately before the documented code.", line: 4, column: 2 },
+			],
+			output:
+				"if (isReady) {\n\t// First comment.\n\t// oxlint-disable-next-line comments/line-comments\n\t// Second comment.\n\trunTask();\n}",
+		},
+		{
 			name: "reindents every line of a wrapped continuation comment to match its declaration",
 			code: "\t// Explain the value across two lines and\n\t// continue on the second line.\nconst value = 1;",
 			errors: [

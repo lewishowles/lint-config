@@ -50,6 +50,16 @@ function openDialog(options) {}`,
 				"// Close the dialog when focus moves outside the component\n// and restore focus to the original trigger.\nonClickOutside(dialog, closeDialog);",
 		},
 		{
+			name: "formats comments separated by a directive independently",
+			code: "// first comment\n// oxlint-disable-next-line comments/line-comments\n  // second comment\nconst value = 1;",
+			errors: [
+				{ message: "Comment text must be a complete sentence.", line: 1, column: 0 },
+				{ message: "Comment text must be a complete sentence.", line: 3, column: 2 },
+			],
+			output:
+				"// First comment.\n// oxlint-disable-next-line comments/line-comments\n  // Second comment.\nconst value = 1;",
+		},
+		{
 			name: "formats multiline ordinary block-comment prose",
 			code: `/* close the dialog
  * after focus moves outside the component
