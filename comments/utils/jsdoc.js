@@ -27,6 +27,7 @@ export function isJSDoc(commentText) {
  */
 export function getJSDocContent(commentText) {
 	const body = commentText.slice(3, -2);
+
 	const lines = body.split(/\r\n|\n|\r/).map((line) => {
 		if (/^\s*\*/.test(line)) {
 			return line.replace(/^\s*\* ?/, "");
@@ -117,6 +118,7 @@ function isPreservedSectionTag(line) {
  */
 function parseTargetTags(tagLines) {
 	const entries = [];
+
 	let currentEntry = null;
 
 	for (const line of tagLines) {
@@ -188,6 +190,7 @@ function getInlineTagDescription(entry) {
  */
 function formatUnwrappedProse(lines, addPunctuation) {
 	const result = lines.map((line) => line.trim());
+
 	let paragraphStart = null;
 
 	for (let index = 0; index < result.length; index += 1) {
@@ -229,6 +232,7 @@ function formatUnwrappedProse(lines, addPunctuation) {
  */
 function formatProse(lines, width, addPunctuation) {
 	const result = [];
+
 	let paragraph = [];
 
 	const flushParagraph = () => {
@@ -293,7 +297,9 @@ function formatTags(tagLines, width, addPunctuation, normaliseTags) {
 	}
 
 	const result = [];
+
 	let lastType = null;
+
 	const orderedEntries = tagOrder.flatMap((type) => entries.filter((entry) => entry.type === type));
 
 	for (const entry of orderedEntries) {
@@ -302,9 +308,11 @@ function formatTags(tagLines, width, addPunctuation, normaliseTags) {
 		}
 
 		result.push(formatTagHeader(entry));
+
 		const description = [getInlineTagDescription(entry), ...entry.description]
 			.filter((line) => line.trim() !== "")
 			.map((line) => line.trim());
+
 		let descriptionText = description.join(" ");
 
 		if (addPunctuation && descriptionText !== "") {
@@ -335,6 +343,7 @@ function formatTags(tagLines, width, addPunctuation, normaliseTags) {
  */
 function formatMixedTags(lines, width, addPunctuation) {
 	const result = [];
+
 	let currentEntry = null;
 	let preserveSection = false;
 
@@ -393,6 +402,7 @@ function formatMixedTags(lines, width, addPunctuation) {
  */
 function formatTagDescriptions(lines, width, addPunctuation) {
 	const result = [];
+
 	let description = [];
 	let preserveSection = false;
 
@@ -504,6 +514,7 @@ function appendJSDocTagsWithExistingSeparator(outputLines, tags, hasTagSeparator
 
 	if (hasTagSeparator) {
 		appendJSDocTags(outputLines, tags);
+
 		return;
 	}
 
@@ -543,12 +554,14 @@ function renderJSDocComment(formattingContext, outputLines) {
 export function formatJSDocBlockStructure(sourceCode, comment) {
 	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
 	const prose = formatUnwrappedProse(formattingContext.proseLines, false);
+
 	const tags = formatTags(
 		formattingContext.tagLines,
 		Math.max(1, formattingContext.width - 4),
 		false,
 		false,
 	);
+
 	const outputLines = [...prose];
 
 	appendJSDocTags(outputLines, tags);
@@ -569,12 +582,14 @@ export function formatJSDocBlockStructure(sourceCode, comment) {
 export function formatJSDocTagFormatting(sourceCode, comment) {
 	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
 	const prose = formatProse(formattingContext.proseLines, formattingContext.width, false);
+
 	const tags = formatTags(
 		formattingContext.tagLines,
 		Math.max(1, formattingContext.width - 4),
 		false,
 		true,
 	);
+
 	const outputLines = [...prose];
 
 	appendJSDocTagsWithExistingSeparator(outputLines, tags, formattingContext.hasTagSeparator);
@@ -595,12 +610,14 @@ export function formatJSDocTagFormatting(sourceCode, comment) {
 export function formatJSDocPunctuation(sourceCode, comment) {
 	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
 	const prose = formatUnwrappedProse(formattingContext.proseLines, true);
+
 	const tags = formatTags(
 		formattingContext.tagLines,
 		Math.max(1, formattingContext.width - 4),
 		true,
 		false,
 	);
+
 	const outputLines = [...prose];
 
 	appendJSDocTagsWithExistingSeparator(outputLines, tags, formattingContext.hasTagSeparator);
@@ -621,12 +638,14 @@ export function formatJSDocPunctuation(sourceCode, comment) {
 export function formatJSDocWrapping(sourceCode, comment) {
 	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
 	const prose = formatProse(formattingContext.proseLines, formattingContext.width, false);
+
 	const tags = formatTags(
 		formattingContext.tagLines,
 		Math.max(1, formattingContext.width - 4),
 		false,
 		false,
 	);
+
 	const outputLines = [...prose];
 
 	appendJSDocTags(outputLines, tags);

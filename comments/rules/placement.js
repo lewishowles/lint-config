@@ -189,6 +189,7 @@ export default {
 		return {
 			Program() {
 				const comments = context.sourceCode.getAllComments();
+
 				const { continuationComments, continuationsByLeader } = getLineCommentContinuations(
 					getLineCommentGroups(context.sourceCode),
 				);
@@ -220,6 +221,7 @@ export default {
 					);
 
 					const followingComment = comments[index + 1];
+
 					const gapFix = getCommentGapFix(
 						context.sourceCode,
 						comment,

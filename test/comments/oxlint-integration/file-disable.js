@@ -11,12 +11,12 @@ const punctuationValue = 1;
 // Explain how this dialog restores focus after it closes and returns to the original trigger.
 const maxLengthValue = 1;
 
-  // Explain the value.
+// Explain the value.
 
 const placementValue = 1;
 
 // Close the dialog when focus moves outside the component and restore focus
-  // to the original trigger.
+// to the original trigger.
 onClickOutside(dialog, closeDialog);
 
 /** Open the dialog.

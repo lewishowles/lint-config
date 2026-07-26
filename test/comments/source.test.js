@@ -10,12 +10,15 @@ test("Keeps separate JSDoc fixes in separate source ranges", () => {
  * Open the dialog.
  * @param {object} options
  */`;
+
 	const comment = { range: [100, 100 + commentText.length] };
+
 	const blockFormattedComment = `/**
  * Open the dialog.
  *
  * @param {object} options
  */`;
+
 	const tagFormattedComment = `/**
  * Open the dialog.
  * @param  {object}  options
@@ -26,6 +29,7 @@ test("Keeps separate JSDoc fixes in separate source ranges", () => {
 		commentText,
 		blockFormattedComment,
 	);
+
 	const tagReplacement = getMinimalCommentReplacement(comment, commentText, tagFormattedComment);
 
 	assert.equal(
@@ -46,6 +50,7 @@ test("Keeps separate JSDoc fixes in separate source ranges", () => {
 test("Replaces only the changed comment range", () => {
 	const sourceText = "// Explain the dialog";
 	const comment = { range: [100, 100 + sourceText.length] };
+
 	const fixer = {
 		replaceTextRange(range, text) {
 			return { range, text };

@@ -1,0 +1,19 @@
+{
+	"extends": ["./base.json"],
+	"env": {
+		"builtin": true,
+		"node": true
+	},
+	"overrides": [
+		{
+			"files": ["test/comments/oxlint-integration/**"],
+			"globals": {
+				"closeDialog": "readonly",
+				"dialog": "readonly",
+				"onClickOutside": "readonly",
+				"registerDialog": "readonly"
+			},
+			"rules": { "no-unused-vars": "off" }
+		}
+	]
+}

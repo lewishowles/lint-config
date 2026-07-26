@@ -60,7 +60,6 @@ function formatLineCommentGroup(sourceCode, comments) {
 	const firstComment = comments[0];
 	const lastComment = comments.at(-1);
 	const firstText = firstComment.value.trim();
-	const lastText = lastComment.value.trim();
 
 	if (firstText === "" || firstText.startsWith("@")) {
 		return null;
@@ -70,6 +69,7 @@ function formatLineCommentGroup(sourceCode, comments) {
 		comments.length === 1
 			? formatSentence(firstComment.value)
 			: capitaliseSentence(firstComment.value);
+
 	const lastValue = comments.length === 1 ? firstValue : addTerminalPunctuation(lastComment.value);
 	const firstReplacement = replaceLineCommentValue(sourceCode, firstComment, firstValue);
 	const lastReplacement = replaceLineCommentValue(sourceCode, lastComment, lastValue);
@@ -108,6 +108,7 @@ function formatOrdinaryBlockComment(sourceCode, comment) {
 	}
 
 	const lines = commentText.split(/\r\n|\n|\r/);
+
 	const proseLineIndexes = lines
 		.slice(1, -1)
 		.map((line, index) => ({ index: index + 1, text: line.replace(/^\s*\*?\s?/, "").trim() }))
@@ -197,6 +198,7 @@ export default {
 					}
 
 					const commentText = getCommentText(context.sourceCode, comment);
+
 					const formattedComment = isJSDoc(commentText)
 						? formatJSDocPunctuation(context.sourceCode, comment)
 						: formatOrdinaryBlockComment(context.sourceCode, comment);

@@ -11,6 +11,7 @@
 export function wrapWords(text, width) {
 	const words = text.trim().split(/\s+/).filter(Boolean);
 	const lines = [];
+
 	let currentLine = "";
 
 	for (const word of words) {
@@ -66,10 +67,12 @@ export function capitaliseSentence(text) {
 	}
 
 	const firstLetter = trimmedText.search(/\p{L}/u);
+
 	let formattedText = trimmedText;
 
 	if (firstLetter >= 0) {
 		const letter = formattedText[firstLetter];
+
 		formattedText = `${formattedText.slice(0, firstLetter)}${letter.toLocaleUpperCase()}${formattedText.slice(firstLetter + 1)}`;
 	}
 

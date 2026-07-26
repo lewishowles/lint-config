@@ -32,14 +32,18 @@
 		"access": "public"
 	},
 	"scripts": {
+		"lint": "vp check",
+		"lint:fix": "vp check --fix",
+		"prepare": "vp config",
 		"publint": "publint"
 	},
 	"devDependencies": {
-		"publint": "^0.3.21"
+		"publint": "^0.3.22",
+		"vite-plus": "0.2.6"
 	},
 	"peerDependencies": {
 		"@stylistic/eslint-plugin": "*",
-		"vite-plus": "*"
+		"vite-plus": "0.2.6"
 	},
 	"engines": {
 		"node": ">=20"

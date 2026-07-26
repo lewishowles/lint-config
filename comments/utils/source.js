@@ -154,15 +154,18 @@ export function getLineIndent(sourceCode, offset) {
  */
 export function getCommentNeighbours(sourceCode, comment) {
 	const sourceItems = sourceCode.tokensAndComments;
+
 	const commentIndex = sourceItems.findIndex(
 		(item) => item.range[0] === comment.range[0] && item.range[1] === comment.range[1],
 	);
+
 	let previous = null;
 	let next = null;
 
 	for (let index = commentIndex - 1; index >= 0; index -= 1) {
 		if (!isComment(sourceItems[index])) {
 			previous = sourceItems[index];
+
 			break;
 		}
 	}
@@ -170,6 +173,7 @@ export function getCommentNeighbours(sourceCode, comment) {
 	for (let index = commentIndex + 1; index < sourceItems.length; index += 1) {
 		if (!isComment(sourceItems[index])) {
 			next = sourceItems[index];
+
 			break;
 		}
 	}
@@ -196,9 +200,11 @@ export function getLineCommentGroups(sourceCode) {
 
 		const group = groups.at(-1);
 		const previousComment = group?.at(-1);
+
 		const gap = previousComment
 			? sourceCode.text.slice(previousComment.range[1], comment.range[0])
 			: "";
+
 		const newlineCount = gap.match(/\r\n|\n|\r/g)?.length ?? 0;
 
 		if (group && newlineCount === 1 && /^[ \t]*\r?\n[ \t]*$/.test(gap)) {

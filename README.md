@@ -88,10 +88,10 @@ Plugins are additive and deduplicated: your local plugins are added to the share
 
 ## Layers
 
-| Layer  | File        | Contents                                                                                                                                                                                                                              |
-| ------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Layer  | File        | Contents                                                                                                                                                                                                                                                           |
+| ------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `base` | `base.json` | Correctness rules, named-import member sorting, `@stylistic` formatting rules, `vite-plus/prefer-vite-plus-imports`, `oxc` + `typescript` + `unicorn` plugins, browser env, node env for config files (`vite.config.*`, `vitest.config.*`, `playwright*.config.*`) |
-| `vue`  | `vue.json`  | Extends `base`. Adds `vue` plugin, Vue compiler macros as globals, Vue-specific rules                                                                                                                                                 |
+| `vue`  | `vue.json`  | Extends `base`. Adds `vue` plugin, Vue compiler macros as globals, Vue-specific rules                                                                                                                                                                              |
 
 ### Import sorting ownership
 
