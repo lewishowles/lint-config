@@ -3,6 +3,7 @@ import {
 	getLineCommentGroups,
 	getLineIndent,
 	getLineStart,
+	isDirectiveComment,
 } from "../utils/source.js";
 
 /**
@@ -21,7 +22,13 @@ export default {
 		return {
 			Program() {
 				for (const comments of getLineCommentGroups(context.sourceCode)) {
-					const firstIndent = getLineIndent(context.sourceCode, comments[0].range[0]);
+					const commentGroup = comments.filter((comment) => !isDirectiveComment(comment));
+
+					if (commentGroup.length < 2) {
+						continue;
+					}
+
+					const firstIndent = getLineIndent(context.sourceCode, commentGroup[0].range[0]);
 
 					if (firstIndent === null) {
 						continue;
@@ -29,7 +36,7 @@ export default {
 
 					const fixes = [];
 
-					for (const comment of comments) {
+					for (const comment of commentGroup) {
 						const indentation = getLineIndent(context.sourceCode, comment.range[0]);
 
 						if (indentation === null || indentation === firstIndent) {
@@ -49,7 +56,7 @@ export default {
 					context.report({
 						fix: (fixer) => fixes.map((fix) => fixer.replaceTextRange(fix.range, fix.text)),
 						message: "Wrapped line comments must align with the first comment marker.",
-						node: comments[0],
+						node: commentGroup[0],
 					});
 				}
 			},

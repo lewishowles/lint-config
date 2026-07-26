@@ -1,0 +1,6 @@
+/**
+ * Open the dialog.
+ * @param {object} options
+ *     The dialog options.
+ */
+function openDialog(options) {}

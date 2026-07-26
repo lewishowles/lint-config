@@ -1,0 +1,17 @@
+{
+	"jsPlugins": [
+		{
+			"name": "comments",
+			"specifier": "../../../comments/plugin.js"
+		}
+	],
+	"rules": {
+		"comments/block-comments": "error",
+		"comments/jsdoc-tag-formatting": "error",
+		"comments/line-comments": "error",
+		"comments/max-line-length": "error",
+		"comments/placement": "error",
+		"comments/sentence-punctuation": "error",
+		"no-unused-vars": "off"
+	}
+}

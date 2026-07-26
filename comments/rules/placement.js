@@ -1,9 +1,11 @@
 import {
 	getCommentNeighbours,
 	getCommentText,
+	getLineCommentGroups,
 	getLineIndent,
 	getLineStart,
 	getNewline,
+	isDirectiveComment,
 	isLeadingComment,
 } from "../utils/source.js";
 
@@ -40,8 +42,19 @@ export default {
 			Program() {
 				const comments = context.sourceCode.getAllComments();
 
+				const lineCommentGroups = getLineCommentGroups(context.sourceCode).map((group) =>
+					group.filter((comment) => !isDirectiveComment(comment)),
+				);
+
+				const continuationComments = new Set(lineCommentGroups.flatMap((group) => group.slice(1)));
+				const continuationsByLeader = new Map(
+					lineCommentGroups
+						.filter((group) => group.length > 1)
+						.map((group) => [group[0], group.slice(1)]),
+				);
+
 				for (const [index, comment] of comments.entries()) {
-					if (comment.type === "Shebang") {
+					if (comment.type === "Shebang" || continuationComments.has(comment)) {
 						continue;
 					}
 
@@ -80,8 +93,24 @@ export default {
 
 						fixes.push({
 							range: [getLineStart(context.sourceCode, comment.range[0]), comment.range[1]],
-							text: `${expectedIndent}${indentedComment}`,
+							text: indentedComment,
 						});
+
+						for (const continuation of continuationsByLeader.get(comment) ?? []) {
+							const continuationIndent =
+								getLineIndent(context.sourceCode, continuation.range[0]) ?? "";
+							const relativeIndent = continuationIndent.startsWith(actualIndent)
+								? continuationIndent.slice(actualIndent.length)
+								: continuationIndent;
+
+							fixes.push({
+								range: [
+									getLineStart(context.sourceCode, continuation.range[0]),
+									continuation.range[1],
+								],
+								text: `${expectedIndent}${relativeIndent}${getCommentText(context.sourceCode, continuation)}`,
+							});
+						}
 					}
 
 					const followingComment = comments[index + 1];

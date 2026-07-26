@@ -1,6 +1,14 @@
 import { formatJSDocComment, isJSDoc } from "../utils/jsdoc.js";
-import { getCommentText, getLineIndent, getNewline } from "../utils/source.js";
-import { wrapWords } from "../utils/wrap.js";
+
+import {
+	getCommentText,
+	getLineIndent,
+	getNewline,
+	isDirectiveComment,
+	replaceMinimalComment,
+} from "../utils/source.js";
+
+import { formatSentence, wrapWords } from "../utils/wrap.js";
 
 const maximumLineLength = 80;
 
@@ -24,16 +32,16 @@ function formatLineComment(sourceCode, comment) {
 	const width = maximumLineLength - indentation.length - 3;
 	const text = comment.value.trim();
 
-	if (/^(?:eslint|oxlint|istanbul|c8)-/.test(text)) {
+	if (isDirectiveComment(comment)) {
 		return null;
 	}
 
 	if (text === "") {
-		return `${indentation}//`;
+		return "//";
 	}
 
 	return wrapWords(text, Math.max(1, width))
-		.map((line) => `${indentation}// ${line}`)
+		.map((line, index) => `${index === 0 ? "" : indentation}// ${line}`)
 		.join(getNewline(sourceCode.text));
 }
 
@@ -55,15 +63,13 @@ function formatBlockComment(sourceCode, comment) {
 	}
 
 	const commentText = getCommentText(sourceCode, comment);
-	const text = commentText.slice(2, -2).trim();
+	const text = formatSentence(commentText.slice(2, -2).trim());
 	const width = maximumLineLength - indentation.length - 3;
 	const lines = wrapWords(text, Math.max(1, width));
 
-	return [
-		`${indentation}/*`,
-		...lines.map((line) => `${indentation} * ${line}`),
-		`${indentation} */`,
-	].join(getNewline(sourceCode.text));
+	return ["/*", ...lines.map((line) => `${indentation} * ${line}`), `${indentation} */`].join(
+		getNewline(sourceCode.text),
+	);
 }
 
 /**
@@ -105,7 +111,9 @@ export default {
 					}
 
 					context.report({
-						fix: (fixer) => fixer.replaceText(comment, formattedComment),
+						fix: (fixer) => {
+							return replaceMinimalComment(fixer, comment, commentText, formattedComment);
+						},
 						message: "Comment exceeds 80 characters.",
 						node: comment,
 					});

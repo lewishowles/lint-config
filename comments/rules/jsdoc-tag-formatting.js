@@ -1,5 +1,5 @@
 import { formatJSDocComment, hasTargetJSDocTag, isJSDoc } from "../utils/jsdoc.js";
-import { getCommentText } from "../utils/source.js";
+import { getCommentText, replaceMinimalComment } from "../utils/source.js";
 
 /**
  * Create the JSDoc tag-formatting rule.
@@ -28,6 +28,7 @@ export default {
 					}
 
 					const formattedComment = formatJSDocComment(context.sourceCode, comment, {
+						normaliseTagSeparator: false,
 						normaliseTags: true,
 					});
 
@@ -36,7 +37,9 @@ export default {
 					}
 
 					context.report({
-						fix: (fixer) => fixer.replaceText(comment, formattedComment),
+						fix: (fixer) => {
+							return replaceMinimalComment(fixer, comment, commentText, formattedComment);
+						},
 						message: "JSDoc tags must use the configured spacing, order, and grouping.",
 						node: comment,
 					});

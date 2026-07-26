@@ -1,0 +1,4 @@
+/**
+ * Explain how this dialog restores focus after it closes and returns to the original trigger
+ */
+function openDialog() {}

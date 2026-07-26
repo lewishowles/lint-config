@@ -14,6 +14,7 @@ Today every repo carries its own copy of the same lint stack (`@eslint/js`, `@st
 - This is a personal-ecosystem package. External users are welcome but not a design constraint; keep the API surface minimal.
 - Runtime: Bun for development, published to npm under `@lewishowles/`.
 - Follow the conventions of the sibling packages (`helpers` is the reference for repo hygiene: scripted checks, publint/attw, generated docs where useful).
+- Oxlint's JS Plugin API fixer treats two rules' fix ranges as conflicting whenever they touch or overlap, even if the resulting text is byte-identical at that boundary. When authoring a fixer for a comment-formatting rule that shares comment text with another rule, verify the two rules' minimal replacement ranges are genuinely disjoint, not just non-identical.
 
 ## Working style
 

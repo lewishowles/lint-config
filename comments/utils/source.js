@@ -27,6 +27,77 @@ export function getCommentText(sourceCode, comment) {
 }
 
 /**
+ * Return the smallest replacement that changes one comment to formatted text.
+ *
+ * @param  {object}  comment
+ *     The comment token.
+ * @param  {string}  commentText
+ *     The comment's source text.
+ * @param  {string}  formattedComment
+ *     The formatted replacement text.
+ * @returns  {object}
+ *     The source range and replacement text.
+ */
+export function getMinimalCommentReplacement(comment, commentText, formattedComment) {
+	let start = 0;
+
+	while (
+		start < commentText.length &&
+		start < formattedComment.length &&
+		commentText[start] === formattedComment[start]
+	) {
+		start += 1;
+	}
+
+	let end = 0;
+
+	while (
+		commentText.at(-end - 1) === formattedComment.at(-end - 1) &&
+		end < commentText.length - start &&
+		end < formattedComment.length - start
+	) {
+		end += 1;
+	}
+
+	return {
+		range: [comment.range[0] + start, comment.range[1] - end],
+		text: formattedComment.slice(start, formattedComment.length - end),
+	};
+}
+
+/**
+ * Replace a comment using the smallest changed source range.
+ *
+ * @param  {object}  fixer
+ *     The Oxlint fixer.
+ * @param  {object}  comment
+ *     The comment token.
+ * @param  {string}  sourceText
+ *     The comment's source text.
+ * @param  {string}  formattedText
+ *     The formatted replacement text.
+ * @returns  {object}
+ *     The fixer replacement.
+ */
+export function replaceMinimalComment(fixer, comment, sourceText, formattedText) {
+	const replacement = getMinimalCommentReplacement(comment, sourceText, formattedText);
+
+	return fixer.replaceTextRange(replacement.range, replacement.text);
+}
+
+/**
+ * Return whether a comment is an inline tool directive.
+ *
+ * @param  {object}  comment
+ *     The comment token.
+ * @returns  {boolean}
+ *     Whether the comment starts with a recognised directive prefix.
+ */
+export function isDirectiveComment(comment) {
+	return /^(?:eslint|oxlint|istanbul|c8)-/.test(comment.value.trim());
+}
+
+/**
  * Return the source line containing an offset.
  *
  * @param  {object}  sourceCode

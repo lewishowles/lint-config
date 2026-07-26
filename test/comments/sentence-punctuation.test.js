@@ -13,6 +13,15 @@ ruleTester.run("comments/sentence-punctuation", rule, {
  * Open the dialog.
  */
 	function openDialog() {}`,
+		{
+			name: "leaves prose-to-tag spacing to the block-comment rule",
+			code: `/**
+ * Open the dialog.
+ * @param {object} options
+ *     The dialog options.
+ */
+function openDialog(options) {}`,
+		},
 		`/**
  * Open the dialog.
  *
@@ -28,11 +37,32 @@ function openDialog(options) {}`,
 	],
 	invalid: [
 		{
+			name: "capitalises and punctuates a standalone line comment",
 			code: "// close the dialog\ncloseDialog();",
 			errors: [{ message: "Comment text must be a complete sentence.", line: 1, column: 0 }],
 			output: "// Close the dialog.\ncloseDialog();",
 		},
 		{
+			name: "formats a wrapped line comment as one sentence",
+			code: "// close the dialog when focus moves outside the component\n// and restore focus to the original trigger.\nonClickOutside(dialog, closeDialog);",
+			errors: [{ message: "Comment text must be a complete sentence.", line: 1, column: 0 }],
+			output:
+				"// Close the dialog when focus moves outside the component\n// and restore focus to the original trigger.\nonClickOutside(dialog, closeDialog);",
+		},
+		{
+			name: "formats multiline ordinary block-comment prose",
+			code: `/* close the dialog
+ * after focus moves outside the component
+ */
+closeDialog();`,
+			errors: [{ message: "Comment text must be a complete sentence.", line: 1, column: 0 }],
+			output: `/*
+ * Close the dialog after focus moves outside the component.
+ */
+closeDialog();`,
+		},
+		{
+			name: "formats JSDoc prose and tag descriptions",
 			code: `/**
  * open the dialog
  *
@@ -50,6 +80,21 @@ function openDialog(options) {}`,
 function openDialog(options) {}`,
 		},
 		{
+			name: "preserves wrapped JSDoc prose while adding punctuation",
+			code: `/**
+ * Explain how this dialog restores focus after it closes and returns to the
+ * original trigger
+ */
+function openDialog() {}`,
+			errors: [{ message: "Comment text must be a complete sentence.", line: 1, column: 0 }],
+			output: `/**
+ * Explain how this dialog restores focus after it closes and returns to the
+ * original trigger.
+ */
+function openDialog() {}`,
+		},
+		{
+			name: "formats an inline ordinary block comment",
 			code: "/* close the dialog */\ncloseDialog();",
 			errors: [{ message: "Comment text must be a complete sentence.", line: 1, column: 0 }],
 			output: "/* Close the dialog. */\ncloseDialog();",

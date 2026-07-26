@@ -5,6 +5,8 @@ import {
 	getLineCommentGroups,
 	getLineIndent,
 	getNewline,
+	isDirectiveComment,
+	replaceMinimalComment,
 } from "../utils/source.js";
 
 /**
@@ -23,6 +25,26 @@ function replaceLineCommentValue(sourceCode, comment, value) {
 	const commentText = getCommentText(sourceCode, comment);
 
 	return `${commentText.slice(0, 2)}${value}`;
+}
+
+/**
+ * Format the prose text in a standard block-comment line.
+ *
+ * @param  {string}  line
+ *     The block-comment line.
+ * @param  {Function}  format
+ *     The sentence formatter.
+ * @returns  {string}
+ *     The formatted block-comment line.
+ */
+function formatBlockCommentLine(line, format) {
+	const marker = line.match(/^\s*\*\s?/);
+
+	if (marker === null) {
+		return line;
+	}
+
+	return `${marker[0]}${format(line.slice(marker[0].length).trim())}`;
 }
 
 /**
@@ -90,6 +112,30 @@ function formatOrdinaryBlockComment(sourceCode, comment) {
 		return `/* ${formatSentence(content)} */`;
 	}
 
+	const lines = commentText.split(/\r\n|\n|\r/);
+	const proseLineIndexes = lines
+		.slice(1, -1)
+		.map((line, index) => ({ index: index + 1, text: line.replace(/^\s*\*?\s?/, "").trim() }))
+		.filter((line) => line.text !== "")
+		.map((line) => line.index);
+
+	if (lines[0] === "/*" && lines.at(-1).trim() === "*/" && proseLineIndexes.length > 0) {
+		const formattedLines = [...lines];
+		const firstProseLine = proseLineIndexes[0];
+		const lastProseLine = proseLineIndexes.at(-1);
+
+		formattedLines[firstProseLine] = formatBlockCommentLine(
+			formattedLines[firstProseLine],
+			capitaliseSentence,
+		);
+		formattedLines[lastProseLine] = formatBlockCommentLine(
+			formattedLines[lastProseLine],
+			addTerminalPunctuation,
+		);
+
+		return formattedLines.join(getNewline(sourceCode.text));
+	}
+
 	const paragraphs = content
 		.split(/\r\n|\n|\r/)
 		.map((line) => line.replace(/^\s*\*?\s?/, "").trim())
@@ -97,7 +143,7 @@ function formatOrdinaryBlockComment(sourceCode, comment) {
 		.join(" ");
 
 	return [
-		`${indentation}/*`,
+		"/*",
 		`${indentation} * ${formatSentence(paragraphs)}`,
 		`${indentation} */`,
 	].join(getNewline(sourceCode.text));
@@ -119,18 +165,34 @@ export default {
 		return {
 			Program() {
 				for (const comments of getLineCommentGroups(context.sourceCode)) {
-					const formattedGroup = formatLineCommentGroup(context.sourceCode, comments);
+					const commentGroup = comments.filter((comment) => !isDirectiveComment(comment));
+
+					if (commentGroup.length === 0) {
+						continue;
+					}
+
+					const formattedGroup = formatLineCommentGroup(context.sourceCode, commentGroup);
 
 					if (formattedGroup) {
 						context.report({
 							fix: (fixer) => {
 								const fixes = [
-									fixer.replaceText(formattedGroup.firstComment, formattedGroup.firstReplacement),
+									replaceMinimalComment(
+										fixer,
+										formattedGroup.firstComment,
+										getCommentText(context.sourceCode, formattedGroup.firstComment),
+										formattedGroup.firstReplacement,
+									),
 								];
 
 								if (formattedGroup.lastComment.range[0] !== formattedGroup.firstComment.range[0]) {
 									fixes.push(
-										fixer.replaceText(formattedGroup.lastComment, formattedGroup.lastReplacement),
+										replaceMinimalComment(
+											fixer,
+											formattedGroup.lastComment,
+											getCommentText(context.sourceCode, formattedGroup.lastComment),
+											formattedGroup.lastReplacement,
+										),
 									);
 								}
 
@@ -151,13 +213,17 @@ export default {
 					const formattedComment = isJSDoc(commentText)
 						? formatJSDocComment(context.sourceCode, comment, {
 								addPunctuation: true,
+								normaliseTagSeparator: false,
 								normaliseTags: false,
+								wrap: false,
 							})
 						: formatOrdinaryBlockComment(context.sourceCode, comment);
 
 					if (formattedComment !== commentText) {
 						context.report({
-							fix: (fixer) => fixer.replaceText(comment, formattedComment),
+							fix: (fixer) => {
+								return replaceMinimalComment(fixer, comment, commentText, formattedComment);
+							},
 							message: "Comment text must be a complete sentence.",
 							node: comment,
 						});

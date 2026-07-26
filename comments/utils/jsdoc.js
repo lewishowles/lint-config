@@ -1,5 +1,5 @@
 import { getCommentText, getLineIndent, getNewline } from "./source.js";
-import { formatSentence, wrapWords } from "./wrap.js";
+import { addTerminalPunctuation, capitaliseSentence, formatSentence, wrapWords } from "./wrap.js";
 
 const tagOrder = ["param", "throws", "returns"];
 const preservedSectionTags = new Set(["example"]);
@@ -177,6 +177,40 @@ function getInlineTagDescription(entry) {
 }
 
 /**
+ * Format prose without changing its existing line wrapping.
+ *
+ * @param  {string[]}  lines
+ *     The prose content lines.
+ * @param  {boolean}  addPunctuation
+ *     Whether to format each paragraph as a sentence.
+ * @returns  {string[]}
+ *     The formatted prose lines.
+ */
+function formatUnwrappedProse(lines, addPunctuation) {
+	const result = lines.map((line) => line.trim());
+	let paragraphStart = null;
+
+	for (let index = 0; index <= result.length; index += 1) {
+		if (index < result.length && result[index] !== "") {
+			if (paragraphStart === null) {
+				paragraphStart = index;
+			}
+
+			continue;
+		}
+
+		if (paragraphStart !== null && addPunctuation) {
+			result[paragraphStart] = capitaliseSentence(result[paragraphStart]);
+			result[index - 1] = addTerminalPunctuation(result[index - 1]);
+		}
+
+		paragraphStart = null;
+	}
+
+	return result;
+}
+
+/**
  * Format prose paragraphs to the block-comment width.
  *
  * @param  {string[]}  lines
@@ -191,6 +225,10 @@ function getInlineTagDescription(entry) {
  *     Formatted prose content lines.
  */
 function formatProse(lines, width, addPunctuation, wrap) {
+	if (!wrap) {
+		return formatUnwrappedProse(lines, addPunctuation);
+	}
+
 	const result = [];
 	let paragraph = [];
 
@@ -205,7 +243,7 @@ function formatProse(lines, width, addPunctuation, wrap) {
 			text = formatSentence(text);
 		}
 
-		result.push(...(wrap ? wrapWords(text, width) : [text]));
+		result.push(...wrapWords(text, width));
 		paragraph = [];
 	};
 
@@ -421,6 +459,8 @@ export function formatJSDocComment(sourceCode, comment, options = {}) {
 	const width = Math.max(1, 80 - indent.length - 3);
 	const content = getJSDocContent(commentText);
 	const { proseLines, tagLines } = splitJSDocContent(content);
+	const normaliseTagSeparator = options.normaliseTagSeparator !== false;
+	const hasTagSeparator = proseLines.at(-1)?.trim() === "";
 	const prose = formatProse(
 		proseLines,
 		width,
@@ -436,7 +476,11 @@ export function formatJSDocComment(sourceCode, comment, options = {}) {
 	const outputLines = [...prose];
 
 	if (tags.length > 0) {
-		if (outputLines.length > 0 && outputLines.at(-1) !== "") {
+		if (
+			outputLines.length > 0 &&
+			outputLines.at(-1) !== "" &&
+			(normaliseTagSeparator || hasTagSeparator)
+		) {
 			outputLines.push("");
 		}
 

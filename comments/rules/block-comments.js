@@ -1,5 +1,5 @@
 import { formatJSDocComment, isJSDoc } from "../utils/jsdoc.js";
-import { getCommentText } from "../utils/source.js";
+import { getCommentText, replaceMinimalComment } from "../utils/source.js";
 
 /**
  * Create the JSDoc block-comment formatting rule.
@@ -29,6 +29,7 @@ export default {
 
 					const formattedComment = formatJSDocComment(context.sourceCode, comment, {
 						normaliseTags: false,
+						wrap: false,
 					});
 
 					if (formattedComment === commentText) {
@@ -36,7 +37,9 @@ export default {
 					}
 
 					context.report({
-						fix: (fixer) => fixer.replaceText(comment, formattedComment),
+						fix: (fixer) => {
+							return replaceMinimalComment(fixer, comment, commentText, formattedComment);
+						},
 						message: "JSDoc comments must use the configured block format.",
 						node: comment,
 					});
