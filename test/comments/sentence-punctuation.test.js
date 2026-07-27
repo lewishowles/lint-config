@@ -50,7 +50,17 @@ function openDialog(options) {}`,
 				"// Close the dialog when focus moves outside the component\n// and restore focus to the original trigger.\nonClickOutside(dialog, closeDialog);",
 		},
 		{
-			name: "formats comments separated by a directive independently",
+			name: "formats comments separated by an ESLint directive independently",
+			code: "// first comment\n// eslint-disable-next-line comments/line-comments\n  // second comment\nconst value = 1;",
+			errors: [
+				{ message: "Comment text must be a complete sentence.", line: 1, column: 0 },
+				{ message: "Comment text must be a complete sentence.", line: 3, column: 2 },
+			],
+			output:
+				"// First comment.\n// eslint-disable-next-line comments/line-comments\n  // Second comment.\nconst value = 1;",
+		},
+		{
+			name: "formats comments separated by an Oxlint directive independently",
 			code: "// first comment\n// oxlint-disable-next-line comments/line-comments\n  // second comment\nconst value = 1;",
 			errors: [
 				{ message: "Comment text must be a complete sentence.", line: 1, column: 0 },
@@ -58,6 +68,24 @@ function openDialog(options) {}`,
 			],
 			output:
 				"// First comment.\n// oxlint-disable-next-line comments/line-comments\n  // Second comment.\nconst value = 1;",
+		},
+		{
+			name: "formats comments separated by an Istanbul directive independently",
+			code: "// first comment\n// istanbul-ignore-next\n  // second comment\nconst value = 1;",
+			errors: [
+				{ message: "Comment text must be a complete sentence.", line: 1, column: 0 },
+				{ message: "Comment text must be a complete sentence.", line: 3, column: 2 },
+			],
+			output: "// First comment.\n// istanbul-ignore-next\n  // Second comment.\nconst value = 1;",
+		},
+		{
+			name: "formats comments separated by a c8 directive independently",
+			code: "// first comment\n// c8-ignore-next\n  // second comment\nconst value = 1;",
+			errors: [
+				{ message: "Comment text must be a complete sentence.", line: 1, column: 0 },
+				{ message: "Comment text must be a complete sentence.", line: 3, column: 2 },
+			],
+			output: "// First comment.\n// c8-ignore-next\n  // Second comment.\nconst value = 1;",
 		},
 		{
 			name: "formats multiline ordinary block-comment prose",

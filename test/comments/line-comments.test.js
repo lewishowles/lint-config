@@ -11,8 +11,20 @@ ruleTester.run("comments/line-comments", rule, {
 			code: "// Close the dialog when focus moves outside the component and restore focus\n// to the original trigger.\nonClickOutside(dialog, closeDialog);",
 		},
 		{
-			name: "treats comments separated by a directive as standalone",
+			name: "treats comments separated by an ESLint directive as standalone",
+			code: "// First comment.\n// eslint-disable-next-line comments/line-comments\n  // Second comment.\nconst value = 1;",
+		},
+		{
+			name: "treats comments separated by an Oxlint directive as standalone",
 			code: "// First comment.\n// oxlint-disable-next-line comments/line-comments\n  // Second comment.\nconst value = 1;",
+		},
+		{
+			name: "treats comments separated by an Istanbul directive as standalone",
+			code: "// First comment.\n// istanbul-ignore-next\n  // Second comment.\nconst value = 1;",
+		},
+		{
+			name: "treats comments separated by a c8 directive as standalone",
+			code: "// First comment.\n// c8-ignore-next\n  // Second comment.\nconst value = 1;",
 		},
 	],
 	invalid: [
