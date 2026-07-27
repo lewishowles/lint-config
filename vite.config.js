@@ -8,4 +8,9 @@ const lint = {
 	overrides: oxlintrc.overrides,
 };
 
-export default defineConfig({ lint });
+export default defineConfig({
+	staged: {
+		"*": "vp check --fix",
+	},
+	lint,
+});

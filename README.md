@@ -34,6 +34,36 @@ Create a `.oxlintrc.json` in your project root that extends the appropriate laye
 
 The Vue layer extends `base.json` internally, so you only need to extend `vue.json`.
 
+### Comment formatting (opt-in)
+
+Add the comments layer alongside the base or Vue layer to enforce the six comment-formatting rules:
+
+```json
+{
+	"extends": [
+		"./node_modules/@lewishowles/lint-config/base.json",
+		"./node_modules/@lewishowles/lint-config/comments.json"
+	],
+	"ignorePatterns": ["**/dist/*", ".codebase-memory/**"]
+}
+```
+
+The comments layer registers its plugin through the package export, so the consuming project does not need a relative `jsPlugins` path. To select rules yourself instead, add the plugin directly:
+
+```json
+{
+	"jsPlugins": [
+		{
+			"name": "comments",
+			"specifier": "@lewishowles/lint-config/comments/plugin"
+		}
+	],
+	"rules": {
+		"comments/line-comments": "error"
+	}
+}
+```
+
 ## Customising
 
 Your `.oxlintrc.json` stub can override rules, add ignore patterns, add overrides, or add plugins on top of the shared layer.
@@ -88,10 +118,11 @@ Plugins are additive and deduplicated: your local plugins are added to the share
 
 ## Layers
 
-| Layer  | File        | Contents                                                                                                                                                                                                                                                           |
-| ------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `base` | `base.json` | Correctness rules, named-import member sorting, `@stylistic` formatting rules, `vite-plus/prefer-vite-plus-imports`, `oxc` + `typescript` + `unicorn` plugins, browser env, node env for config files (`vite.config.*`, `vitest.config.*`, `playwright*.config.*`) |
-| `vue`  | `vue.json`  | Extends `base`. Adds `vue` plugin, Vue compiler macros as globals, Vue-specific rules                                                                                                                                                                              |
+| Layer      | File            | Contents                                                                                                                                                                                                                                                           |
+| ---------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `base`     | `base.json`     | Correctness rules, named-import member sorting, `@stylistic` formatting rules, `vite-plus/prefer-vite-plus-imports`, `oxc` + `typescript` + `unicorn` plugins, browser env, node env for config files (`vite.config.*`, `vitest.config.*`, `playwright*.config.*`) |
+| `comments` | `comments.json` | Opt-in comment formatting. Registers the comments plugin and enables the six Phase 1 rules                                                                                                                                                                         |
+| `vue`      | `vue.json`      | Extends `base`. Adds `vue` plugin, Vue compiler macros as globals, Vue-specific rules                                                                                                                                                                              |
 
 ### Import sorting ownership
 

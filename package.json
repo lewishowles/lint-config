@@ -20,12 +20,16 @@
 	},
 	"files": [
 		"base.json",
+		"comments",
+		"comments.json",
 		"vue.json",
 		"README.md"
 	],
 	"type": "module",
 	"exports": {
 		"./base.json": "./base.json",
+		"./comments.json": "./comments.json",
+		"./comments/plugin": "./comments/plugin.js",
 		"./vue.json": "./vue.json"
 	},
 	"publishConfig": {
