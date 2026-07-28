@@ -4,6 +4,7 @@
 /* oxlint-disable comments/line-comments */
 /* oxlint-disable comments/block-comments */
 /* oxlint-disable comments/jsdoc-tag-formatting */
+/* oxlint-disable comments/variable-declarations */
 
 // explain the dialog
 const punctuationValue = 1;

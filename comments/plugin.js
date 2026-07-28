@@ -4,6 +4,7 @@ import lineComments from "./rules/line-comments.js";
 import maxLineLength from "./rules/max-line-length.js";
 import placement from "./rules/placement.js";
 import sentencePunctuation from "./rules/sentence-punctuation.js";
+import variableDeclarations from "./rules/variable-declarations.js";
 
 export default {
 	meta: { name: "comments" },
@@ -14,5 +15,6 @@ export default {
 		"max-line-length": maxLineLength,
 		placement,
 		"sentence-punctuation": sentencePunctuation,
+		"variable-declarations": variableDeclarations,
 	},
 };

@@ -9,6 +9,7 @@ const punctuationValue = 1;
 // oxlint-disable-next-line comments/placement
 /* Explain the value. */
 
+// oxlint-disable-next-line comments/variable-declarations
 const placementValue = 1;
 
 // oxlint-disable-next-line comments/line-comments

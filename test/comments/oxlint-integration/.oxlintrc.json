@@ -12,6 +12,7 @@
 		"comments/max-line-length": "error",
 		"comments/placement": "error",
 		"comments/sentence-punctuation": "error",
+		"comments/variable-declarations": "error",
 		"no-unused-vars": "off"
 	}
 }

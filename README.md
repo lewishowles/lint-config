@@ -36,7 +36,7 @@ The Vue layer extends `base.json` internally, so you only need to extend `vue.js
 
 ### Comment formatting (opt-in)
 
-Add the comments layer alongside the base or Vue layer to enforce the six comment-formatting rules:
+Add the comments layer alongside the base or Vue layer to enforce the comment-formatting rules and variable-declaration documentation:
 
 ```json
 {
@@ -121,7 +121,7 @@ Plugins are additive and deduplicated: your local plugins are added to the share
 | Layer      | File            | Contents                                                                                                                                                                                                                                                           |
 | ---------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `base`     | `base.json`     | Correctness rules, named-import member sorting, `@stylistic` formatting rules, `vite-plus/prefer-vite-plus-imports`, `oxc` + `typescript` + `unicorn` plugins, browser env, node env for config files (`vite.config.*`, `vitest.config.*`, `playwright*.config.*`) |
-| `comments` | `comments.json` | Opt-in comment formatting. Registers the comments plugin and enables the six Phase 1 rules                                                                                                                                                                         |
+| `comments` | `comments.json` | Opt-in comment rules. Registers the comments plugin, enables the six Phase 1 formatting rules, and requires variable-declaration comments                                                                                                                          |
 | `vue`      | `vue.json`      | Extends `base`. Adds `vue` plugin, Vue compiler macros as globals, Vue-specific rules                                                                                                                                                                              |
 
 ### Import sorting ownership
