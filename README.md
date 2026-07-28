@@ -1,6 +1,6 @@
 # @lewishowles/lint-config
 
-Shared oxlint configuration for Lewis Howles projects. One package that every repo extends, so lint setup stops being duplicated and drifting across the ecosystem.
+Shared Oxlint configuration for Lewis Howles projects. Projects extend this package to keep their lint configuration consistent across projects, instead of copying and maintaining the same rules everywhere.
 
 ## Installation
 
@@ -19,24 +19,37 @@ Create a `.oxlintrc.json` in your project root that extends the appropriate laye
 ```json
 {
 	"extends": ["./node_modules/@lewishowles/lint-config/base.json"],
+	"env": { "builtin": true, "browser": true },
 	"ignorePatterns": ["**/dist/*", ".codebase-memory/**"]
 }
 ```
+
+Note that `env` has to be redeclared here: Oxlint doesn't yet merge it through `extends`, so `base.json`'s own `env` never reaches your project. See [known limitations](docs/limitations.md) for why.
 
 ### Vue layer (Vue 3 projects)
 
 ```json
 {
 	"extends": ["./node_modules/@lewishowles/lint-config/vue.json"],
+	"env": { "builtin": true, "browser": true },
+	"globals": {
+		"defineEmits": "readonly",
+		"defineExpose": "readonly",
+		"defineModel": "readonly",
+		"defineOptions": "readonly",
+		"defineProps": "readonly",
+		"defineSlots": "readonly",
+		"withDefaults": "readonly"
+	},
 	"ignorePatterns": ["**/dist/*", ".codebase-memory/**"]
 }
 ```
 
-The Vue layer extends `base.json` internally, so you only need to extend `vue.json`.
+The Vue layer extends `base.json` internally, so you only need to extend `vue.json`. The same `env`/`globals` limitation applies here too, which is why both are redeclared above.
 
-### Comment formatting (opt-in)
+### Comment formatting (optional)
 
-Add the comments layer alongside the base or Vue layer to enforce the comment-formatting rules and variable-declaration documentation:
+Add the comments layer alongside the base or Vue layer to enforce the comment-formatting rules, variable-declaration documentation, and JSDoc on named functions and first-level object methods:
 
 ```json
 {
@@ -44,11 +57,12 @@ Add the comments layer alongside the base or Vue layer to enforce the comment-fo
 		"./node_modules/@lewishowles/lint-config/base.json",
 		"./node_modules/@lewishowles/lint-config/comments.json"
 	],
+	"env": { "builtin": true, "browser": true },
 	"ignorePatterns": ["**/dist/*", ".codebase-memory/**"]
 }
 ```
 
-The comments layer registers its plugin through the package export, so the consuming project does not need a relative `jsPlugins` path. To select rules yourself instead, add the plugin directly:
+The comments layer loads its plugin for you, so there's no relative `jsPlugins` path to add. To pick rules yourself instead, add the plugin directly:
 
 ```json
 {
@@ -66,11 +80,11 @@ The comments layer registers its plugin through the package export, so the consu
 
 ## Customising
 
-Your `.oxlintrc.json` stub can override rules, add ignore patterns, add overrides, or add plugins on top of the shared layer.
+Your project's `.oxlintrc.json` can override rules, add ignore patterns, add overrides, or add plugins on top of the shared layer.
 
 ### Overriding a rule
 
-To change the severity or options of a rule defined in the shared layer, redeclare it in your stub: your value wins.
+To change the severity or options of a rule defined in the shared layer, redeclare it in your project config: your value wins.
 
 ```json
 {
@@ -83,7 +97,7 @@ To change the severity or options of a rule defined in the shared layer, redecla
 
 ### Adding ignore patterns
 
-Ignore patterns are repo-specific, so they always live in your stub:
+Ignore patterns are project-specific, so they always live in your project config:
 
 ```json
 {
@@ -114,76 +128,32 @@ Overrides are additive: shared overrides (if any) still apply, and your local on
 
 ### Adding plugins
 
-Plugins are additive and deduplicated: your local plugins are added to the shared ones. Note that oxlint only supports its built-in plugin names (`oxc`, `typescript`, `unicorn`, `vue`, etc.); there is no `playwright` or `vitest` plugin. Test-file-specific behaviour is handled via `overrides`, not plugins.
+Plugins are additive and deduplicated: your local plugins are added to the shared ones. Oxlint's `plugins` field only accepts built-in plugin names, such as `oxc`, `typescript`, `unicorn`, and `vue`; there's no `playwright` or `vitest` plugin. Custom JS plugins, like this package's `comments` plugin, load through `jsPlugins` instead. Test-file-specific behaviour is handled via `overrides`, not plugins.
 
 ## Layers
 
-| Layer      | File            | Contents                                                                                                                                                                                                                                                           |
-| ---------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `base`     | `base.json`     | Correctness rules, named-import member sorting, `@stylistic` formatting rules, `vite-plus/prefer-vite-plus-imports`, `oxc` + `typescript` + `unicorn` plugins, browser env, node env for config files (`vite.config.*`, `vitest.config.*`, `playwright*.config.*`) |
-| `comments` | `comments.json` | Opt-in comment rules. Registers the comments plugin, enables the six Phase 1 formatting rules, and requires variable-declaration comments                                                                                                                          |
-| `vue`      | `vue.json`      | Extends `base`. Adds `vue` plugin, Vue compiler macros as globals, Vue-specific rules                                                                                                                                                                              |
+| Layer      | File            | Contents                                                                               |
+| ---------- | --------------- | -------------------------------------------------------------------------------------- |
+| `base`     | `base.json`     | Correctness and formatting rules, import sorting, `oxc`/`typescript`/`unicorn` plugins |
+| `comments` | `comments.json` | Optional comment-formatting rules, variable-declaration documentation, JSDoc checks    |
+| `vue`      | `vue.json`      | Extends `base`, adds the `vue` plugin, Vue compiler macro globals, Vue-specific rules  |
 
-### Import sorting ownership
+### Import sorting
 
-The base layer sorts named members within each import declaration. It sets `ignoreDeclarationSort: true` because Oxlint reports declaration-row ordering but does not auto-fix it.
-
-Consumers that want import declaration rows sorted should enable Oxfmt's `sortImports` option in their local `.oxfmtrc.json`. This keeps member sorting in the shared Oxlint layer and declaration ordering in the formatter that can fix it.
+The base layer sorts named members within each import statement, but leaves declaration order (which import comes first) to Oxfmt: enable Oxfmt's `sortImports` option in your local `.oxfmtrc.json` if you want that sorted and fixed automatically.
 
 ## What stays repo-local
 
-- `ignorePatterns`, since every repo has different build output and tool directories
-- `overrides` for repo-specific directories (e.g. `bin/**/*.js`, `src/cli/**/*.js`, `src/playwright/**/*.js`), since the file paths differ per repo and can't be generalised
-- Test-file rule relaxations (e.g. turning off `vite-plus/prefer-vite-plus-imports` in `*.d.ts`)
-- Additional plugins, only for repos that need them
+- `ignorePatterns`, since every project has different build output and tool directories
+- `overrides` for project-specific directories (e.g. `bin/**/*.js`, `src/cli/**/*.js`, `src/playwright/**/*.js`), since the file paths differ per project and can't be generalised
+- Rule relaxations for specific file patterns (e.g. turning off `vite-plus/prefer-vite-plus-imports` in generated `.d.ts` files)
+- Additional plugins, only for projects that need them
 
 ## Merge semantics
 
-When a consumer stub extends a shared layer:
+When a project's `.oxlintrc.json` extends a shared layer:
 
-- **Rules** shallow-merge by key: the consumer's value wins for any rule defined in both
+- **Rules** shallow-merge by key: your value wins for any rule defined in both
 - **Overrides** are additive: both shared and local `overrides` entries apply, including any `env` declared inside an override block
-- **Plugins** are additive: both shared and local `plugins`/`jsPlugins` are loaded (deduplicated)
-
-### Known oxlint limitation: top-level `env`, `globals`, and `ignorePatterns` don't merge through `extends`
-
-oxlint currently drops top-level `env`, `globals`, and `ignorePatterns` from an extended config file entirely: they only take effect if declared directly in the file oxlint is invoked with. This is an open upstream bug: [oxc-project/oxc#20087](https://github.com/oxc-project/oxc/issues/20087) (open as of oxlint 1.72.0).
-
-In practice this means:
-
-- `base.json`'s `env` (`builtin`, `browser`) and `vue.json`'s Vue macro `globals` (`defineProps`, `defineEmits`, etc.) will **not** reach a consumer that only does `{ "extends": ["./node_modules/@lewishowles/lint-config/vue.json"] }`: every global from the shared layer will be flagged by `no-undef`.
-- Any `ignorePatterns` this package might declare would be silently dropped the same way, so it deliberately ships none. See "What stays repo-local" below.
-
-Until this is fixed upstream, redeclare the `env`/`globals` you need directly in your project's `.oxlintrc.json`, even though `base.json`/`vue.json` already declare them:
-
-```json
-{
-	"extends": ["./node_modules/@lewishowles/lint-config/vue.json"],
-	"env": { "builtin": true, "browser": true },
-	"globals": {
-		"defineEmits": "readonly",
-		"defineExpose": "readonly",
-		"defineModel": "readonly",
-		"defineOptions": "readonly",
-		"defineProps": "readonly",
-		"defineSlots": "readonly",
-		"withDefaults": "readonly"
-	},
-	"ignorePatterns": ["**/dist/*", ".codebase-memory/**"]
-}
-```
-
-### Known limitation: `vite-plus`'s `lint` config field requires resolved objects, not string paths
-
-Raw oxlint (CLI, editor integrations) accepts `"extends": ["./node_modules/@lewishowles/lint-config/vue.json"]` as string paths and resolves them at load time. `vite-plus`, when a project routes its oxlint config through `vite.config.js`'s `lint` field (importing `.oxlintrc.json` as JSON and handing it to `vp check`/`vp lint`), does not resolve string paths in `extends`: every entry, at every nesting level, must already be a plain object. This means `vue.json`'s own internal `extends: ["./base.json"]` also breaks one level deeper.
-
-If your project uses `vite-plus`'s `lint` field rather than raw oxlint, resolve the chain yourself in `vite.config.js`:
-
-```js
-import base from "@lewishowles/lint-config/base.json" with { type: "json" };
-import vue from "@lewishowles/lint-config/vue.json" with { type: "json" };
-
-const lint = { ...vue, extends: [base, ...(vue.extends ?? [])] };
-```
-
-`.oxlintrc.json` itself should stay untouched (string `extends`) for raw oxlint/editor consumption; this only applies to the `vite-plus` config path.
+- **Plugins** are additive: both shared and local `plugins`/`jsPlugins` load, deduplicated
+- **`env`, `globals`, and `ignorePatterns` don't merge through `extends` at all** (an open Oxlint bug), which is why the usage examples above redeclare `env`/`globals` directly. See [known limitations](docs/limitations.md) for the full detail, including the separate `vite-plus` caveat around resolving `extends` paths.
