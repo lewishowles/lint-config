@@ -1,3 +1,4 @@
+// The token types treated as comments.
 const commentTypes = new Set(["Block", "Line", "Shebang"]);
 
 /**
@@ -5,6 +6,7 @@ const commentTypes = new Set(["Block", "Line", "Shebang"]);
  *
  * @param  {object}  item
  *     The source item to inspect.
+ *
  * @returns  {boolean}
  *     Whether the item is a comment token.
  */
@@ -19,6 +21,7 @@ export function isComment(item) {
  *     The Oxlint source code object.
  * @param  {object}  comment
  *     The comment token.
+ *
  * @returns  {string}
  *     The comment's source text.
  */
@@ -35,10 +38,12 @@ export function getCommentText(sourceCode, comment) {
  *     The comment's source text.
  * @param  {string}  formattedComment
  *     The formatted replacement text.
+ *
  * @returns  {object}
  *     The source range and replacement text.
  */
 export function getMinimalCommentReplacement(comment, commentText, formattedComment) {
+	// The count of unchanged characters shared at the start of both texts.
 	let start = 0;
 
 	while (
@@ -49,6 +54,7 @@ export function getMinimalCommentReplacement(comment, commentText, formattedComm
 		start += 1;
 	}
 
+	// The count of unchanged characters shared at the end of both texts.
 	let end = 0;
 
 	while (
@@ -76,10 +82,12 @@ export function getMinimalCommentReplacement(comment, commentText, formattedComm
  *     The comment's source text.
  * @param  {string}  formattedText
  *     The formatted replacement text.
+ *
  * @returns  {object}
  *     The fixer replacement.
  */
 export function replaceMinimalComment(fixer, comment, sourceText, formattedText) {
+	// The smallest source range and text that changes the comment.
 	const replacement = getMinimalCommentReplacement(comment, sourceText, formattedText);
 
 	return fixer.replaceTextRange(replacement.range, replacement.text);
@@ -90,6 +98,7 @@ export function replaceMinimalComment(fixer, comment, sourceText, formattedText)
  *
  * @param  {object}  comment
  *     The comment token.
+ *
  * @returns  {boolean}
  *     Whether the comment starts with a recognised directive prefix.
  */
@@ -104,6 +113,7 @@ export function isDirectiveComment(comment) {
  *     The Oxlint source code object.
  * @param  {number}  offset
  *     The source offset.
+ *
  * @returns  {number}
  *     The one-based source line.
  */
@@ -118,6 +128,7 @@ export function getLineNumber(sourceCode, offset) {
  *     The Oxlint source code object.
  * @param  {number}  offset
  *     The source offset.
+ *
  * @returns  {number}
  *     The line-start offset.
  */
@@ -132,11 +143,14 @@ export function getLineStart(sourceCode, offset) {
  *     The Oxlint source code object.
  * @param  {number}  offset
  *     The source offset.
+ *
  * @returns  {string|null}
  *     The line indentation, or null when code precedes the offset.
  */
 export function getLineIndent(sourceCode, offset) {
+	// The offset at which the offset's line begins.
 	const lineStart = getLineStart(sourceCode, offset);
+	// The source text between the line start and the offset.
 	const prefix = sourceCode.text.slice(lineStart, offset);
 
 	return /^\s*$/.test(prefix) ? prefix : null;
@@ -149,17 +163,22 @@ export function getLineIndent(sourceCode, offset) {
  *     The Oxlint source code object.
  * @param  {object}  comment
  *     The comment token.
+ *
  * @returns  {object}
  *     The previous and next non-comment source items.
  */
 export function getCommentNeighbours(sourceCode, comment) {
+	// Every token and comment in the file, in source order.
 	const sourceItems = sourceCode.tokensAndComments;
 
+	// The comment's position within sourceItems.
 	const commentIndex = sourceItems.findIndex(
 		(item) => item.range[0] === comment.range[0] && item.range[1] === comment.range[1],
 	);
 
+	// The preceding non-comment source item, once found.
 	let previous = null;
+	// The following non-comment source item, once found.
 	let next = null;
 
 	for (let index = commentIndex - 1; index >= 0; index -= 1) {
@@ -186,11 +205,14 @@ export function getCommentNeighbours(sourceCode, comment) {
  *
  * @param  {object}  sourceCode
  *     The Oxlint source code object.
+ *
  * @returns  {object[][]}
  *     Adjacent line-comment groups.
  */
 export function getLineCommentGroups(sourceCode) {
+	// Every line comment in the file, in source order.
 	const comments = sourceCode.getAllComments().filter((comment) => comment.type === "Line");
+	// The adjacent comment groups, built up in place.
 	const groups = [];
 
 	for (const comment of comments) {
@@ -198,13 +220,17 @@ export function getLineCommentGroups(sourceCode) {
 			continue;
 		}
 
+		// The group currently being built, when there is one.
 		const group = groups.at(-1);
+		// The current group's last comment, when there is one.
 		const previousComment = group?.at(-1);
 
+		// The source text between the previous comment and this one.
 		const gap = previousComment
 			? sourceCode.text.slice(previousComment.range[1], comment.range[0])
 			: "";
 
+		// How many newlines separate this comment from the previous one.
 		const newlineCount = gap.match(/\r\n|\n|\r/g)?.length ?? 0;
 
 		if (group && newlineCount === 1 && /^[ \t]*\r?\n[ \t]*$/.test(gap)) {
@@ -222,6 +248,7 @@ export function getLineCommentGroups(sourceCode) {
  *
  * @param  {string}  source
  *     The source text.
+ *
  * @returns  {string}
  *     The source newline sequence.
  */
@@ -238,6 +265,7 @@ export function getNewline(source) {
  *     The comment token.
  * @param  {object|null}  previous
  *     The preceding non-comment source item.
+ *
  * @returns  {boolean}
  *     Whether the comment is on a line of its own before code.
  */

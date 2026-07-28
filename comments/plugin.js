@@ -1,4 +1,5 @@
 import blockComments from "./rules/block-comments.js";
+import functionDocumentation from "./rules/function-documentation.js";
 import jsdocTagFormatting from "./rules/jsdoc-tag-formatting.js";
 import lineComments from "./rules/line-comments.js";
 import maxLineLength from "./rules/max-line-length.js";
@@ -10,6 +11,7 @@ export default {
 	meta: { name: "comments" },
 	rules: {
 		"block-comments": blockComments,
+		"function-documentation": functionDocumentation,
 		"jsdoc-tag-formatting": jsdocTagFormatting,
 		"line-comments": lineComments,
 		"max-line-length": maxLineLength,

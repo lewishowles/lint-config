@@ -1,6 +1,7 @@
 import { RuleTester } from "oxlint/plugins-dev";
 import rule from "../../comments/rules/max-line-length.js";
 
+// The RuleTester instance used for every case below.
 const ruleTester = new RuleTester();
 
 ruleTester.run("comments/max-line-length", rule, {

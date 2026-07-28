@@ -4,6 +4,13 @@
 		"builtin": true,
 		"node": true
 	},
+	"ignorePatterns": [
+		"**/.*",
+		"dist/**",
+		"build/**",
+		"PROGRESS.md",
+		"AGENTS.md"
+	],
 	"overrides": [
 		{
 			"files": ["test/comments/oxlint-integration/**"],

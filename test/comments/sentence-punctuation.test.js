@@ -1,6 +1,7 @@
 import { RuleTester } from "oxlint/plugins-dev";
 import rule from "../../comments/rules/sentence-punctuation.js";
 
+// The RuleTester instance used for every case below.
 const ruleTester = new RuleTester();
 
 ruleTester.run("comments/sentence-punctuation", rule, {

@@ -3,6 +3,7 @@
 /* oxlint-disable comments/placement */
 /* oxlint-disable comments/line-comments */
 /* oxlint-disable comments/block-comments */
+/* oxlint-disable comments/function-documentation */
 /* oxlint-disable comments/jsdoc-tag-formatting */
 /* oxlint-disable comments/variable-declarations */
 
@@ -18,7 +19,7 @@ const placementValue = 1;
 
 // Close the dialog when focus moves outside the component and restore focus
 // to the original trigger.
-onClickOutside(dialog, closeDialog);
+onClickOutside(dialog, dismissDialog);
 
 /** Open the dialog.
  *
@@ -34,3 +35,5 @@ function openDialog(options) {}
  *     The ID of the tab.
  */
 function findTab(id) {}
+
+function dismissDialog() {}

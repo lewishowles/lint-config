@@ -7,6 +7,7 @@
 	],
 	"rules": {
 		"comments/block-comments": "error",
+		"comments/function-documentation": "error",
 		"comments/jsdoc-tag-formatting": "error",
 		"comments/line-comments": "error",
 		"comments/max-line-length": "error",

@@ -1,6 +1,7 @@
 import { RuleTester } from "oxlint/plugins-dev";
 import rule from "../../comments/rules/block-comments.js";
 
+// The RuleTester instance used for every case below.
 const ruleTester = new RuleTester();
 
 ruleTester.run("comments/block-comments", rule, {

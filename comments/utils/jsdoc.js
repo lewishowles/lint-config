@@ -1,8 +1,11 @@
 import { getCommentText, getLineIndent, getNewline } from "./source.js";
 import { addTerminalPunctuation, capitaliseSentence, formatSentence, wrapWords } from "./wrap.js";
 
+// The JSDoc tags this package formats, in their required output order.
 const tagOrder = ["param", "throws", "returns"];
+// Tags whose section content is kept verbatim rather than reflowed.
 const preservedSectionTags = new Set(["example"]);
+// Fast lookup set built from tagOrder.
 const targetTags = new Set(tagOrder);
 
 /**
@@ -10,6 +13,7 @@ const targetTags = new Set(tagOrder);
  *
  * @param  {string}  commentText
  *     The comment source text.
+ *
  * @returns  {boolean}
  *     Whether the comment starts with JSDoc syntax.
  */
@@ -22,12 +26,15 @@ export function isJSDoc(commentText) {
  *
  * @param  {string}  commentText
  *     The comment source text.
+ *
  * @returns  {string[]}
  *     The comment content lines.
  */
 export function getJSDocContent(commentText) {
+	// Strips the /** and */ delimiters, leaving the raw comment body.
 	const body = commentText.slice(3, -2);
 
+	// Removes each line's leading indentation and star decoration.
 	const lines = body.split(/\r\n|\n|\r/).map((line) => {
 		if (/^\s*\*/.test(line)) {
 			return line.replace(/^\s*\* ?/, "");
@@ -52,10 +59,12 @@ export function getJSDocContent(commentText) {
  *
  * @param  {string[]}  contentLines
  *     The undecorated comment content.
+ *
  * @returns  {object}
  *     Prose and tag content.
  */
 function splitJSDocContent(contentLines) {
+	// Finds where the tag section begins, if there is one.
 	const firstTagIndex = contentLines.findIndex((line) => /^@\w+\b/.test(line.trim()));
 
 	if (firstTagIndex < 0) {
@@ -73,10 +82,12 @@ function splitJSDocContent(contentLines) {
  *
  * @param  {string}  line
  *     The undecorated JSDoc line.
+ *
  * @returns  {string|null}
  *     The tag name, or null when the line is not a tag.
  */
 function getJSDocTagName(line) {
+	// Matches the leading @tagName, ignoring any indentation.
 	const match = line.trim().match(/^@([a-zA-Z][\w-]*)\b/);
 
 	return match?.[1] ?? null;
@@ -87,10 +98,12 @@ function getJSDocTagName(line) {
  *
  * @param  {string}  line
  *     The undecorated JSDoc line.
+ *
  * @returns  {boolean}
  *     Whether the line is one of the Phase 1 tags.
  */
 function isTargetTag(line) {
+	// The tag name, or null when the line isn't a tag at all.
 	const tagName = getJSDocTagName(line);
 
 	return tagName !== null && targetTags.has(tagName);
@@ -101,6 +114,7 @@ function isTargetTag(line) {
  *
  * @param  {string}  line
  *     The undecorated JSDoc line.
+ *
  * @returns  {boolean}
  *     Whether the line starts a preserved section.
  */
@@ -113,15 +127,19 @@ function isPreservedSectionTag(line) {
  *
  * @param  {string[]}  tagLines
  *     The undecorated tag content.
+ *
  * @returns  {object[]}
  *     Parsed target tag entries.
  */
 function parseTargetTags(tagLines) {
+	// The parsed tag entries, in source order.
 	const entries = [];
 
+	// The tag entry currently collecting description lines.
 	let currentEntry = null;
 
 	for (const line of tagLines) {
+		// Matches a new @param/@throws/@returns tag line.
 		const match = line.trim().match(/^@(param|throws|returns)\b(.*)$/);
 
 		if (match) {
@@ -144,17 +162,21 @@ function parseTargetTags(tagLines) {
  *
  * @param  {object}  entry
  *     The parsed tag entry.
+ *
  * @returns  {string}
  *     The aligned tag header.
  */
 function formatTagHeader(entry) {
+	// Splits the tag's remainder into its type, name, and description.
 	const typeMatch = entry.rest.match(/^(\{[^}]+\})(?:\s+(\S+))?(?:\s+(.*))?$/);
 
 	if (!typeMatch) {
 		return `@${entry.type}  ${entry.rest}`.trimEnd();
 	}
 
+	// The bare {type} annotation.
 	const type = typeMatch[1];
+	// The parameter name, when the tag has one.
 	const name = typeMatch[2];
 
 	if (entry.type === "param" && name) {
@@ -169,10 +191,12 @@ function formatTagHeader(entry) {
  *
  * @param  {object}  entry
  *     The parsed tag entry.
+ *
  * @returns  {string}
  *     The inline description, when present.
  */
 function getInlineTagDescription(entry) {
+	// Splits the tag's remainder into its type, name, and description.
 	const typeMatch = entry.rest.match(/^(\{[^}]+\})(?:\s+(\S+))?(?:\s+(.*))?$/);
 
 	return typeMatch?.[3] ?? "";
@@ -185,12 +209,15 @@ function getInlineTagDescription(entry) {
  *     The prose content lines.
  * @param  {boolean}  addPunctuation
  *     Whether to format each paragraph as a sentence.
+ *
  * @returns  {string[]}
  *     The formatted prose lines.
  */
 function formatUnwrappedProse(lines, addPunctuation) {
+	// The formatted lines, built up in place.
 	const result = lines.map((line) => line.trim());
 
+	// The index of the current paragraph's first line, or null between paragraphs.
 	let paragraphStart = null;
 
 	for (let index = 0; index < result.length; index += 1) {
@@ -227,19 +254,26 @@ function formatUnwrappedProse(lines, addPunctuation) {
  *     The available content width.
  * @param  {boolean}  addPunctuation
  *     Whether to format each paragraph as a sentence.
+ *
  * @returns  {string[]}
  *     Formatted prose content lines.
  */
 function formatProse(lines, width, addPunctuation) {
+	// The formatted lines, built up in place.
 	const result = [];
 
+	// The prose lines collected for the paragraph in progress.
 	let paragraph = [];
 
-	const flushParagraph = () => {
+	/**
+	 * Format the collected paragraph and append it to the result.
+	 */
+	function flushParagraph() {
 		if (paragraph.length === 0) {
 			return;
 		}
 
+		// The paragraph text, punctuated as a sentence when requested.
 		let text = paragraph.join(" ").trim();
 
 		if (addPunctuation) {
@@ -248,7 +282,7 @@ function formatProse(lines, width, addPunctuation) {
 
 		result.push(...wrapWords(text, width));
 		paragraph = [];
-	};
+	}
 
 	for (const line of lines) {
 		if (line.trim() === "") {
@@ -281,11 +315,14 @@ function formatProse(lines, width, addPunctuation) {
  *     Whether to format tag descriptions as sentences.
  * @param  {boolean}  normaliseTags
  *     Whether to normalise tag spacing and group order.
+ *
  * @returns  {string[]}
  *     Formatted tag content lines.
  */
 function formatTags(tagLines, width, addPunctuation, normaliseTags) {
+	// The parsed @param/@throws/@returns entries.
 	const entries = parseTargetTags(tagLines);
+	// Whether the block also carries a tag this formatter doesn't normalise.
 	const hasUnknownTag = tagLines.some((line) => line.trim().startsWith("@") && !isTargetTag(line));
 
 	if (!normaliseTags || entries.length === 0) {
@@ -296,10 +333,13 @@ function formatTags(tagLines, width, addPunctuation, normaliseTags) {
 		return formatMixedTags(tagLines, width, addPunctuation);
 	}
 
+	// The formatted lines, built up in place.
 	const result = [];
 
+	// The tag type of the previously written entry, used to detect group changes.
 	let lastType = null;
 
+	// The entries regrouped into the required tag order.
 	const orderedEntries = tagOrder.flatMap((type) => entries.filter((entry) => entry.type === type));
 
 	for (const entry of orderedEntries) {
@@ -309,10 +349,12 @@ function formatTags(tagLines, width, addPunctuation, normaliseTags) {
 
 		result.push(formatTagHeader(entry));
 
+		// The entry's inline and multi-line description text, combined.
 		const description = [getInlineTagDescription(entry), ...entry.description]
 			.filter((line) => line.trim() !== "")
 			.map((line) => line.trim());
 
+		// The description text, punctuated as a sentence when requested.
 		let descriptionText = description.join(" ");
 
 		if (addPunctuation && descriptionText !== "") {
@@ -338,17 +380,23 @@ function formatTags(tagLines, width, addPunctuation, normaliseTags) {
  *     The available description width.
  * @param  {boolean}  addPunctuation
  *     Whether to format descriptions as sentences.
+ *
  * @returns  {string[]}
  *     Formatted mixed tag content lines.
  */
 function formatMixedTags(lines, width, addPunctuation) {
+	// The formatted lines, built up in place.
 	const result = [];
 
+	// The tag entry currently collecting description lines.
 	let currentEntry = null;
+	// Whether the current tag's content is copied through unchanged.
 	let preserveSection = false;
 
 	for (const line of lines) {
+		// The tag name, or null when the line isn't a tag at all.
 		const tagName = getJSDocTagName(line);
+		// Matches a new @param/@throws/@returns tag line.
 		const match = line.trim().match(/^@(param|throws|returns)\b(.*)$/);
 
 		if (match) {
@@ -371,6 +419,7 @@ function formatMixedTags(lines, width, addPunctuation) {
 				result.push("");
 			}
 		} else {
+			// The description text, punctuated as a sentence when requested.
 			let text = line.trim();
 
 			if (addPunctuation && currentEntry) {
@@ -397,20 +446,28 @@ function formatMixedTags(lines, width, addPunctuation) {
  *     The available description width.
  * @param  {boolean}  addPunctuation
  *     Whether to format descriptions as sentences.
+ *
  * @returns  {string[]}
  *     Formatted tag content lines.
  */
 function formatTagDescriptions(lines, width, addPunctuation) {
+	// The formatted lines, built up in place.
 	const result = [];
 
+	// The description lines collected for the tag in progress.
 	let description = [];
+	// Whether the current tag's content is copied through unchanged.
 	let preserveSection = false;
 
-	const flushDescription = () => {
+	/**
+	 * Format the collected description and append it to the result.
+	 */
+	function flushDescription() {
 		if (description.length === 0) {
 			return;
 		}
 
+		// The description text, punctuated as a sentence when requested.
 		let text = description.join(" ").trim();
 
 		if (addPunctuation) {
@@ -419,9 +476,10 @@ function formatTagDescriptions(lines, width, addPunctuation) {
 
 		result.push(...wrapWords(text, width).map((line) => `    ${line}`));
 		description = [];
-	};
+	}
 
 	for (const line of lines) {
+		// The tag name, or null when the line isn't a tag at all.
 		const tagName = getJSDocTagName(line);
 
 		if (tagName !== null) {
@@ -456,15 +514,22 @@ function formatTagDescriptions(lines, width, addPunctuation) {
  *     The Oxlint source code object.
  * @param  {object}  comment
  *     The JSDoc comment token.
+ *
  * @returns  {object}
  *     The JSDoc content and layout details.
  */
 function getJSDocFormattingContext(sourceCode, comment) {
+	// The raw comment source text.
 	const commentText = getCommentText(sourceCode, comment);
+	// The indentation the comment's lines are aligned to.
 	const indent = getLineIndent(sourceCode, comment.range[0]) ?? "";
+	// The newline style used by the surrounding source.
 	const newline = getNewline(sourceCode.text);
+	// The available content width, allowing for the indent and " * " prefix.
 	const width = Math.max(1, 80 - indent.length - 3);
+	// The undecorated comment content lines.
 	const content = getJSDocContent(commentText);
+	// The content split into its prose and tag sections.
 	const { proseLines, tagLines } = splitJSDocContent(content);
 
 	return {
@@ -528,14 +593,16 @@ function appendJSDocTagsWithExistingSeparator(outputLines, tags, hasTagSeparator
  *     The JSDoc layout details.
  * @param  {string[]}  outputLines
  *     The formatted prose and tag lines.
+ *
  * @returns  {string}
  *     The formatted comment text.
  */
 function renderJSDocComment(formattingContext, outputLines) {
+	// The comment's indent and newline style, from the formatting context.
 	const { indent, newline } = formattingContext;
 
 	return [
-		`${indent}/**`,
+		"/**",
 		...outputLines.map((line) => (line === "" ? `${indent} *` : `${indent} * ${line}`)),
 		`${indent} */`,
 	].join(newline);
@@ -548,13 +615,17 @@ function renderJSDocComment(formattingContext, outputLines) {
  *     The Oxlint source code object.
  * @param  {object}  comment
  *     The JSDoc comment token.
+ *
  * @returns  {string}
  *     The formatted comment text.
  */
 export function formatJSDocBlockStructure(sourceCode, comment) {
+	// The comment's parsed content and layout details.
 	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
+	// The prose lines, rewrapped without changing existing line breaks.
 	const prose = formatUnwrappedProse(formattingContext.proseLines, false);
 
+	// The tag lines, without spacing or grouping normalisation.
 	const tags = formatTags(
 		formattingContext.tagLines,
 		Math.max(1, formattingContext.width - 4),
@@ -562,6 +633,7 @@ export function formatJSDocBlockStructure(sourceCode, comment) {
 		false,
 	);
 
+	// The formatted comment content, before tags are appended.
 	const outputLines = [...prose];
 
 	appendJSDocTags(outputLines, tags);
@@ -576,13 +648,17 @@ export function formatJSDocBlockStructure(sourceCode, comment) {
  *     The Oxlint source code object.
  * @param  {object}  comment
  *     The JSDoc comment token.
+ *
  * @returns  {string}
  *     The formatted comment text.
  */
 export function formatJSDocTagFormatting(sourceCode, comment) {
+	// The comment's parsed content and layout details.
 	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
+	// The prose, rewrapped to the comment's available width.
 	const prose = formatProse(formattingContext.proseLines, formattingContext.width, false);
 
+	// The tag lines, with spacing and grouping normalised.
 	const tags = formatTags(
 		formattingContext.tagLines,
 		Math.max(1, formattingContext.width - 4),
@@ -590,6 +666,7 @@ export function formatJSDocTagFormatting(sourceCode, comment) {
 		true,
 	);
 
+	// The formatted comment content, before tags are appended.
 	const outputLines = [...prose];
 
 	appendJSDocTagsWithExistingSeparator(outputLines, tags, formattingContext.hasTagSeparator);
@@ -604,13 +681,17 @@ export function formatJSDocTagFormatting(sourceCode, comment) {
  *     The Oxlint source code object.
  * @param  {object}  comment
  *     The JSDoc comment token.
+ *
  * @returns  {string}
  *     The formatted comment text.
  */
 export function formatJSDocPunctuation(sourceCode, comment) {
+	// The comment's parsed content and layout details.
 	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
+	// The prose, capitalised and punctuated as sentences.
 	const prose = formatUnwrappedProse(formattingContext.proseLines, true);
 
+	// The tag lines, with descriptions punctuated as sentences.
 	const tags = formatTags(
 		formattingContext.tagLines,
 		Math.max(1, formattingContext.width - 4),
@@ -618,6 +699,7 @@ export function formatJSDocPunctuation(sourceCode, comment) {
 		false,
 	);
 
+	// The formatted comment content, before tags are appended.
 	const outputLines = [...prose];
 
 	appendJSDocTagsWithExistingSeparator(outputLines, tags, formattingContext.hasTagSeparator);
@@ -632,13 +714,17 @@ export function formatJSDocPunctuation(sourceCode, comment) {
  *     The Oxlint source code object.
  * @param  {object}  comment
  *     The JSDoc comment token.
+ *
  * @returns  {string}
  *     The formatted comment text.
  */
 export function formatJSDocWrapping(sourceCode, comment) {
+	// The comment's parsed content and layout details.
 	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
+	// The prose, rewrapped to the comment's available width.
 	const prose = formatProse(formattingContext.proseLines, formattingContext.width, false);
 
+	// The tag lines, without spacing or grouping normalisation.
 	const tags = formatTags(
 		formattingContext.tagLines,
 		Math.max(1, formattingContext.width - 4),
@@ -646,6 +732,7 @@ export function formatJSDocWrapping(sourceCode, comment) {
 		false,
 	);
 
+	// The formatted comment content, before tags are appended.
 	const outputLines = [...prose];
 
 	appendJSDocTags(outputLines, tags);
@@ -660,6 +747,7 @@ export function formatJSDocWrapping(sourceCode, comment) {
  *     The Oxlint source code object.
  * @param  {object}  comment
  *     The comment token.
+ *
  * @returns  {boolean}
  *     Whether a Phase 1 tag is present.
  */

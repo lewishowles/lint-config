@@ -15,7 +15,7 @@ const placementValue = 1;
 // oxlint-disable-next-line comments/line-comments
 // Close the dialog when focus moves outside the component and restore focus
 // to the original trigger.
-onClickOutside(dialog, closeDialog);
+onClickOutside(dialog, dismissDialog);
 
 // oxlint-disable-next-line comments/block-comments comments/jsdoc-tag-formatting comments/sentence-punctuation
 /** Open the dialog.
@@ -33,3 +33,6 @@ function openDialog(options) {}
  *     The ID of the tab.
  */
 function findTab(id) {}
+
+// oxlint-disable-next-line comments/function-documentation
+function dismissDialog() {}

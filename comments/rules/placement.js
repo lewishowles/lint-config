@@ -17,6 +17,7 @@ import {
  *     The comment token.
  * @param  {object}  next
  *     The next source token.
+ *
  * @returns  {string}
  *     The source gap after the comment.
  */
@@ -29,11 +30,14 @@ function getCommentToTokenGap(sourceCode, comment, next) {
  *
  * @param  {object[][]}  lineCommentGroups
  *     The adjacent line-comment groups.
+ *
  * @returns  {object}
  *     The continuation comments and their leaders.
  */
 function getLineCommentContinuations(lineCommentGroups) {
+	// The comments that follow a group's leader, across every group.
 	const continuationComments = new Set();
+	// Each group's continuation comments, indexed by their leader.
 	const continuationsByLeader = new Map();
 
 	for (const group of lineCommentGroups) {
@@ -41,6 +45,7 @@ function getLineCommentContinuations(lineCommentGroups) {
 			continue;
 		}
 
+		// The group's leading comment and its continuations.
 		const [leader, ...continuations] = group;
 
 		continuationsByLeader.set(leader, continuations);
@@ -60,6 +65,7 @@ function getLineCommentContinuations(lineCommentGroups) {
  *     The line indentation.
  * @param  {string}  commentIndent
  *     The leading comment's current indentation.
+ *
  * @returns  {string}
  *     The indentation to preserve after reindenting.
  */
@@ -80,6 +86,7 @@ function getRelativeIndent(indentation, commentIndent) {
  *     The comment's current indentation.
  * @param  {string}  expectedIndent
  *     The documented code's indentation.
+ *
  * @returns  {string}
  *     The reindented comment text.
  */
@@ -91,7 +98,9 @@ function getReindentedCommentText(sourceCode, comment, commentIndent, expectedIn
 				return `${expectedIndent}${line}`;
 			}
 
+			// The line's current indentation.
 			const lineIndent = line.match(/^[ \t]*/)[0];
+			// The indentation to preserve relative to the comment's own indent.
 			const relativeIndent = getRelativeIndent(lineIndent, commentIndent);
 
 			return `${expectedIndent}${relativeIndent}${line.slice(lineIndent.length)}`;
@@ -112,6 +121,7 @@ function getReindentedCommentText(sourceCode, comment, commentIndent, expectedIn
  *     The comment's current indentation.
  * @param  {string}  expectedIndent
  *     The documented code's indentation.
+ *
  * @returns  {object[]}
  *     The indentation replacements.
  */
@@ -126,6 +136,7 @@ function getCommentIndentationFixes(
 		return [];
 	}
 
+	// The replacements, starting with the leading comment's reindent.
 	const fixes = [
 		{
 			range: [getLineStart(sourceCode, comment.range[0]), comment.range[1]],
@@ -134,7 +145,9 @@ function getCommentIndentationFixes(
 	];
 
 	for (const continuation of continuations) {
+		// The continuation's current indentation.
 		const continuationIndent = getLineIndent(sourceCode, continuation.range[0]) ?? "";
+		// The indentation to preserve relative to the leading comment's indent.
 		const relativeIndent = getRelativeIndent(continuationIndent, actualIndent);
 
 		fixes.push({
@@ -159,6 +172,7 @@ function getCommentIndentationFixes(
  *     The next comment token.
  * @param  {string}  expectedIndent
  *     The documented code's indentation.
+ *
  * @returns  {object|null}
  *     The gap replacement, or null when none is needed.
  */
@@ -167,7 +181,9 @@ function getCommentGapFix(sourceCode, comment, next, followingComment, expectedI
 		return null;
 	}
 
+	// The source text currently between the comment and its documented code.
 	const gap = getCommentToTokenGap(sourceCode, comment, next);
+	// The gap the documented code's indentation requires.
 	const desiredGap = `${getNewline(sourceCode.text)}${expectedIndent}`;
 
 	return gap === desiredGap ? null : { range: [comment.range[1], next.range[0]], text: desiredGap };
@@ -185,11 +201,25 @@ export default {
 		fixable: "code",
 		type: "layout",
 	},
+	/**
+	 * Create the rule's node visitors.
+	 *
+	 * @param  {object}  context
+	 *     The Oxlint rule context.
+	 *
+	 * @returns  {object}
+	 *     The visitor functions for this rule.
+	 */
 	createOnce(context) {
 		return {
+			/**
+			 * Align every leading comment in the file with its documented code.
+			 */
 			Program() {
+				// Every comment token in the file, in source order.
 				const comments = context.sourceCode.getAllComments();
 
+				// The continuation comments and their group leaders.
 				const { continuationComments, continuationsByLeader } = getLineCommentContinuations(
 					getLineCommentGroups(context.sourceCode),
 				);
@@ -199,19 +229,23 @@ export default {
 						continue;
 					}
 
+					// The comment's neighbouring token and comment.
 					const { next, previous } = getCommentNeighbours(context.sourceCode, comment);
 
 					if (next === null || !isLeadingComment(context.sourceCode, comment, previous)) {
 						continue;
 					}
 
+					// The documented code's indentation.
 					const expectedIndent = getLineIndent(context.sourceCode, next.range[0]);
+					// The comment's current indentation.
 					const actualIndent = getLineIndent(context.sourceCode, comment.range[0]);
 
 					if (expectedIndent === null || actualIndent === null) {
 						continue;
 					}
 
+					// The reindentation fixes for the comment and its continuations.
 					const fixes = getCommentIndentationFixes(
 						context.sourceCode,
 						comment,
@@ -220,8 +254,10 @@ export default {
 						expectedIndent,
 					);
 
+					// The next comment token, used to avoid overlapping gap fixes.
 					const followingComment = comments[index + 1];
 
+					// The fix that closes the gap between the comment and its code, when needed.
 					const gapFix = getCommentGapFix(
 						context.sourceCode,
 						comment,
@@ -239,6 +275,15 @@ export default {
 					}
 
 					context.report({
+						/**
+						 * Apply the comment's alignment fixes.
+						 *
+						 * @param  {object}  fixer
+						 *     The Oxlint fixer.
+						 *
+						 * @returns  {object[]}
+						 *     The fixes to apply.
+						 */
 						fix: (fixer) => fixes.map((fix) => fixer.replaceTextRange(fix.range, fix.text)),
 						message: "Comment must be immediately before the documented code.",
 						node: comment,

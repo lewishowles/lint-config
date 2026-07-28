@@ -5,13 +5,17 @@
  *     The text to wrap.
  * @param  {number}  width
  *     The maximum output width.
+ *
  * @returns  {string[]}
  *     Wrapped lines.
  */
 export function wrapWords(text, width) {
+	// The text's individual words.
 	const words = text.trim().split(/\s+/).filter(Boolean);
+	// The wrapped lines, built up in place.
 	const lines = [];
 
+	// The line currently being filled.
 	let currentLine = "";
 
 	for (const word of words) {
@@ -44,6 +48,7 @@ export function wrapWords(text, width) {
  *
  * @param  {string}  text
  *     The sentence text.
+ *
  * @returns  {string}
  *     The corrected sentence text.
  */
@@ -56,21 +61,26 @@ export function formatSentence(text) {
  *
  * @param  {string}  text
  *     The sentence text.
+ *
  * @returns  {string}
  *     The capitalised sentence text.
  */
 export function capitaliseSentence(text) {
+	// The sentence text, without leading or trailing whitespace.
 	const trimmedText = text.trim();
 
 	if (trimmedText === "" || trimmedText.startsWith("@")) {
 		return text;
 	}
 
+	// The index of the first letter character, ignoring leading punctuation.
 	const firstLetter = trimmedText.search(/\p{L}/u);
 
+	// The text with its first letter capitalised, once found.
 	let formattedText = trimmedText;
 
 	if (firstLetter >= 0) {
+		// The first letter character.
 		const letter = formattedText[firstLetter];
 
 		formattedText = `${formattedText.slice(0, firstLetter)}${letter.toLocaleUpperCase()}${formattedText.slice(firstLetter + 1)}`;
@@ -84,10 +94,12 @@ export function capitaliseSentence(text) {
  *
  * @param  {string}  text
  *     The sentence text.
+ *
  * @returns  {string}
  *     The punctuated sentence text.
  */
 export function addTerminalPunctuation(text) {
+	// The sentence text, without leading or trailing whitespace.
 	const trimmedText = text.trim();
 
 	if (trimmedText === "" || trimmedText.startsWith("@") || /[.!?]$/.test(trimmedText)) {

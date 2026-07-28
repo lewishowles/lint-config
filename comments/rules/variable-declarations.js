@@ -64,8 +64,23 @@ export default {
 		docs: { description: "Require comments before variable declarations." },
 		type: "suggestion",
 	},
+	/**
+	 * Create the rule's node visitors.
+	 *
+	 * @param  {object}  context
+	 *     The Oxlint rule context.
+	 *
+	 * @returns  {object}
+	 *     The visitor functions for this rule.
+	 */
 	createOnce(context) {
 		return {
+			/**
+			 * Check a const or let declaration for a preceding comment.
+			 *
+			 * @param  {object}  node
+			 *     The variable declaration node.
+			 */
 			VariableDeclaration(node) {
 				if ((node.kind !== "const" && node.kind !== "let") || isLoopHeaderDeclaration(node)) {
 					return;
