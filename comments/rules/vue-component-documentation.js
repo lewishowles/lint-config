@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { isDirectiveComment } from "../utils/source.js";
 
-// Keep raw script blocks in source order so each one matches its component
-// entry point.
+// Captures the opening tag's attributes separately, so the setup attribute
+// can be tested without the tag being available from Oxlint's extracted AST.
 const scriptBlockPattern =
 	/(?<openingTag><script\b(?<attributes>[^>]*)>)(?<content>[\s\S]*?)<\/script\s*>/gi;
 
@@ -57,6 +57,25 @@ function getScriptBlocks(context) {
 	const vueSource = getVueSource(context);
 
 	return vueSource ? Array.from(vueSource.matchAll(scriptBlockPattern)) : [];
+}
+
+/**
+ * Find the raw script block matching the current Program's extracted text.
+ *
+ * @param  {object}  context
+ *     The rule context for the extracted script block.
+ *
+ * @returns  {RegExpMatchArray|undefined}
+ *     The matching raw script block, when one is found.
+ */
+function findScriptBlock(context) {
+	// Re-read on every call rather than caching, since this file's other
+	// script blocks may not have been visited yet or ever in this run.
+	const scriptBlocks = getScriptBlocks(context);
+
+	return scriptBlocks.find(
+		(scriptBlock) => scriptBlock.groups.content.trim() === context.sourceCode.text.trim(),
+	);
 }
 
 /**
@@ -121,12 +140,6 @@ export default {
 	 *     The script-block checks for this rule.
 	 */
 	createOnce(context) {
-		// The Vue file path is unavailable until the first script block is processed.
-		// Read the file only then.
-		let scriptBlocks;
-		// Advance once for each script block, so source-order matching remains stable.
-		let scriptBlockIndex = 0;
-
 		return {
 			/**
 			 * Check the current component's script setup block for documentation.
@@ -135,12 +148,11 @@ export default {
 			 *     The entry point parsed from the current script block.
 			 */
 			Program(node) {
-				scriptBlocks ??= getScriptBlocks(context);
-
-				// Keep this visitor aligned with its source-order script block.
-				const scriptBlock = scriptBlocks[scriptBlockIndex];
-
-				scriptBlockIndex += 1;
+				// createOnce builds this visitor once for the whole run, and a
+				// single file's script blocks are not necessarily visited
+				// consecutively, so the matching block is looked up fresh on each
+				// call rather than tracked with shared state.
+				const scriptBlock = findScriptBlock(context);
 
 				if (hasComponentDocumentation(context, scriptBlock)) {
 					return;
