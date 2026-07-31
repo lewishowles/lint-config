@@ -138,5 +138,11 @@ function openDialog() {}`,
 			errors: [{ message: "Comment text must be a complete sentence.", line: 1, column: 0 }],
 			output: "/* Close the dialog. */\ncloseDialog();",
 		},
+		{
+			name: "adds punctuation without capitalising a leading camelCase identifier",
+			code: "// closeDialog runs when focus moves outside the component\ncloseDialog();",
+			errors: [{ message: "Comment text must be a complete sentence.", line: 1, column: 0 }],
+			output: "// closeDialog runs when focus moves outside the component.\ncloseDialog();",
+		},
 	],
 });

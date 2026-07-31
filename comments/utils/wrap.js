@@ -76,15 +76,23 @@ export function capitaliseSentence(text) {
 	// The index of the first letter character, ignoring leading punctuation.
 	const firstLetter = trimmedText.search(/\p{L}/u);
 
-	// The text with its first letter capitalised, once found.
-	let formattedText = trimmedText;
-
-	if (firstLetter >= 0) {
-		// The first letter character.
-		const letter = formattedText[firstLetter];
-
-		formattedText = `${formattedText.slice(0, firstLetter)}${letter.toLocaleUpperCase()}${formattedText.slice(firstLetter + 1)}`;
+	if (firstLetter < 0) {
+		return text;
 	}
+
+	// The leading word, starting from the first letter character.
+	const leadingWord = trimmedText.slice(firstLetter).match(/^\p{L}[\p{L}\p{N}]*/u)?.[0] ?? "";
+
+	// A camelCase word (lowercase start, later uppercase) is a code
+	// identifier and must keep its own casing rather than sentence casing.
+	if (/^\p{Ll}[\p{Ll}\p{N}]*\p{Lu}/u.test(leadingWord)) {
+		return text;
+	}
+
+	// The first letter character.
+	const letter = trimmedText[firstLetter];
+	// The text with its first letter capitalised.
+	const formattedText = `${trimmedText.slice(0, firstLetter)}${letter.toLocaleUpperCase()}${trimmedText.slice(firstLetter + 1)}`;
 
 	return text.replace(trimmedText, formattedText);
 }
