@@ -6,6 +6,7 @@ import maxLineLength from "./rules/max-line-length.js";
 import placement from "./rules/placement.js";
 import sentencePunctuation from "./rules/sentence-punctuation.js";
 import variableDeclarations from "./rules/variable-declarations.js";
+import vueComponentDocumentation from "./rules/vue-component-documentation.js";
 
 export default {
 	meta: { name: "comments" },
@@ -18,5 +19,6 @@ export default {
 		placement,
 		"sentence-punctuation": sentencePunctuation,
 		"variable-declarations": variableDeclarations,
+		"vue-component-documentation": vueComponentDocumentation,
 	},
 };

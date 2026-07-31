@@ -49,7 +49,7 @@ The Vue layer extends `base.json` internally, so you only need to extend `vue.js
 
 ### Comment formatting (optional)
 
-Add the comments layer alongside the base or Vue layer to enforce the comment-formatting rules, variable-declaration documentation, and JSDoc on named functions and first-level object methods:
+Add the comments layer alongside the base or Vue layer to enforce the comment-formatting rules, variable-declaration documentation, JSDoc on named functions and first-level object methods, and documentation directly after each Vue `<script setup>` opening tag:
 
 ```json
 {
@@ -62,7 +62,7 @@ Add the comments layer alongside the base or Vue layer to enforce the comment-fo
 }
 ```
 
-The comments layer loads its plugin for you, so there's no relative `jsPlugins` path to add. To pick rules yourself instead, add the plugin directly:
+The Vue component rule reads the raw `.vue` file because Oxlint's JS Plugin API only receives the extracted script block. The comments layer loads its plugin for you, so there's no relative `jsPlugins` path to add. To pick rules yourself instead, add the plugin directly:
 
 ```json
 {
