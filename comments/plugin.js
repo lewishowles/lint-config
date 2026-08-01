@@ -7,6 +7,7 @@ import placement from "./rules/placement.js";
 import sentencePunctuation from "./rules/sentence-punctuation.js";
 import variableDeclarations from "./rules/variable-declarations.js";
 import vueComponentDocumentation from "./rules/vue-component-documentation.js";
+import vuePropDocumentation from "./rules/vue-prop-documentation.js";
 
 export default {
 	meta: { name: "comments" },
@@ -20,5 +21,6 @@ export default {
 		"sentence-punctuation": sentencePunctuation,
 		"variable-declarations": variableDeclarations,
 		"vue-component-documentation": vueComponentDocumentation,
+		"vue-prop-documentation": vuePropDocumentation,
 	},
 };
