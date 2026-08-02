@@ -14,6 +14,7 @@ ruleTester.run("comments/function-documentation", rule, {
 		"const dialog = { nested: { close() {} }, value: 1 };",
 		"/** Open the dialog.\n *\n * @param {object} options\n * @param {object} options.trigger\n * @param {string} options.trigger.id\n * @param {number} [options.count=1]\n */\nfunction openDialog({ trigger: { id }, count = 1 }) {}",
 		"/** Open the dialog.\n *\n * @param {object} options\n * @param {string} options.id\n */\nfunction openDialog({ id: dialogId }) {}",
+		"/** Open the dialog.\n *\n * @param {object} [options]\n */\nfunction openDialog(options) {}",
 		"const dialog = {\n\t/** Open the dialog.\n\t *\n\t * @param {string} id\n\t */\n\topen(id) {},\n};",
 		"const dialog = {\n\t/** Open the dialog.\n\t *\n\t * @param {string} id\n\t */\n\topen: (id) => {},\n};",
 		"const dialog = {\n\t/** Open the dialog.\n\t *\n\t * @param {string} id\n\t */\n\topen(id) {},\n\t/** Close the dialog.\n\t *\n\t * @param {string} reason\n\t */\n\tclose: (reason) => {},\n};",

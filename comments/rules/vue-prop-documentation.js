@@ -1,3 +1,9 @@
+import {
+	getObjectArgument,
+	getObjectProperties,
+	getPropertyName,
+	isNamedCall,
+} from "../utils/vue-macro.js";
 import { getCommentNeighbours, isDirectiveComment, isLeadingComment } from "../utils/source.js";
 
 // Matches the single newline and indentation allowed between a comment and a
@@ -7,43 +13,6 @@ const immediateCommentGapPattern = /^\r?\n[ \t]*$/;
 // The message shared by runtime props and their withDefaults entries.
 const missingCommentMessage =
 	"Vue prop declarations require an immediately preceding block comment.";
-
-/**
- * Return whether a node is a call to a named function.
- *
- * @param  {object}  node
- *     The node to inspect.
- * @param  {string}  name
- *     The function name to match.
- *
- * @returns  {boolean}
- *     Whether the node is the named call.
- */
-function isNamedCall(node, name) {
-	return (
-		node?.type === "CallExpression" &&
-		node.callee?.type === "Identifier" &&
-		node.callee.name === name
-	);
-}
-
-/**
- * Return an object-expression argument from a call.
- *
- * @param  {object}  callNode
- *     The call whose argument should be inspected.
- * @param  {number}  argumentIndex
- *     The argument position to inspect.
- *
- * @returns  {object|null}
- *     The object-expression argument, when present.
- */
-function getObjectArgument(callNode, argumentIndex) {
-	// The argument at the requested position.
-	const argument = callNode.arguments[argumentIndex];
-
-	return argument?.type === "ObjectExpression" ? argument : null;
-}
 
 /**
  * Return the runtime props object from a defineProps call or withDefaults
@@ -98,40 +67,6 @@ function isWrappedDefinePropsCall(node) {
 	const parent = node.parent;
 
 	return isNamedCall(parent, "withDefaults") && parent.arguments[0] === node;
-}
-
-/**
- * Return the source name of an object property.
- *
- * @param  {object}  property
- *     The property to inspect.
- *
- * @returns  {string|null}
- *     The property name, when it is a string or number.
- */
-function getPropertyName(property) {
-	if (property.key.type === "Identifier") {
-		return property.key.name;
-	}
-
-	if (typeof property.key.value === "string" || typeof property.key.value === "number") {
-		return String(property.key.value);
-	}
-
-	return null;
-}
-
-/**
- * Return the object properties that represent runtime declarations.
- *
- * @param  {object}  objectExpression
- *     The object expression to inspect.
- *
- * @returns  {object[]}
- *     Its ordinary properties, excluding spread elements.
- */
-function getObjectProperties(objectExpression) {
-	return objectExpression.properties.filter((property) => property.type === "Property");
 }
 
 /**
