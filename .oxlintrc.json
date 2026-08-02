@@ -19,7 +19,9 @@
 				"defineProps": "readonly",
 				"dialog": "readonly",
 				"onClickOutside": "readonly",
-				"registerDialog": "readonly"
+				"onMounted": "readonly",
+				"registerDialog": "readonly",
+				"watch": "readonly"
 			},
 			"rules": { "no-unused-vars": "off" }
 		},

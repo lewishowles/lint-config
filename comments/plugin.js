@@ -1,4 +1,5 @@
 import blockComments from "./rules/block-comments.js";
+import configuredApiCalls from "./rules/configured-api-calls.js";
 import functionDocumentation from "./rules/function-documentation.js";
 import jsdocTagFormatting from "./rules/jsdoc-tag-formatting.js";
 import lineComments from "./rules/line-comments.js";
@@ -13,6 +14,7 @@ export default {
 	meta: { name: "comments" },
 	rules: {
 		"block-comments": blockComments,
+		"configured-api-calls": configuredApiCalls,
 		"function-documentation": functionDocumentation,
 		"jsdoc-tag-formatting": jsdocTagFormatting,
 		"line-comments": lineComments,
