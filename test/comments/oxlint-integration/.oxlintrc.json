@@ -16,6 +16,7 @@
 		"comments/sentence-punctuation": "error",
 		"comments/variable-declarations": "error",
 		"comments/vue-component-documentation": "error",
+		"comments/vue-emit-documentation": "error",
 		"comments/vue-prop-documentation": "error",
 		"no-unused-vars": "off"
 	}

@@ -8,6 +8,7 @@ import placement from "./rules/placement.js";
 import sentencePunctuation from "./rules/sentence-punctuation.js";
 import variableDeclarations from "./rules/variable-declarations.js";
 import vueComponentDocumentation from "./rules/vue-component-documentation.js";
+import vueEmitDocumentation from "./rules/vue-emit-documentation.js";
 import vuePropDocumentation from "./rules/vue-prop-documentation.js";
 
 export default {
@@ -23,6 +24,7 @@ export default {
 		"sentence-punctuation": sentencePunctuation,
 		"variable-declarations": variableDeclarations,
 		"vue-component-documentation": vueComponentDocumentation,
+		"vue-emit-documentation": vueEmitDocumentation,
 		"vue-prop-documentation": vuePropDocumentation,
 	},
 };

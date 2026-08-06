@@ -80,6 +80,8 @@ The Vue component rule reads the raw `.vue` file because Oxlint's JS Plugin API 
 
 The `comments/vue-prop-documentation` rule requires an indented block comment immediately before every runtime property in `defineProps`. A matching comment on a `defineProps` property also documents its `withDefaults` entry; type-only props are not checked.
 
+The `comments/vue-emit-documentation` rule requires an indented block comment immediately before every runtime property in `defineEmits`. Function-valued events also require the normal JSDoc tags; array-form and type-only emits are not checked.
+
 The `comments/configured-api-calls` rule requires an immediately preceding line comment before configured bare-identifier calls such as Vue lifecycle hooks, reactive effects, and `onClickOutside`. A documented variable declaration covers a direct call initializer; member-expression calls are out of scope. Add project-specific APIs without replacing the built-in list:
 
 ```json

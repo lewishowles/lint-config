@@ -16,6 +16,7 @@
 			"files": ["test/comments/oxlint-integration/**"],
 			"globals": {
 				"closeDialog": "readonly",
+				"defineEmits": "readonly",
 				"defineProps": "readonly",
 				"dialog": "readonly",
 				"onClickOutside": "readonly",
