@@ -12,6 +12,21 @@ ruleTester.run("comments/function-documentation", rule, {
 		"/** Close the dialog. */\nconst closeDialog = () => { return; };",
 		"const callbacks = [function namedCallback() {}, () => {}];",
 		"const dialog = { nested: { close() {} }, value: 1 };",
+		`defineModel({
+	/** Read the model value.
+	 *
+	 * @param {string} value
+	 * @returns {string}
+	 * @throws {Error}
+	 */
+	get(value) {
+		if (!value) {
+			throw new Error();
+		}
+
+		return value;
+	},
+});`,
 		"/** Open the dialog.\n *\n * @param {object} options\n * @param {object} options.trigger\n * @param {string} options.trigger.id\n * @param {number} [options.count=1]\n */\nfunction openDialog({ trigger: { id }, count = 1 }) {}",
 		"/** Open the dialog.\n *\n * @param {object} options\n * @param {string} options.id\n */\nfunction openDialog({ id: dialogId }) {}",
 		"/** Open the dialog.\n *\n * @param {object} [options]\n */\nfunction openDialog(options) {}",
@@ -38,6 +53,15 @@ ruleTester.run("comments/function-documentation", rule, {
 		{
 			name: "requires JSDoc before first-level object methods",
 			code: "const dialog = { open() {} };",
+			errors: [{ message: "Functions require an immediately preceding JSDoc block." }],
+		},
+		{
+			name: "requires documentation for function-valued defineModel options",
+			code: `defineModel({
+	get(value) {
+		return value;
+	},
+});`,
 			errors: [{ message: "Functions require an immediately preceding JSDoc block." }],
 		},
 		{
