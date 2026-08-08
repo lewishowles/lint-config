@@ -38,16 +38,16 @@
 	"scripts": {
 		"lint": "vp check",
 		"lint:fix": "vp check --fix",
-		"prepare": "vp config",
+		"prepare": "vp config --no-agent",
 		"publint": "publint"
 	},
 	"devDependencies": {
 		"publint": "^0.3.22",
-		"vite-plus": "0.2.6"
+		"vite-plus": "0.2.8"
 	},
 	"peerDependencies": {
 		"@stylistic/eslint-plugin": "*",
-		"vite-plus": "0.2.6"
+		"vite-plus": "0.2.8"
 	},
 	"engines": {
 		"node": ">=20"
