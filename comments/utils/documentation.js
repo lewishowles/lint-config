@@ -9,6 +9,29 @@ import {
 } from "./source.js";
 
 /**
+ * Return the declaration node that owns the documentation position.
+ *
+ * @param  {object}  node
+ *     The declaration node.
+ *
+ * @returns  {object}
+ *     The node immediately following the documentation block.
+ */
+export function getDocumentationNode(node) {
+	// Walks up through export wrappers to find the documented position.
+	let documentationNode = node;
+
+	while (
+		documentationNode.parent?.type === "ExportDefaultDeclaration" ||
+		documentationNode.parent?.type === "ExportNamedDeclaration"
+	) {
+		documentationNode = documentationNode.parent;
+	}
+
+	return documentationNode;
+}
+
+/**
  * Return whether a node is a function value, used to tell function-valued
  * options and properties apart from named function declarations.
  *

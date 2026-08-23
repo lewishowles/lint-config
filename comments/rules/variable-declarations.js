@@ -1,3 +1,4 @@
+import { getDocumentationNode } from "../utils/documentation.js";
 import { hasImmediateLineComment } from "../utils/source.js";
 
 /**
@@ -52,10 +53,13 @@ export default {
 					return;
 				}
 
-				if (!hasImmediateLineComment(context.sourceCode, node)) {
+				// Resolves any export wrapper before checking for documentation.
+				const documentationNode = getDocumentationNode(node);
+
+				if (!hasImmediateLineComment(context.sourceCode, documentationNode)) {
 					context.report({
 						message: "Variable declarations require an immediately preceding line comment.",
-						node,
+						node: documentationNode,
 					});
 				}
 

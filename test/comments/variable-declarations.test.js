@@ -9,6 +9,8 @@ ruleTester.run("comments/variable-declarations", rule, {
 		"var legacyValue = getLegacyValue();",
 		"// The dialog element.\nconst dialog = getDialog();",
 		"// The observer used to track dialog size changes.\nlet resizeObserver;",
+		"// The exported dialog element.\nexport const dialog = getDialog();",
+		"// The exported observer.\nexport let resizeObserver;",
 		"// The dialog state and actions.\nconst { close, isOpen, open } = useDialog();",
 		"for (let index = 0; index < items.length; index += 1) {}",
 		"for (const item of items) {}",
@@ -22,6 +24,16 @@ ruleTester.run("comments/variable-declarations", rule, {
 		{
 			name: "requires a comment before a const declaration",
 			code: "const dialog = getDialog();",
+			errors: [{ message: "Variable declarations require an immediately preceding line comment." }],
+		},
+		{
+			name: "requires a comment before an exported const declaration",
+			code: "export const dialog = getDialog();",
+			errors: [{ message: "Variable declarations require an immediately preceding line comment." }],
+		},
+		{
+			name: "rejects a misplaced comment before an exported let declaration",
+			code: "// The exported observer.\n\nexport let resizeObserver;",
 			errors: [{ message: "Variable declarations require an immediately preceding line comment." }],
 		},
 		{

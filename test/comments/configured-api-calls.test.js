@@ -45,6 +45,7 @@ ruleTester.run("comments/configured-api-calls", rule, {
 		"// Store the stop handle.\nconst stop = watch();",
 		"// Store the stop handle.\nlet stop = watch();",
 		"// Store the stop handle.\nvar stop = watch();",
+		"// Store the stop handle.\nexport const stop = watch();",
 		"const stop =\n// Register the watcher.\nwatch();",
 		{
 			code: "// Subscribe to updates.\nsubscribe();\n// Watch the source.\nwatch();",
@@ -71,6 +72,11 @@ ruleTester.run("comments/configured-api-calls", rule, {
 		{
 			name: "requires a comment before an undocumented const initializer",
 			code: "const stop = watch();",
+			errors: [{ message: "Configured API calls require an immediately preceding line comment." }],
+		},
+		{
+			name: "requires a comment before an undocumented exported const initializer",
+			code: "export const stop = watch();",
 			errors: [{ message: "Configured API calls require an immediately preceding line comment." }],
 		},
 		{

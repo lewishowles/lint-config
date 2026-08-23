@@ -1,3 +1,4 @@
+import { getDocumentationNode } from "../utils/documentation.js";
 import { hasImmediateLineComment } from "../utils/source.js";
 
 // The built-in APIs that require a preceding comment by default.
@@ -44,9 +45,14 @@ function hasDocumentedVariableDeclaration(sourceCode, node) {
 	// The declarator's enclosing variable declaration.
 	const declaration = declarator.parent;
 
-	return (
-		declaration?.type === "VariableDeclaration" && hasImmediateLineComment(sourceCode, declaration)
-	);
+	if (declaration?.type !== "VariableDeclaration") {
+		return false;
+	}
+
+	// Resolves any export wrapper before checking for documentation.
+	const documentationNode = getDocumentationNode(declaration);
+
+	return hasImmediateLineComment(sourceCode, documentationNode);
 }
 
 /**

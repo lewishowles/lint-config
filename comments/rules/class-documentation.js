@@ -1,27 +1,5 @@
+import { getDocumentationNode } from "../utils/documentation.js";
 import { hasImmediateBlockComment } from "../utils/source.js";
-
-/**
- * Return the declaration node that owns the documentation position.
- *
- * @param  {object}  node
- *     The class declaration node.
- *
- * @returns  {object}
- *     The node immediately following the documentation block.
- */
-function getDocumentationNode(node) {
-	// Walks up through export wrappers to find the documented position.
-	let documentationNode = node;
-
-	while (
-		documentationNode.parent?.type === "ExportDefaultDeclaration" ||
-		documentationNode.parent?.type === "ExportNamedDeclaration"
-	) {
-		documentationNode = documentationNode.parent;
-	}
-
-	return documentationNode;
-}
 
 /**
  * Create the class-documentation rule.
