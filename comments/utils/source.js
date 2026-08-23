@@ -310,3 +310,37 @@ export function hasImmediateLineComment(sourceCode, node) {
 		/^\r?\n[ \t]*$/.test(gap)
 	);
 }
+
+/**
+ * Return whether a block comment immediately documents a source node.
+ *
+ * @param  {object}  sourceCode
+ *     The Oxlint source code object.
+ * @param  {object}  node
+ *     The source node.
+ *
+ * @returns  {boolean}
+ *     Whether an ordinary block comment immediately precedes the node.
+ */
+export function hasImmediateBlockComment(sourceCode, node) {
+	// Finds the closest preceding comment.
+	const comment = sourceCode
+		.getAllComments()
+		.findLast((candidate) => candidate.range[1] <= node.range[0]);
+
+	if (comment?.type !== "Block" || isDirectiveComment(comment)) {
+		return false;
+	}
+
+	// Checks the comments immediately around the node.
+	const { next, previous } = getCommentNeighbours(sourceCode, comment);
+
+	// Confirms there is no blank line before the node.
+	const gap = sourceCode.text.slice(comment.range[1], node.range[0]);
+
+	return (
+		next?.range[0] === node.range[0] &&
+		isLeadingComment(sourceCode, comment, previous) &&
+		/^\r?\n[ \t]*$/.test(gap)
+	);
+}
