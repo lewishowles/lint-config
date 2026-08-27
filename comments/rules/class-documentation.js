@@ -1,5 +1,5 @@
 import { getDocumentationNode, reportFunctionDocumentation } from "../utils/documentation.js";
-import { hasImmediateBlockComment } from "../utils/source.js";
+import { hasImmediateBlockComment, hasImmediateLineComment } from "../utils/source.js";
 
 /**
  * Create the class-documentation rule.
@@ -76,6 +76,25 @@ export default {
 				if (node.kind === "method") {
 					reportFunctionDocumentation(context, node, node.value, {
 						subject: "Methods",
+					});
+				}
+			},
+			/**
+			 * Check instance fields for a preceding line comment.
+			 *
+			 * @param  {object}  node
+			 *     The property-definition node.
+			 */
+			PropertyDefinition(node) {
+				// Static fields are not covered by the instance-field requirement.
+				if (node.static) {
+					return;
+				}
+
+				if (!hasImmediateLineComment(context.sourceCode, node)) {
+					context.report({
+						message: "Instance fields require an immediately preceding line comment.",
+						node,
 					});
 				}
 			},

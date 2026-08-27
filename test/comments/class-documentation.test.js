@@ -27,6 +27,9 @@ ruleTester.run("comments/class-documentation", rule, {
 		"/** The dialog component. */\nclass Dialog {\n\t/** Write whether the dialog is open.\n\t *\n\t * @param {boolean} isOpen\n\t * @returns {boolean}\n\t */\n\tset isOpen(isOpen) { return isOpen; }\n}",
 		"/** The dialog component. */\nclass Dialog {\n\t/** Open the dialog.\n\t *\n\t * @param {string} label\n\t */\n\tstatic open(label) {}\n}",
 		"/** The dialog component. */\nclass Dialog {\n\t/** Check whether the dialog is open.\n\t *\n\t * @returns {boolean}\n\t */\n\tisOpen() { return true; }\n}",
+		"/** The dialog component. */\nclass Dialog {\n\t// Whether the dialog is open.\n\tisOpen = false;\n}",
+		"/** The dialog component. */\nclass Dialog {\n\t// Whether the dialog is open privately.\n\t#isOpen = false;\n}",
+		"/** The dialog component. */\nclass Dialog {\n\tstatic isOpen = false;\n}",
 	],
 	invalid: [
 		{
@@ -68,6 +71,21 @@ ruleTester.run("comments/class-documentation", rule, {
 			name: "requires a JSDoc block before constructors",
 			code: "/** The dialog component. */\nclass Dialog {\n\tconstructor(label) {}\n}",
 			errors: [{ message: "Constructors require an immediately preceding JSDoc block." }],
+		},
+		{
+			name: "requires a line comment before instance fields",
+			code: "/** The dialog component. */\nclass Dialog {\n\tisOpen = false;\n}",
+			errors: [{ message: "Instance fields require an immediately preceding line comment." }],
+		},
+		{
+			name: "requires a line comment before private instance fields",
+			code: "/** The dialog component. */\nclass Dialog {\n\t#isOpen = false;\n}",
+			errors: [{ message: "Instance fields require an immediately preceding line comment." }],
+		},
+		{
+			name: "rejects a trailing line comment after instance fields",
+			code: "/** The dialog component. */\nclass Dialog {\n\tisOpen = false; // Whether the dialog is open.\n}",
+			errors: [{ message: "Instance fields require an immediately preceding line comment." }],
 		},
 		{
 			name: "requires a tag for every constructor parameter",
