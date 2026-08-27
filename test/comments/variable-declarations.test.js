@@ -12,6 +12,8 @@ ruleTester.run("comments/variable-declarations", rule, {
 		"// The exported dialog element.\nexport const dialog = getDialog();",
 		"// The exported observer.\nexport let resizeObserver;",
 		"// The dialog state and actions.\nconst { close, isOpen, open } = useDialog();",
+		"const Dialog = class {}",
+		"// The dialog component.\nconst Dialog = class {}",
 		"for (let index = 0; index < items.length; index += 1) {}",
 		"for (const item of items) {}",
 		"for (const key in item) {}",
@@ -68,6 +70,19 @@ ruleTester.run("comments/variable-declarations", rule, {
 				{ message: "Variable declarations require an immediately preceding line comment." },
 				{ message: "Declare one variable per declaration statement." },
 			],
+		},
+		{
+			name: "keeps the multiple declarator report for a const class expression",
+			code: "const Dialog = class {}, isOpen = false;",
+			errors: [
+				{ message: "Variable declarations require an immediately preceding line comment." },
+				{ message: "Declare one variable per declaration statement." },
+			],
+		},
+		{
+			name: "requires a comment before a destructured const class expression",
+			code: "const { x } = class {}",
+			errors: [{ message: "Variable declarations require an immediately preceding line comment." }],
 		},
 	],
 });

@@ -9,7 +9,7 @@ import { hasImmediateBlockComment } from "../utils/source.js";
  */
 export default {
 	meta: {
-		docs: { description: "Require block comments before class declarations." },
+		docs: { description: "Require block comments before classes." },
 		type: "suggestion",
 	},
 	/**
@@ -35,7 +35,33 @@ export default {
 
 				if (!hasImmediateBlockComment(context.sourceCode, documentationNode)) {
 					context.report({
-						message: "Class declarations require an immediately preceding block comment.",
+						message: "Classes require an immediately preceding block comment.",
+						node: documentationNode,
+					});
+				}
+			},
+			/**
+			 * Check a const class expression for a preceding block comment.
+			 *
+			 * @param  {object}  node
+			 *     The variable declarator node.
+			 */
+			VariableDeclarator(node) {
+				if (
+					node.parent?.kind !== "const" ||
+					node.parent.declarations.length !== 1 ||
+					node.id?.type !== "Identifier" ||
+					node.init?.type !== "ClassExpression"
+				) {
+					return;
+				}
+
+				// Resolves any export wrapper before checking for documentation.
+				const documentationNode = getDocumentationNode(node.parent);
+
+				if (!hasImmediateBlockComment(context.sourceCode, documentationNode)) {
+					context.report({
+						message: "Classes require an immediately preceding block comment.",
 						node: documentationNode,
 					});
 				}

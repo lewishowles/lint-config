@@ -53,6 +53,16 @@ export default {
 					return;
 				}
 
+				// A lone const class expression is documented by class-documentation.
+				if (
+					node.kind === "const" &&
+					node.declarations.length === 1 &&
+					node.declarations[0].id?.type === "Identifier" &&
+					node.declarations[0].init?.type === "ClassExpression"
+				) {
+					return;
+				}
+
 				// Resolves any export wrapper before checking for documentation.
 				const documentationNode = getDocumentationNode(node);
 
