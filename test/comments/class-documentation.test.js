@@ -17,6 +17,9 @@ ruleTester.run("comments/class-documentation", rule, {
 		"/** The dialog component. */\nclass Dialog {\n\t/** Create the dialog.\n\t *\n\t * @param {string} label\n\t */\n\tconstructor(label) {}\n}",
 		"/** The dialog component. */\nclass Dialog {\n\t/** Create the dialog. */\n\tconstructor() {}\n}",
 		"/** The dialog component. */\nclass Dialog {\n\t/** Create the dialog. */\n\tconstructor() { return {}; }\n}",
+		"/** The dialog component. */\nclass Dialog {\n\t/** Open the dialog. */\n\topen() {}\n}",
+		"/** The dialog component. */\nclass Dialog {\n\t/** Open the dialog.\n\t *\n\t * @param {string} label\n\t */\n\tstatic open(label) {}\n}",
+		"/** The dialog component. */\nclass Dialog {\n\t/** Check whether the dialog is open.\n\t *\n\t * @returns {boolean}\n\t */\n\tisOpen() { return true; }\n}",
 	],
 	invalid: [
 		{
@@ -68,6 +71,35 @@ ruleTester.run("comments/class-documentation", rule, {
 			name: "rejects a plain block comment before constructors",
 			code: "/** The dialog component. */\nclass Dialog {\n\t/* Create the dialog. */\n\tconstructor() {}\n}",
 			errors: [{ message: "Constructors require an immediately preceding JSDoc block." }],
+		},
+		{
+			name: "requires a JSDoc block before methods",
+			code: "/** The dialog component. */\nclass Dialog {\n\topen() {}\n}",
+			errors: [{ message: "Methods require an immediately preceding JSDoc block." }],
+		},
+		{
+			name: "requires a tag for every method parameter",
+			code: "/** The dialog component. */\nclass Dialog {\n\t/** Open the dialog. */\n\topen(label) {}\n}",
+			errors: [{ message: "Methods require an @param for label." }],
+		},
+		{
+			name: "requires returns for methods with explicit return values",
+			code: "/** The dialog component. */\nclass Dialog {\n\t/** Check whether the dialog is open. */\n\tisOpen() { return true; }\n}",
+			errors: [{ message: "Methods that return a value require an @returns tag." }],
+		},
+		{
+			name: "requires throws for methods with explicit throws",
+			code: "/** The dialog component. */\nclass Dialog {\n\t/** Open the dialog. */\n\topen() { throw new Error(); }\n}",
+			errors: [{ message: "Methods that throw require an @throws tag." }],
+		},
+		{
+			name: "requires every destructured method parameter path",
+			code: "/** The dialog component. */\nclass Dialog {\n\t/** Open the dialog.\n\t *\n\t * @param {object} options\n\t */\n\topen({ trigger: { id }, count = 1 }) {}\n}",
+			errors: [
+				{ message: "Methods require an @param for options.trigger." },
+				{ message: "Methods require an @param for options.trigger.id." },
+				{ message: "Methods require an @param for [options.count=1]." },
+			],
 		},
 	],
 });

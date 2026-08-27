@@ -41,20 +41,27 @@ export default {
 				}
 			},
 			/**
-			 * Check a constructor for its required JSDoc block and tags.
+			 * Check a constructor or ordinary method for its required JSDoc block and
+			 * tags. Constructors are exempt from the @returns requirement.
 			 *
 			 * @param  {object}  node
 			 *     The method-definition node.
 			 */
 			MethodDefinition(node) {
-				if (node.kind !== "constructor") {
+				if (node.kind === "constructor") {
+					reportFunctionDocumentation(context, node, node.value, {
+						requiresReturns: false,
+						subject: "Constructors",
+					});
+
 					return;
 				}
 
-				reportFunctionDocumentation(context, node, node.value, {
-					requiresReturns: false,
-					subject: "Constructors",
-				});
+				if (node.kind === "method") {
+					reportFunctionDocumentation(context, node, node.value, {
+						subject: "Methods",
+					});
+				}
 			},
 			/**
 			 * Check a const class expression for a preceding block comment.
