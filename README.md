@@ -92,6 +92,8 @@ The `comments/configured-api-calls` rule requires an immediately preceding line 
 }
 ```
 
+The `comments/class-documentation` rule requires an immediately preceding block comment before class declarations and const-assigned class expressions. Constructors, methods, getters, and setters require full JSDoc; constructors never need an `@returns` tag, and getters and setters need one only when they return a value. Instance and static fields require an immediately preceding line comment.
+
 ## Customising
 
 Your project's `.oxlintrc.json` can override rules, add ignore patterns, add overrides, or add plugins on top of the shared layer.

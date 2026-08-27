@@ -9,7 +9,10 @@ import { hasImmediateBlockComment, hasImmediateLineComment } from "../utils/sour
  */
 export default {
 	meta: {
-		docs: { description: "Require block comments before classes." },
+		docs: {
+			description:
+				"Require documentation for classes, their methods, getters, setters, and fields.",
+		},
 		type: "suggestion",
 	},
 	/**
