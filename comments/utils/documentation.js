@@ -287,14 +287,19 @@ function hasValueReturn(node) {
  *     Optional reporting options.
  * @param  {boolean}  [options.requiresReturns=true]
  *     Whether a returned value requires an @returns tag.
+ * @param  {string}  [options.subject="Functions"]
+ *     The declaration kind named in report messages, such as "Constructors".
  */
 export function reportFunctionDocumentation(context, node, functionNode, options = {}) {
+	// Defaults to "Functions" when the caller names no declaration kind.
+	const subject = options.subject ?? "Functions";
+
 	// Finds the JSDoc block documenting this function, when present.
 	const comment = getDocumentationComment(context.sourceCode, node);
 
 	if (!comment) {
 		context.report({
-			message: "Functions require an immediately preceding JSDoc block.",
+			message: `${subject} require an immediately preceding JSDoc block.`,
 			node,
 		});
 
@@ -315,7 +320,7 @@ export function reportFunctionDocumentation(context, node, functionNode, options
 
 		if (!documentedParameters.has(path) && !documentedParameters.has(optionalPath)) {
 			context.report({
-				message: `Functions require an @param for ${path}.`,
+				message: `${subject} require an @param for ${path}.`,
 				node,
 			});
 		}
@@ -330,14 +335,14 @@ export function reportFunctionDocumentation(context, node, functionNode, options
 
 	if (options.requiresReturns !== false && hasValueReturn(functionNode) && !hasReturns) {
 		context.report({
-			message: "Functions that return a value require an @returns tag.",
+			message: `${subject} that return a value require an @returns tag.`,
 			node,
 		});
 	}
 
 	if (containsStatement(functionNode.body, "ThrowStatement") && !hasThrows) {
 		context.report({
-			message: "Functions that throw require an @throws tag.",
+			message: `${subject} that throw require an @throws tag.`,
 			node,
 		});
 	}

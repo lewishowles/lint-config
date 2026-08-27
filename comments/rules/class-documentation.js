@@ -1,4 +1,4 @@
-import { getDocumentationNode } from "../utils/documentation.js";
+import { getDocumentationNode, reportFunctionDocumentation } from "../utils/documentation.js";
 import { hasImmediateBlockComment } from "../utils/source.js";
 
 /**
@@ -39,6 +39,22 @@ export default {
 						node: documentationNode,
 					});
 				}
+			},
+			/**
+			 * Check a constructor for its required JSDoc block and tags.
+			 *
+			 * @param  {object}  node
+			 *     The method-definition node.
+			 */
+			MethodDefinition(node) {
+				if (node.kind !== "constructor") {
+					return;
+				}
+
+				reportFunctionDocumentation(context, node, node.value, {
+					requiresReturns: false,
+					subject: "Constructors",
+				});
 			},
 			/**
 			 * Check a const class expression for a preceding block comment.
