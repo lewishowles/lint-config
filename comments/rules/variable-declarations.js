@@ -1,6 +1,9 @@
 import { getDocumentationNode } from "../utils/documentation.js";
 import { hasImmediateLineComment } from "../utils/source.js";
 
+// Declaration kinds that require an immediately preceding line comment.
+const documentedKinds = new Set(["await using", "const", "let", "using"]);
+
 /**
  * Return whether a declaration is inside a loop header.
  *
@@ -43,13 +46,13 @@ export default {
 	createOnce(context) {
 		return {
 			/**
-			 * Check a const or let declaration for a preceding comment.
+			 * Check a variable declaration for a preceding line comment.
 			 *
 			 * @param  {object}  node
 			 *     The variable declaration node.
 			 */
 			VariableDeclaration(node) {
-				if ((node.kind !== "const" && node.kind !== "let") || isLoopHeaderDeclaration(node)) {
+				if (!documentedKinds.has(node.kind) || isLoopHeaderDeclaration(node)) {
 					return;
 				}
 

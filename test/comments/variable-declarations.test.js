@@ -9,6 +9,8 @@ ruleTester.run("comments/variable-declarations", rule, {
 		"var legacyValue = getLegacyValue();",
 		"// The dialog element.\nconst dialog = getDialog();",
 		"// The observer used to track dialog size changes.\nlet resizeObserver;",
+		"function useResource() {\n\t// The resource.\n\tusing resource = getResource();\n}",
+		"async function useAsyncResource() {\n\t// The resource.\n\tawait using resource = getResource();\n}",
 		"// The exported dialog element.\nexport const dialog = getDialog();",
 		"// The exported observer.\nexport let resizeObserver;",
 		"// The dialog state and actions.\nconst { close, isOpen, open } = useDialog();",
@@ -17,6 +19,8 @@ ruleTester.run("comments/variable-declarations", rule, {
 		"for (let index = 0; index < items.length; index += 1) {}",
 		"for (const item of items) {}",
 		"for (const key in item) {}",
+		"function useResources() {\n\tfor (using resource of resources) {}\n}",
+		"async function useAsyncResources() {\n\tfor (await using resource of resources) {}\n}",
 		"for (let index = 0, length = items.length; index < length; index += 1) {}",
 		"({ isOpen } = nextState);",
 		"dialog.value = null;",
@@ -31,6 +35,16 @@ ruleTester.run("comments/variable-declarations", rule, {
 		{
 			name: "requires a comment before an exported const declaration",
 			code: "export const dialog = getDialog();",
+			errors: [{ message: "Variable declarations require an immediately preceding line comment." }],
+		},
+		{
+			name: "requires a comment before a using declaration",
+			code: "function useResource() {\n\tusing resource = getResource();\n}",
+			errors: [{ message: "Variable declarations require an immediately preceding line comment." }],
+		},
+		{
+			name: "requires a comment before an await using declaration",
+			code: "async function useAsyncResource() {\n\tawait using resource = getResource();\n}",
 			errors: [{ message: "Variable declarations require an immediately preceding line comment." }],
 		},
 		{
@@ -61,6 +75,11 @@ ruleTester.run("comments/variable-declarations", rule, {
 		{
 			name: "rejects multiple declarators with a declaration comment",
 			code: "// The dialog state.\nconst dialog = getDialog(), isOpen = false;",
+			errors: [{ message: "Declare one variable per declaration statement." }],
+		},
+		{
+			name: "rejects multiple using declarators with a declaration comment",
+			code: "function useResources() {\n\t// The resources.\n\tusing a = f(), b = g();\n}",
 			errors: [{ message: "Declare one variable per declaration statement." }],
 		},
 		{

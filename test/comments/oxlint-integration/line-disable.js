@@ -36,3 +36,14 @@ function findTab(id) {}
 
 // oxlint-disable-next-line comments/function-documentation
 function dismissDialog() {}
+
+/**
+ * Hold managed resources that dispose when the function returns.
+ */
+async function disposeResources() {
+	// oxlint-disable-next-line comments/variable-declarations
+	using resource = {};
+
+	// oxlint-disable-next-line comments/variable-declarations
+	await using asyncResource = {};
+}
