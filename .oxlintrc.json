@@ -8,7 +8,6 @@
 		"**/.*",
 		"dist/**",
 		"build/**",
-		"PROGRESS.md",
 		"AGENTS.md"
 	],
 	"overrides": [

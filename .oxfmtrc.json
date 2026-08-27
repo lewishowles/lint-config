@@ -1,5 +1,5 @@
 {
-	"ignorePatterns": ["**/.*", "dist/**", "build/**", "PROGRESS.md", "AGENTS.md"],
+	"ignorePatterns": ["**/.*", "dist/**", "build/**", "AGENTS.md"],
 	"printWidth": 100,
 	"semi": true,
 	"singleQuote": false,
