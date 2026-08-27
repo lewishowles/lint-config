@@ -21,6 +21,10 @@ ruleTester.run("comments/class-documentation", rule, {
 		"/** The dialog component. */\nclass Dialog {\n\t/** Read whether the dialog is open. */\n\tget isOpen() {}\n}",
 		"/** The dialog component. */\nclass Dialog {\n\t/** Read whether the dialog is open.\n\t *\n\t * @returns {boolean}\n\t */\n\tget isOpen() { return true; }\n}",
 		"/** The dialog component. */\nclass Dialog {\n\t/** Stop reading the dialog state. */\n\tget isOpen() { return; }\n}",
+		"/** The dialog component. */\nclass Dialog {\n\t/** Write whether the dialog is open.\n\t *\n\t * @param {boolean} isOpen\n\t */\n\tset isOpen(isOpen) {}\n}",
+		"/** The dialog component. */\nclass Dialog {\n\t/** Write whether the dialog is open.\n\t *\n\t * @param {boolean} isOpen\n\t */\n\tset isOpen(isOpen) { return; }\n}",
+		"/** The dialog component. */\nclass Dialog {\n\t/** Write whether the dialog is open.\n\t *\n\t * @param {boolean} isOpen\n\t */\n\tset isOpen(isOpen) { function readValue() { return isOpen; } }\n}",
+		"/** The dialog component. */\nclass Dialog {\n\t/** Write whether the dialog is open.\n\t *\n\t * @param {boolean} isOpen\n\t * @returns {boolean}\n\t */\n\tset isOpen(isOpen) { return isOpen; }\n}",
 		"/** The dialog component. */\nclass Dialog {\n\t/** Open the dialog.\n\t *\n\t * @param {string} label\n\t */\n\tstatic open(label) {}\n}",
 		"/** The dialog component. */\nclass Dialog {\n\t/** Check whether the dialog is open.\n\t *\n\t * @returns {boolean}\n\t */\n\tisOpen() { return true; }\n}",
 	],
@@ -91,9 +95,19 @@ ruleTester.run("comments/class-documentation", rule, {
 			errors: [{ message: "Getters require an immediately preceding JSDoc block." }],
 		},
 		{
+			name: "requires a JSDoc block before setters",
+			code: "/** The dialog component. */\nclass Dialog {\n\tset isOpen(isOpen) {}\n}",
+			errors: [{ message: "Setters require an immediately preceding JSDoc block." }],
+		},
+		{
 			name: "requires returns for getters with explicit return values",
 			code: "/** The dialog component. */\nclass Dialog {\n\t/** Read whether the dialog is open. */\n\tget isOpen() { return true; }\n}",
 			errors: [{ message: "Getters that return a value require an @returns tag." }],
+		},
+		{
+			name: "requires returns for setters with explicit return values",
+			code: "/** The dialog component. */\nclass Dialog {\n\t/** Write whether the dialog is open.\n\t *\n\t * @param {boolean} isOpen\n\t */\n\tset isOpen(isOpen) { return isOpen; }\n}",
+			errors: [{ message: "Setters that return a value require an @returns tag." }],
 		},
 		{
 			name: "requires returns for methods with explicit return values",

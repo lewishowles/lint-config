@@ -41,8 +41,8 @@ export default {
 				}
 			},
 			/**
-			 * Check a constructor, getter, or ordinary method for its required JSDoc
-			 * block and tags. Constructors are exempt from the @returns requirement.
+			 * Check class methods for required JSDoc blocks and tags. Constructors are
+			 * exempt from the @returns requirement.
 			 *
 			 * @param  {object}  node
 			 *     The method-definition node.
@@ -60,6 +60,14 @@ export default {
 				if (node.kind === "get") {
 					reportFunctionDocumentation(context, node, node.value, {
 						subject: "Getters",
+					});
+
+					return;
+				}
+
+				if (node.kind === "set") {
+					reportFunctionDocumentation(context, node, node.value, {
+						subject: "Setters",
 					});
 
 					return;
