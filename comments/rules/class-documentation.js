@@ -80,23 +80,22 @@ export default {
 				}
 			},
 			/**
-			 * Check instance fields for a preceding line comment.
+			 * Check instance and static fields for a preceding line comment.
 			 *
 			 * @param  {object}  node
 			 *     The property-definition node.
 			 */
 			PropertyDefinition(node) {
-				// Static fields are not covered by the instance-field requirement.
-				if (node.static) {
+				if (hasImmediateLineComment(context.sourceCode, node)) {
 					return;
 				}
 
-				if (!hasImmediateLineComment(context.sourceCode, node)) {
-					context.report({
-						message: "Instance fields require an immediately preceding line comment.",
-						node,
-					});
-				}
+				// Static and instance fields share the requirement; only the wording differs.
+				const message = node.static
+					? "Static fields require an immediately preceding line comment."
+					: "Instance fields require an immediately preceding line comment.";
+
+				context.report({ message, node });
 			},
 			/**
 			 * Check a const class expression for a preceding block comment.
