@@ -1,7 +1,6 @@
 /* oxlint-disable comments/sentence-punctuation */
 /* oxlint-disable comments/max-line-length */
 /* oxlint-disable comments/placement */
-/* oxlint-disable comments/line-comments */
 /* oxlint-disable comments/block-comments */
 /* oxlint-disable comments/function-documentation */
 /* oxlint-disable comments/jsdoc-tag-formatting */

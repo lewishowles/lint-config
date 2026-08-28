@@ -12,7 +12,6 @@ const punctuationValue = 1;
 // oxlint-disable-next-line comments/variable-declarations
 const placementValue = 1;
 
-// oxlint-disable-next-line comments/line-comments
 // Close the dialog when focus moves outside the component and restore focus
 // to the original trigger.
 onClickOutside(dialog, dismissDialog);
