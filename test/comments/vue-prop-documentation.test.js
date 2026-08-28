@@ -65,5 +65,16 @@ defineOptions({ inheritAttrs: false });`,
 				},
 			],
 		},
+		{
+			name: "requires a block comment before an undocumented function-valued prop",
+			code: `defineProps({
+	onUpdate: () => null,
+});`,
+			errors: [
+				{
+					message: "Vue prop declarations require an immediately preceding block comment.",
+				},
+			],
+		},
 	],
 });

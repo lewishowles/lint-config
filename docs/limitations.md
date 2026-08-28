@@ -11,6 +11,10 @@ In practice:
 
 Until this is fixed upstream, redeclare the `env`/`globals` you need directly in your project's `.oxlintrc.json`, as shown in the README's usage examples, even though `base.json`/`vue.json` already declare them.
 
+## Function-valued Vue macro options can produce two diagnostics
+
+An undocumented function-valued option in `defineProps` or `defineEmits` reports both the matching `vue-prop-documentation` or `vue-emit-documentation` rule and `function-documentation`. One JSDoc block immediately before the option clears both, as long as it also carries the `@param`, `@returns`, and `@throws` tags that `function-documentation` requires for that function. This overlap is intentional because the rules remain independent.
+
 ## `vite-plus`'s `lint` config field requires resolved objects, not string paths
 
 Raw Oxlint (CLI, editor integrations) accepts `"extends": ["./node_modules/@lewishowles/lint-config/vue.json"]` as string paths and resolves them at load time. `vite-plus`, when a project routes its Oxlint config through `vite.config.js`'s `lint` field (importing `.oxlintrc.json` as JSON and handing it to `vp check`/`vp lint`), doesn't resolve string paths in `extends`: every entry, at every nesting level, must already be a plain object. This means `vue.json`'s own internal `extends: ["./base.json"]` also breaks one level deeper.

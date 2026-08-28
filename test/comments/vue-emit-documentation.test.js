@@ -74,5 +74,17 @@ ruleTester.run("comments/vue-emit-documentation", rule, {
 				},
 			],
 		},
+		{
+			name: "requires a block comment before an undocumented function-valued event",
+			filename: "component.vue",
+			code: `defineEmits({
+	submit: () => null,
+});`,
+			errors: [
+				{
+					message: "Vue emit declarations require an immediately preceding block comment.",
+				},
+			],
+		},
 	],
 });
