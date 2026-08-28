@@ -94,6 +94,12 @@ The `comments/configured-api-calls` rule requires an immediately preceding line 
 
 The `comments/class-documentation` rule requires an immediately preceding block comment before class declarations and const-assigned class expressions. Constructors, methods, getters, and setters require full JSDoc; constructors never need an `@returns` tag, and getters and setters need one only when they return a value. Instance and static fields require an immediately preceding line comment.
 
+### `vp check` configuration
+
+The `vp check` and `vp lint` commands read Oxlint settings only from a `lint` block in `vite.config.js`; they do not read `.oxlintrc.json` directly. If `vite.config.js` is missing, they silently use an unrelated default configuration. You may still see plausible warnings and exit codes, but none of your rules are applied.
+
+Each consuming repo needs a `vite.config.js` with a `lint` block built from the config layer(s) and the repo's `.oxlintrc.json`, imported as JSON. Verify the setup with `vp lint --print-config <file>` and check that your real values, not defaults, are active.
+
 ## Customising
 
 Your project's `.oxlintrc.json` can override rules, add ignore patterns, add overrides, or add plugins on top of the shared layer.
