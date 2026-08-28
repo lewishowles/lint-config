@@ -29,6 +29,24 @@ registerDialog();`,
 			output: "// Explain the value.\nconst value = 1;",
 		},
 		{
+			name: "removes a blank line before a directive after a block comment",
+			code: "/* Explain the value. */\n\n// oxlint-disable-next-line comments/variable-declarations\nconst value = 1;",
+			errors: [
+				{ message: "Comment must be immediately before the documented code.", line: 1, column: 0 },
+			],
+			output:
+				"/* Explain the value. */\n// oxlint-disable-next-line comments/variable-declarations\nconst value = 1;",
+		},
+		{
+			name: "reindents a directive that separates a comment from its code",
+			code: "if (isReady) {\n\t// Explain the value.\n  // oxlint-disable-next-line comments/variable-declarations\n\trunTask();\n}",
+			errors: [
+				{ message: "Comment must be immediately before the documented code.", line: 2, column: 1 },
+			],
+			output:
+				"if (isReady) {\n\t// Explain the value.\n\t// oxlint-disable-next-line comments/variable-declarations\n\trunTask();\n}",
+		},
+		{
 			name: "matches block-comment indentation to its declaration",
 			code: "\t/**\n\t * Explain the value.\n\t */\nconst value = 1;",
 			errors: [

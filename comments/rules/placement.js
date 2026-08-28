@@ -5,25 +5,9 @@ import {
 	getLineIndent,
 	getLineStart,
 	getNewline,
+	isDirectiveComment,
 	isLeadingComment,
 } from "../utils/source.js";
-
-/**
- * Return the end-to-token gap for a leading comment.
- *
- * @param  {object}  sourceCode
- *     The Oxlint source code object.
- * @param  {object}  comment
- *     The comment token.
- * @param  {object}  next
- *     The next source token.
- *
- * @returns  {string}
- *     The source gap after the comment.
- */
-function getCommentToTokenGap(sourceCode, comment, next) {
-	return sourceCode.text.slice(comment.range[1], next.range[0]);
-}
 
 /**
  * Return continuation comments indexed by their group leader.
@@ -160,7 +144,7 @@ function getCommentIndentationFixes(
 }
 
 /**
- * Return the replacement that places a final leading comment against its code.
+ * Return the replacement that closes the gap after a final leading comment.
  *
  * @param  {object}  sourceCode
  *     The Oxlint source code object.
@@ -169,7 +153,7 @@ function getCommentIndentationFixes(
  * @param  {object}  next
  *     The documented source token.
  * @param  {object|undefined}  followingComment
- *     The next comment token.
+ *     The comment after this one in source order, when there is one.
  * @param  {string}  expectedIndent
  *     The documented code's indentation.
  *
@@ -177,16 +161,23 @@ function getCommentIndentationFixes(
  *     The gap replacement, or null when none is needed.
  */
 function getCommentGapFix(sourceCode, comment, next, followingComment, expectedIndent) {
-	if (followingComment !== undefined && followingComment.range[0] <= next.range[0]) {
+	// Whether another comment sits between this one and its documented code.
+	const followingCommentIntervenes =
+		followingComment !== undefined && followingComment.range[0] <= next.range[0];
+
+	if (followingCommentIntervenes && !isDirectiveComment(followingComment)) {
 		return null;
 	}
 
-	// The source text currently between the comment and its documented code.
-	const gap = getCommentToTokenGap(sourceCode, comment, next);
+	// Stop at an intervening directive so the fix range never overlaps it.
+	const gapEnd = followingCommentIntervenes ? followingComment.range[0] : next.range[0];
+
+	// What currently follows the comment, up to the code or directive.
+	const gap = sourceCode.text.slice(comment.range[1], gapEnd);
 	// The gap the documented code's indentation requires.
 	const desiredGap = `${getNewline(sourceCode.text)}${expectedIndent}`;
 
-	return gap === desiredGap ? null : { range: [comment.range[1], next.range[0]], text: desiredGap };
+	return gap === desiredGap ? null : { range: [comment.range[1], gapEnd], text: desiredGap };
 }
 
 /**
@@ -225,7 +216,11 @@ export default {
 				);
 
 				for (const [index, comment] of comments.entries()) {
-					if (comment.type === "Shebang" || continuationComments.has(comment)) {
+					if (
+						comment.type === "Shebang" ||
+						isDirectiveComment(comment) ||
+						continuationComments.has(comment)
+					) {
 						continue;
 					}
 
