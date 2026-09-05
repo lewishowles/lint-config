@@ -1,0 +1,27 @@
+/**
+ * Resolve the router destination.
+ * @param  {string|object|Function}  to
+ *     The router destination for the sidebar link. Resolved once at
+ *     setup; a Function's return value is not tracked reactively afterwards.
+ *
+ * @returns  {object}
+ */
+function resolvePeriodSeparatedDestination(to) {
+	return to;
+}
+
+resolvePeriodSeparatedDestination("destination");
+
+/**
+ * Resolve the router destination.
+ * @param  {string|object|Function}  to
+ *     The router destination for the sidebar link, resolved once
+ *     at setup and not tracked reactively afterwards.
+ *
+ * @returns  {object}
+ */
+function resolveCommaSeparatedDestination(to) {
+	return to;
+}
+
+resolveCommaSeparatedDestination("destination");
