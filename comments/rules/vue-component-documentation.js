@@ -119,7 +119,8 @@ function hasComponentDocumentation(context, scriptBlock) {
 		return false;
 	}
 
-	// A blank line would separate the component documentation from its entry point.
+	// A blank line would separate the component documentation from its entry
+	// point.
 	const commentGap = context.sourceCode.text.slice(0, comment.range[0]);
 
 	return immediateCommentGapPattern.test(commentGap);
@@ -142,7 +143,8 @@ export default {
 	createOnce(context) {
 		return {
 			/**
-			 * Check the current component's script setup block for documentation.
+			 * Check the current component's script setup block for
+			 * documentation.
 			 *
 			 * @param  {object}  node
 			 *     The entry point parsed from the current script block.
@@ -150,7 +152,8 @@ export default {
 			Program(node) {
 				// createOnce builds this visitor once for the whole run, and a
 				// single file's script blocks are not necessarily visited
-				// consecutively, so the matching block is looked up fresh on each
+				// consecutively, so the matching block is looked up fresh on
+				// each
 				// call rather than tracked with shared state.
 				const scriptBlock = findScriptBlock(context);
 

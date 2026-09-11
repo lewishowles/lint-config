@@ -157,6 +157,21 @@ export function getLineIndent(sourceCode, offset) {
 }
 
 /**
+ * Return the number of columns a source string occupies on screen, so comment
+ * lines are measured and wrapped against the 80-column limit under tab
+ * indentation. A tab counts as four columns, the width this package assumes.
+ *
+ * @param  {string}  sourceText
+ *     The source string to measure, such as a line or its indentation.
+ *
+ * @returns  {number}
+ *     The source string's width in display columns.
+ */
+export function getDisplayWidth(sourceText) {
+	return sourceText.replaceAll("\t", "    ").length;
+}
+
+/**
  * Return the source items immediately around a comment.
  *
  * @param  {object}  sourceCode

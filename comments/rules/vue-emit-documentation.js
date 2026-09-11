@@ -111,7 +111,8 @@ export default {
 					return;
 				}
 
-				// Array and type-only forms have no runtime properties to document.
+				// Array and type-only forms have no runtime properties to
+				// document.
 				const emitsObject = getObjectArgument(node, 0);
 
 				if (emitsObject) {

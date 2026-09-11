@@ -1,4 +1,4 @@
-import { getCommentText, getLineIndent, getNewline } from "./source.js";
+import { getCommentText, getDisplayWidth, getLineIndent, getNewline } from "./source.js";
 import { addTerminalPunctuation, capitaliseSentence, formatSentence, wrapWords } from "./wrap.js";
 
 // The JSDoc tags this package formats, in their required output order.
@@ -217,7 +217,8 @@ function formatUnwrappedProse(lines, addPunctuation) {
 	// The formatted lines, built up in place.
 	const result = lines.map((line) => line.trim());
 
-	// The index of the current paragraph's first line, or null between paragraphs.
+	// The index of the current paragraph's first line, or null between
+	// paragraphs.
 	let paragraphStart = null;
 
 	for (let index = 0; index < result.length; index += 1) {
@@ -336,7 +337,8 @@ function formatTags(tagLines, width, addPunctuation, normaliseTags) {
 	// The formatted lines, built up in place.
 	const result = [];
 
-	// The tag type of the previously written entry, used to detect group changes.
+	// The tag type of the previously written entry, used to detect group
+	// changes.
 	let lastType = null;
 
 	// The entries regrouped into the required tag order.
@@ -526,7 +528,7 @@ function getJSDocFormattingContext(sourceCode, comment) {
 	// The newline style used by the surrounding source.
 	const newline = getNewline(sourceCode.text);
 	// The available content width, allowing for the indent and " * " prefix.
-	const width = Math.max(1, 80 - indent.length - 3);
+	const width = Math.max(1, 80 - getDisplayWidth(indent) - 3);
 	// The undecorated comment content lines.
 	const content = getJSDocContent(commentText);
 	// The content split into its prose and tag sections.

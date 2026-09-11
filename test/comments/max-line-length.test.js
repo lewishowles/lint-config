@@ -46,10 +46,31 @@ function openDialog() {}`,
 		},
 		{
 			name: "counts indentation and the line marker when wrapping",
-			code: "\t// Explain how this dialog restores focus after it closes and returns to the original trigger.\nopenDialog();",
+			code: "\t// Explain how this dialog restores focus after it closes, then returns to the original trigger.\nopenDialog();",
 			errors: [{ message: "Comment exceeds 80 characters.", line: 1, column: 1 }],
 			output:
-				"\t// Explain how this dialog restores focus after it closes and returns to the\n\t// original trigger.\nopenDialog();",
+				"\t// Explain how this dialog restores focus after it closes, then returns to\n\t// the original trigger.\nopenDialog();",
+		},
+		{
+			name: "wraps two-tab comments within 80 display columns",
+			code: "\t\t// Explain how this dialog restores focus after it closes and returns to the original trigger.\nopenDialog();",
+			errors: [{ message: "Comment exceeds 80 characters.", line: 1, column: 2 }],
+			output:
+				"\t\t// Explain how this dialog restores focus after it closes and returns to\n\t\t// the original trigger.\nopenDialog();",
+		},
+		{
+			name: "reports a two-tab comment under 80 raw characters",
+			code: "\t\t// Explain how this dialog restores focus after closing and returns to focus.\nopenDialog();",
+			errors: [{ message: "Comment exceeds 80 characters.", line: 1, column: 2 }],
+			output:
+				"\t\t// Explain how this dialog restores focus after closing and returns to\n\t\t// focus.\nopenDialog();",
+		},
+		{
+			name: "reports an eight-space comment the same as the two-tab comment",
+			code: "        // Explain how this dialog restores focus after closing and returns to focus.\nopenDialog();",
+			errors: [{ message: "Comment exceeds 80 characters.", line: 1, column: 8 }],
+			output:
+				"        // Explain how this dialog restores focus after closing and returns to\n        // focus.\nopenDialog();",
 		},
 		{
 			name: "wraps an overlong ordinary block comment",

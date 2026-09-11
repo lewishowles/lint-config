@@ -117,8 +117,10 @@ export default {
 			 *     The call expression node.
 			 */
 			CallExpression(node) {
-				// Read fresh for every call: createOnce's visitor is shared across every file
-				// in the run, so caching this at closure-creation time would freeze the first
+				// Read fresh for every call: createOnce's visitor is shared
+				// across every file
+				// in the run, so caching this at closure-creation time would
+				// freeze the first
 				// file's options.
 				const configuredApis = getConfiguredApis(context);
 

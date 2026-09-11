@@ -136,7 +136,8 @@ function formatOrdinaryBlockComment(sourceCode, comment) {
 	if (lines[0] === "/*" && lines.at(-1).trim() === "*/" && proseLineIndexes.length > 0) {
 		// The comment lines, formatted in place.
 		const formattedLines = [...lines];
-		// The first and last prose line indexes, which start and end the sentence.
+		// The first and last prose line indexes, which start and end the
+		// sentence.
 		const firstProseLine = proseLineIndexes[0];
 		// The last prose line index, which ends the sentence.
 		const lastProseLine = proseLineIndexes.at(-1);
@@ -193,13 +194,15 @@ export default {
 			 */
 			Program() {
 				for (const commentGroup of getLineCommentGroups(context.sourceCode)) {
-					// The group's replacement text, or null when it already reads as a sentence.
+					// The group's replacement text, or null when it already
+					// reads as a sentence.
 					const formattedGroup = formatLineCommentGroup(context.sourceCode, commentGroup);
 
 					if (formattedGroup) {
 						context.report({
 							/**
-							 * Apply the formatted replacement to the comment group.
+							 * Apply the formatted replacement to the comment
+							 * group.
 							 *
 							 * @param  {object}  fixer
 							 *     The Oxlint fixer.
@@ -208,7 +211,8 @@ export default {
 							 *     The fixes to apply.
 							 */
 							fix: (fixer) => {
-								// The fixes to apply, starting with the first comment's replacement.
+								// The fixes to apply, starting with the first
+								// comment's replacement.
 								const fixes = [
 									replaceMinimalComment(
 										fixer,
@@ -245,7 +249,8 @@ export default {
 					// The comment's raw source text.
 					const commentText = getCommentText(context.sourceCode, comment);
 
-					// The comment, sentence-formatted using the JSDoc or ordinary-block formatter.
+					// The comment, sentence-formatted using the JSDoc or
+					// ordinary-block formatter.
 					const formattedComment = isJSDoc(commentText)
 						? formatJSDocPunctuation(context.sourceCode, comment)
 						: formatOrdinaryBlockComment(context.sourceCode, comment);
@@ -253,7 +258,8 @@ export default {
 					if (formattedComment !== commentText) {
 						context.report({
 							/**
-							 * Apply the sentence-formatted replacement to the comment.
+							 * Apply the sentence-formatted replacement to the
+							 * comment.
 							 *
 							 * @param  {object}  fixer
 							 *     The Oxlint fixer.

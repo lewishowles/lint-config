@@ -240,7 +240,8 @@ export default {
 						continue;
 					}
 
-					// The reindentation fixes for the comment and its continuations.
+					// The reindentation fixes for the comment and its
+					// continuations.
 					const fixes = getCommentIndentationFixes(
 						context.sourceCode,
 						comment,
@@ -249,10 +250,12 @@ export default {
 						expectedIndent,
 					);
 
-					// The next comment token, used to avoid overlapping gap fixes.
+					// The next comment token, used to avoid overlapping gap
+					// fixes.
 					const followingComment = comments[index + 1];
 
-					// The fix that closes the gap between the comment and its code, when needed.
+					// The fix that closes the gap between the comment and its
+					// code, when needed.
 					const gapFix = getCommentGapFix(
 						context.sourceCode,
 						comment,

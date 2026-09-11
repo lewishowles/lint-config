@@ -40,7 +40,8 @@ export default {
 						continue;
 					}
 
-					// The comment, with its tag spacing, order, and grouping normalised.
+					// The comment, with its tag spacing, order, and grouping
+					// normalised.
 					const formattedComment = formatJSDocTagFormatting(context.sourceCode, comment);
 
 					if (formattedComment === commentText) {

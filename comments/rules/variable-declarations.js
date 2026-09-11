@@ -56,7 +56,8 @@ export default {
 					return;
 				}
 
-				// A lone const class expression is documented by class-documentation.
+				// A lone const class expression is documented by
+				// class-documentation.
 				if (
 					node.kind === "const" &&
 					node.declarations.length === 1 &&
@@ -66,7 +67,8 @@ export default {
 					return;
 				}
 
-				// Resolves any export wrapper before checking for documentation.
+				// Resolves any export wrapper before checking for
+				// documentation.
 				const documentationNode = getDocumentationNode(node);
 
 				if (!hasImmediateLineComment(context.sourceCode, documentationNode)) {

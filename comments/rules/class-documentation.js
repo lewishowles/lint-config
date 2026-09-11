@@ -33,7 +33,8 @@ export default {
 			 *     The class declaration node.
 			 */
 			ClassDeclaration(node) {
-				// Resolves any export wrapper before checking for documentation.
+				// Resolves any export wrapper before checking for
+				// documentation.
 				const documentationNode = getDocumentationNode(node);
 
 				if (!hasImmediateBlockComment(context.sourceCode, documentationNode)) {
@@ -44,8 +45,8 @@ export default {
 				}
 			},
 			/**
-			 * Check class methods for required JSDoc blocks and tags. Constructors are
-			 * exempt from the @returns requirement.
+			 * Check class methods for required JSDoc blocks and tags.
+			 * Constructors are exempt from the @returns requirement.
 			 *
 			 * @param  {object}  node
 			 *     The method-definition node.
@@ -93,7 +94,8 @@ export default {
 					return;
 				}
 
-				// Static and instance fields share the requirement; only the wording differs.
+				// Static and instance fields share the requirement; only the
+				// wording differs.
 				const message = node.static
 					? "Static fields require an immediately preceding line comment."
 					: "Instance fields require an immediately preceding line comment.";
@@ -116,7 +118,8 @@ export default {
 					return;
 				}
 
-				// Resolves any export wrapper before checking for documentation.
+				// Resolves any export wrapper before checking for
+				// documentation.
 				const documentationNode = getDocumentationNode(node.parent);
 
 				if (!hasImmediateBlockComment(context.sourceCode, documentationNode)) {

@@ -2,6 +2,7 @@ import { formatJSDocWrapping, isJSDoc } from "../utils/jsdoc.js";
 
 import {
 	getCommentText,
+	getDisplayWidth,
 	getLineIndent,
 	getNewline,
 	isDirectiveComment,
@@ -33,7 +34,7 @@ function formatLineComment(sourceCode, comment) {
 	}
 
 	// The available width, allowing for the indent and "// " prefix.
-	const width = maximumLineLength - indentation.length - 3;
+	const width = maximumLineLength - getDisplayWidth(indentation) - 3;
 	// The comment's undecorated text.
 	const text = comment.value.trim();
 
@@ -74,7 +75,7 @@ function formatBlockComment(sourceCode, comment) {
 	// The comment body, sentence-formatted.
 	const text = formatSentence(commentText.slice(2, -2).trim());
 	// The available width, allowing for the indent and " * " prefix.
-	const width = maximumLineLength - indentation.length - 3;
+	const width = maximumLineLength - getDisplayWidth(indentation) - 3;
 	// The comment body, rewrapped to the available width.
 	const lines = wrapWords(text, Math.max(1, width));
 
@@ -120,11 +121,20 @@ export default {
 					// The comment's individual source lines.
 					const lines = commentText.split(/\r\n|\n|\r/);
 
-					if (!lines.some((line) => line.length > maximumLineLength)) {
+					// The whitespace before the comment, absent when code
+					// precedes it.
+					const indentation = getLineIndent(context.sourceCode, comment.range[0]) ?? "";
+					// The comment lines as they appear on screen. The raw text
+					// omits the first line's indentation, so it is restored
+					// before measuring.
+					const displayLines = [`${indentation}${lines[0]}`, ...lines.slice(1)];
+
+					if (!displayLines.some((line) => getDisplayWidth(line) > maximumLineLength)) {
 						continue;
 					}
 
-					// The comment, rewrapped using the formatter matching its type.
+					// The comment, rewrapped using the formatter matching its
+					// type.
 					const formattedComment =
 						comment.type === "Line"
 							? formatLineComment(context.sourceCode, comment)

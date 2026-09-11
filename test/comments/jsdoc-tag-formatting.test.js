@@ -145,5 +145,30 @@ function moveTab(tab, index) {}`,
  */
 function moveTab(tab, index) {}`,
 		},
+		{
+			name: "wraps tab-indented tag descriptions within 80 display columns",
+			code: `\t/**
+	 * Open the dialog.
+	 *
+	 * @param  {object}  options
+	 *     Explain how this modal restores focus after it closes and returns to the original trigger.
+	 */
+	function openDialog(options) {}`,
+			errors: [
+				{
+					message: "JSDoc tags must use the configured spacing, order, and grouping.",
+					line: 1,
+					column: 1,
+				},
+			],
+			output: `\t/**
+	 * Open the dialog.
+	 *
+	 * @param  {object}  options
+	 *     Explain how this modal restores focus after it closes and returns to
+	 *     the original trigger.
+	 */
+	function openDialog(options) {}`,
+		},
 	],
 });

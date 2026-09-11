@@ -40,7 +40,8 @@ export default {
 						continue;
 					}
 
-					// The comment, with its block structure and delimiters normalised.
+					// The comment, with its block structure and delimiters
+					// normalised.
 					const formattedComment = formatJSDocBlockStructure(context.sourceCode, comment);
 
 					if (formattedComment === commentText) {
