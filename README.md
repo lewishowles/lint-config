@@ -92,13 +92,45 @@ The `comments/configured-api-calls` rule requires an immediately preceding line 
 }
 ```
 
+The `comments/variable-declarations` rule accepts a `rootOnly` option to require comments only before root-level `const`, `let`, and `using` declarations. The comments layer already enables `rootOnly` for test files matched by `**/*.test.*`, `**/*.spec.*`, and `**/test/**`; other files keep the default of `false`. Override it for another scope or to change the behaviour:
+
+```json
+{
+	"rules": {
+		"comments/variable-declarations": ["error", { "rootOnly": true }]
+	}
+}
+```
+
 The `comments/class-documentation` rule requires an immediately preceding block comment before class declarations and const-assigned class expressions. Constructors, methods, getters, and setters require full JSDoc; constructors never need an `@returns` tag, and getters and setters need one only when they return a value. Instance and static fields require an immediately preceding line comment.
 
 ### `vp check` configuration
 
 The `vp check` and `vp lint` commands read Oxlint settings only from a `lint` block in `vite.config.js`; they do not read `.oxlintrc.json` directly. If `vite.config.js` is missing, they silently use an unrelated default configuration. You may still see plausible warnings and exit codes, but none of your rules are applied.
 
-Each consuming repo needs a `vite.config.js` with a `lint` block built from the config layer(s) and the repo's `.oxlintrc.json`, imported as JSON. Verify the setup with `vp lint --print-config <file>` and check that your real values, not defaults, are active.
+Each consuming repo needs a `vite.config.js` with a `lint` block built from the config layer(s) and the repo's `.oxlintrc.json`, imported as JSON. Concatenate the `overrides` arrays from every imported layer before the local overrides so shared file-specific rules still apply. Verify the setup with `vp lint --print-config <file>` and check that your real values, not defaults, are active.
+
+```js
+import { defineConfig } from "vite-plus";
+import lintConfigBase from "@lewishowles/lint-config/base.json" with { type: "json" };
+import lintConfigComments from "@lewishowles/lint-config/comments.json" with { type: "json" };
+import oxlintrc from "./.oxlintrc.json" with { type: "json" };
+
+const lint = {
+	...lintConfigBase,
+	env: oxlintrc.env,
+	ignorePatterns: oxlintrc.ignorePatterns,
+	jsPlugins: [...lintConfigBase.jsPlugins, ...lintConfigComments.jsPlugins],
+	overrides: [
+		...(lintConfigBase.overrides ?? []),
+		...(lintConfigComments.overrides ?? []),
+		...(oxlintrc.overrides ?? []),
+	],
+	rules: { ...lintConfigBase.rules, ...lintConfigComments.rules },
+};
+
+export default defineConfig({ lint });
+```
 
 ## Customising
 
@@ -130,7 +162,7 @@ Ignore patterns are project-specific, so they always live in your project config
 
 ### Adding overrides
 
-Overrides are additive: shared overrides (if any) still apply, and your local ones are appended.
+Overrides are additive in the `vite.config.js` lint block: shared overrides still apply, and your local ones are appended.
 
 ```json
 {
@@ -167,7 +199,7 @@ The base layer sorts named members within each import statement, but leaves decl
 ## What stays repo-local
 
 - `ignorePatterns`, since every project has different build output and tool directories
-- `overrides` for project-specific directories (e.g. `bin/**/*.js`, `src/cli/**/*.js`, `src/playwright/**/*.js`), since the file paths differ per project and can't be generalised
+- `overrides` for project-specific directories (e.g. `bin/**/*.js`, `src/cli/**/*.js`, `src/playwright/**/*.js`), since the file paths differ per project and can't be generalised. The `vite.config.js` lint block appends these local entries after the shared layer overrides.
 - Rule relaxations for specific file patterns (e.g. turning off `vite-plus/prefer-vite-plus-imports` in generated `.d.ts` files)
 - Additional plugins, only for projects that need them
 
@@ -176,6 +208,6 @@ The base layer sorts named members within each import statement, but leaves decl
 When a project's `.oxlintrc.json` extends a shared layer:
 
 - **Rules** shallow-merge by key: your value wins for any rule defined in both
-- **Overrides** are additive: both shared and local `overrides` entries apply, including any `env` declared inside an override block
+- **Overrides** are additive in the `vite.config.js` lint block: it concatenates shared layer and local `overrides` entries, including any `env` declared inside an override block
 - **Plugins** are additive: both shared and local `plugins`/`jsPlugins` load, deduplicated
 - **`env`, `globals`, and `ignorePatterns` don't merge through `extends` at all** (an open Oxlint bug), which is why the usage examples above redeclare `env`/`globals` directly. See [known limitations](docs/limitations.md) for the full detail, including the separate `vite-plus` caveat around resolving `extends` paths.

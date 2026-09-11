@@ -33,6 +33,18 @@ export default {
 	meta: {
 		docs: { description: "Require comments before variable declarations." },
 		type: "suggestion",
+		schema: [
+			{
+				type: "object",
+				properties: {
+					rootOnly: {
+						type: "boolean",
+					},
+				},
+				additionalProperties: false,
+			},
+		],
+		defaultOptions: [{ rootOnly: false }],
 	},
 	/**
 	 * Create the rule's node visitors.
@@ -67,11 +79,24 @@ export default {
 					return;
 				}
 
+				// The rule's resolved options for the file currently being
+				// visited.
+				const options = context.options?.[0];
+
 				// Resolves any export wrapper before checking for
 				// documentation.
 				const documentationNode = getDocumentationNode(node);
 
-				if (!hasImmediateLineComment(context.sourceCode, documentationNode)) {
+				// With rootOnly, only declarations directly under the
+				// Program need a comment, so a nested variable inside
+				// a function is left alone.
+				const shouldCheckDocumentation =
+					!options?.rootOnly || documentationNode.parent?.type === "Program";
+
+				if (
+					shouldCheckDocumentation &&
+					!hasImmediateLineComment(context.sourceCode, documentationNode)
+				) {
 					context.report({
 						message: "Variable declarations require an immediately preceding line comment.",
 						node: documentationNode,

@@ -16,6 +16,11 @@ ruleTester.run("comments/variable-declarations", rule, {
 		"// The dialog state and actions.\nconst { close, isOpen, open } = useDialog();",
 		"const Dialog = class {}",
 		"// The dialog component.\nconst Dialog = class {}",
+		{
+			name: "allows nested declarations when rootOnly is enabled",
+			code: "function useResource() {\n\tconst resource = getResource();\n}",
+			options: [{ rootOnly: true }],
+		},
 		"for (let index = 0; index < items.length; index += 1) {}",
 		"for (const item of items) {}",
 		"for (const key in item) {}",
@@ -35,6 +40,18 @@ ruleTester.run("comments/variable-declarations", rule, {
 		{
 			name: "requires a comment before an exported const declaration",
 			code: "export const dialog = getDialog();",
+			errors: [{ message: "Variable declarations require an immediately preceding line comment." }],
+		},
+		{
+			name: "requires a comment before a root const when rootOnly is enabled",
+			code: "const dialog = getDialog();",
+			options: [{ rootOnly: true }],
+			errors: [{ message: "Variable declarations require an immediately preceding line comment." }],
+		},
+		{
+			name: "requires a comment before an exported root const when rootOnly is enabled",
+			code: "export const dialog = getDialog();",
+			options: [{ rootOnly: true }],
 			errors: [{ message: "Variable declarations require an immediately preceding line comment." }],
 		},
 		{
@@ -80,6 +97,12 @@ ruleTester.run("comments/variable-declarations", rule, {
 		{
 			name: "rejects multiple using declarators with a declaration comment",
 			code: "function useResources() {\n\t// The resources.\n\tusing a = f(), b = g();\n}",
+			errors: [{ message: "Declare one variable per declaration statement." }],
+		},
+		{
+			name: "rejects multiple using declarators when rootOnly is enabled",
+			code: "function useResources() {\n\t// The resources.\n\tusing a = f(), b = g();\n}",
+			options: [{ rootOnly: true }],
 			errors: [{ message: "Declare one variable per declaration statement." }],
 		},
 		{

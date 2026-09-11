@@ -10,7 +10,11 @@ const lint = {
 	env: oxlintrc.env,
 	ignorePatterns: oxlintrc.ignorePatterns,
 	jsPlugins: [...lintConfigBase.jsPlugins, ...lintConfigComments.jsPlugins],
-	overrides: oxlintrc.overrides,
+	overrides: [
+		...(lintConfigBase.overrides ?? []),
+		...(lintConfigComments.overrides ?? []),
+		...(oxlintrc.overrides ?? []),
+	],
 	rules: { ...lintConfigBase.rules, ...lintConfigComments.rules },
 };
 

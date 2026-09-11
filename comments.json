@@ -19,5 +19,13 @@
 		"comments/vue-component-documentation": "error",
 		"comments/vue-emit-documentation": "error",
 		"comments/vue-prop-documentation": "error"
-	}
+	},
+	"overrides": [
+		{
+			"files": ["**/*.test.*", "**/*.spec.*", "**/test/**"],
+			"rules": {
+				"comments/variable-declarations": ["error", { "rootOnly": true }]
+			}
+		}
+	]
 }
