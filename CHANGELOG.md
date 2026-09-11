@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0: 2026-09-11
+
+### Changes
+
+- `comments/variable-declarations`: add a `rootOnly` option; `comments.json` enables it for test files so only root-level variables need comments there. If you override `comments.json` rules, concatenate the test-file override (see README).
+
+### Fixes
+
+- Measure comment width in display columns, with tabs counted as four, so indented comments wrap and validate against the visible 80-column limit.
+
 ## 0.4.0: 2026-08-28
 
 ### New rules
