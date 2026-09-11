@@ -40,7 +40,8 @@
 		"lint": "vp check",
 		"lint:fix": "vp check --fix",
 		"prepare": "vp config --no-agent",
-		"publint": "publint"
+		"publint": "publint",
+		"test:unit": "node --test test/comments/*.test.js"
 	},
 	"devDependencies": {
 		"publint": "^0.3.22",
