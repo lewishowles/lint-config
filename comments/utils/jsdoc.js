@@ -525,13 +525,17 @@ function formatTagDescriptions(lines, width, addPunctuation) {
  *     The Oxlint source code object.
  * @param  {object}  comment
  *     The JSDoc comment token.
+ * @param  {string}  commentText
+ *     The comment text to format. Defaults to the comment's source text.
  *
  * @returns  {object}
  *     The JSDoc content and layout details.
  */
-function getJSDocFormattingContext(sourceCode, comment) {
-	// The raw comment source text.
-	const commentText = getCommentText(sourceCode, comment);
+function getJSDocFormattingContext(
+	sourceCode,
+	comment,
+	commentText = getCommentText(sourceCode, comment),
+) {
 	// The indentation the comment's lines are aligned to.
 	const indent = getLineIndent(sourceCode, comment.range[0]) ?? "";
 	// The newline style used by the surrounding source.
@@ -725,13 +729,19 @@ export function formatJSDocPunctuation(sourceCode, comment) {
  *     The Oxlint source code object.
  * @param  {object}  comment
  *     The JSDoc comment token.
+ * @param  {string}  commentText
+ *     The comment text to wrap. Defaults to the comment's source text.
  *
  * @returns  {string}
  *     The formatted comment text.
  */
-export function formatJSDocWrapping(sourceCode, comment) {
+export function formatJSDocWrapping(
+	sourceCode,
+	comment,
+	commentText = getCommentText(sourceCode, comment),
+) {
 	// The comment's parsed content and layout details.
-	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
+	const formattingContext = getJSDocFormattingContext(sourceCode, comment, commentText);
 	// The prose, rewrapped to the comment's available width.
 	const prose = formatProse(formattingContext.proseLines, formattingContext.width, false);
 

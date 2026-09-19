@@ -1,5 +1,4 @@
 /* oxlint-disable @stylistic/padding-line-between-statements */
-/* oxlint-disable comments/sentence-punctuation */
 /* oxlint-disable comments/formatting */
 /* oxlint-disable comments/placement */
 /* oxlint-disable comments/block-comments */

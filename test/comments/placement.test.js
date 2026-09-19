@@ -64,12 +64,12 @@ registerDialog();`,
 		},
 		{
 			name: "ignores directives when finding a continuation-comment leader",
-			code: "// oxlint-disable-next-line comments/sentence-punctuation\n\t// Explain the value across two lines and\n\t// continue on the second line.\nconst value = 1;",
+			code: "// oxlint-disable-next-line comments/formatting\n\t// Explain the value across two lines and\n\t// continue on the second line.\nconst value = 1;",
 			errors: [
 				{ message: "Comment must be immediately before the documented code.", line: 2, column: 1 },
 			],
 			output:
-				"// oxlint-disable-next-line comments/sentence-punctuation\n// Explain the value across two lines and\n// continue on the second line.\nconst value = 1;",
+				"// oxlint-disable-next-line comments/formatting\n// Explain the value across two lines and\n// continue on the second line.\nconst value = 1;",
 		},
 		{
 			name: "does not treat comments separated by a directive as continuations",

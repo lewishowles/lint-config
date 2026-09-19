@@ -3,7 +3,7 @@
 // Explain how this dialog restores focus after it closes and returns to the original trigger.
 const maxLengthValue = 1;
 
-// oxlint-disable-next-line comments/sentence-punctuation
+// oxlint-disable-next-line comments/formatting
 // close the dialog
 const punctuationValue = 1;
 
@@ -17,7 +17,7 @@ const placementValue = 1;
 // to the original trigger.
 onClickOutside(dialog, dismissDialog);
 
-// oxlint-disable-next-line comments/block-comments comments/jsdoc-tag-formatting comments/sentence-punctuation
+// oxlint-disable-next-line comments/block-comments comments/jsdoc-tag-formatting comments/formatting
 /** Open the dialog.
  *
  * @param {object} options

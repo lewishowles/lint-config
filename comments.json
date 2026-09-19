@@ -13,7 +13,6 @@
 		"comments/function-documentation": "error",
 		"comments/jsdoc-tag-formatting": "error",
 		"comments/placement": "error",
-		"comments/sentence-punctuation": "error",
 		"comments/variable-declarations": "error",
 		"comments/vue-component-documentation": "error",
 		"comments/vue-emit-documentation": "error",

@@ -1,4 +1,4 @@
-import { formatJSDocWrapping, isJSDoc } from "../utils/jsdoc.js";
+import { formatJSDocPunctuation, formatJSDocWrapping, isJSDoc } from "../utils/jsdoc.js";
 
 import {
 	getCommentText,
@@ -11,10 +11,35 @@ import {
 	replaceMinimalComment,
 } from "../utils/source.js";
 
-import { formatSentence, wrapWords } from "../utils/wrap.js";
+import {
+	addTerminalPunctuation,
+	capitaliseSentence,
+	formatSentence,
+	wrapWords,
+} from "../utils/wrap.js";
 
 // The line length this rule wraps comments to.
 const maximumLineLength = 80;
+
+/**
+ * Return a line comment's source text with a new value after the `//`.
+ *
+ * @param  {object}  sourceCode
+ *     The Oxlint source code object.
+ * @param  {object}  comment
+ *     The line comment token.
+ * @param  {string}  value
+ *     The replacement comment value.
+ *
+ * @returns  {string}
+ *     The replacement comment text.
+ */
+function replaceLineCommentValue(sourceCode, comment, value) {
+	// The comment's raw source text.
+	const commentText = getCommentText(sourceCode, comment);
+
+	return `${commentText.slice(0, 2)}${value}`;
+}
 
 /**
  * Wrap a line comment to the configured maximum width.
@@ -25,16 +50,18 @@ const maximumLineLength = 80;
  *     The line comment token.
  * @param  {string}  indentation
  *     The indentation shared by the comment group.
+ * @param  {string}  commentText
+ *     The comment text to wrap.
  *
  * @returns  {string|null}
  *     The wrapped comment without leading indentation, or null when it is a
  *     directive.
  */
-function formatLineComment(sourceCode, comment, indentation) {
+function formatLineComment(sourceCode, comment, indentation, commentText) {
 	// The available width, allowing for the indent and "// " prefix.
 	const width = maximumLineLength - getDisplayWidth(indentation) - 3;
 	// The comment's undecorated text.
-	const text = comment.value.trim();
+	const text = commentText.slice(2).trim();
 
 	if (isDirectiveComment(comment)) {
 		return null;
@@ -50,17 +77,110 @@ function formatLineComment(sourceCode, comment, indentation) {
 }
 
 /**
- * Wrap an ordinary block comment to the configured maximum width.
+ * Apply a prose formatter to a block-comment line, keeping its leading `*`.
+ *
+ * @param  {string}  line
+ *     The block-comment line.
+ * @param  {function}  formatProse
+ *     The formatter for the line's prose.
+ *
+ * @returns  {string}
+ *     The formatted block-comment line.
+ */
+function formatBlockCommentLine(line, formatProse) {
+	// The line's leading `*` decoration, when present.
+	const marker = line.match(/^\s*\*\s?/);
+
+	if (marker === null) {
+		return line;
+	}
+
+	return `${marker[0]}${formatProse(line.slice(marker[0].length).trim())}`;
+}
+
+/**
+ * Format prose in an ordinary block comment as complete sentences.
  *
  * @param  {object}  sourceCode
  *     The Oxlint source code object.
  * @param  {object}  comment
  *     The block comment token.
  *
+ * @returns  {string}
+ *     The sentence-formatted comment text.
+ */
+function formatOrdinaryBlockComment(sourceCode, comment) {
+	// The comment's raw source text.
+	const commentText = getCommentText(sourceCode, comment);
+	// The indentation the comment's lines are aligned to.
+	const indentation = getLineIndent(sourceCode, comment.range[0]);
+	// The comment body, stripped of its /* */ delimiters.
+	const content = commentText.slice(2, -2).trim();
+
+	if (indentation === null || content === "" || isDirectiveComment(comment)) {
+		return commentText;
+	}
+
+	if (!commentText.includes("\n") && !commentText.includes("\r")) {
+		return `/* ${formatSentence(content)} */`;
+	}
+
+	// The comment's individual source lines.
+	const lines = commentText.split(/\r\n|\n|\r/);
+
+	// The indexes of lines carrying prose, excluding the delimiter lines.
+	const proseLineIndexes = lines
+		.slice(1, -1)
+		.map((line, index) => ({ index: index + 1, text: line.replace(/^\s*\*?\s?/, "").trim() }))
+		.filter((line) => line.text !== "")
+		.map((line) => line.index);
+
+	if (lines[0] === "/*" && lines.at(-1).trim() === "*/" && proseLineIndexes.length > 0) {
+		// The comment lines, formatted in place.
+		const formattedLines = [...lines];
+		// The first prose line index, which starts the sentence.
+		const firstProseLine = proseLineIndexes[0];
+		// The last prose line index, which ends the sentence.
+		const lastProseLine = proseLineIndexes.at(-1);
+
+		formattedLines[firstProseLine] = formatBlockCommentLine(
+			formattedLines[firstProseLine],
+			capitaliseSentence,
+		);
+		formattedLines[lastProseLine] = formatBlockCommentLine(
+			formattedLines[lastProseLine],
+			addTerminalPunctuation,
+		);
+
+		return formattedLines.join(getNewline(sourceCode.text));
+	}
+
+	// The comment's prose, joined into a single paragraph.
+	const paragraphs = content
+		.split(/\r\n|\n|\r/)
+		.map((line) => line.replace(/^\s*\*?\s?/, "").trim())
+		.filter(Boolean)
+		.join(" ");
+
+	return ["/*", `${indentation} * ${formatSentence(paragraphs)}`, `${indentation} */`].join(
+		getNewline(sourceCode.text),
+	);
+}
+
+/**
+ * Wrap an ordinary block comment to the configured maximum width.
+ *
+ * @param  {object}  sourceCode
+ *     The Oxlint source code object.
+ * @param  {object}  comment
+ *     The block comment token.
+ * @param  {string}  commentText
+ *     The sentence-formatted comment text to wrap.
+ *
  * @returns  {string|null}
  *     The wrapped comment, or null when it is not a standalone comment.
  */
-function formatBlockComment(sourceCode, comment) {
+function formatBlockComment(sourceCode, comment, commentText) {
 	// The comment's current indentation.
 	const indentation = getLineIndent(sourceCode, comment.range[0]);
 
@@ -68,10 +188,14 @@ function formatBlockComment(sourceCode, comment) {
 		return null;
 	}
 
-	// The comment's raw source text.
-	const commentText = getCommentText(sourceCode, comment);
-	// The comment body, sentence-formatted.
-	const text = formatSentence(commentText.slice(2, -2).trim());
+	// The comment body, without its delimiters or line markers.
+	const text = commentText
+		.slice(2, -2)
+		.split(/\r\n|\n|\r/)
+		.map((line) => line.replace(/^\s*\*?\s?/, "").trim())
+		.filter(Boolean)
+		.join(" ");
+
 	// The available width, allowing for the indent and " * " prefix.
 	const width = maximumLineLength - getDisplayWidth(indentation) - 3;
 	// The comment body, rewrapped to the available width.
@@ -83,7 +207,29 @@ function formatBlockComment(sourceCode, comment) {
 }
 
 /**
- * Report line-comment groups that need reindentation or wrapping.
+ * Return the display lines for a formatted block comment.
+ *
+ * @param  {object}  sourceCode
+ *     The Oxlint source code object.
+ * @param  {object}  comment
+ *     The block comment token.
+ * @param  {string}  commentText
+ *     The formatted comment text.
+ *
+ * @returns  {string[]}
+ *     The comment lines as they appear on screen.
+ */
+function getBlockCommentDisplayLines(sourceCode, comment, commentText) {
+	// The comment's current indentation.
+	const indentation = getLineIndent(sourceCode, comment.range[0]) ?? "";
+	// The comment's individual source lines.
+	const lines = commentText.split(/\r\n|\n|\r/);
+
+	return [`${indentation}${lines[0]}`, ...lines.slice(1)];
+}
+
+/**
+ * Report line-comment groups that need punctuation, reindentation or wrapping.
  *
  * @param  {object}  context
  *     The Oxlint rule context.
@@ -119,12 +265,45 @@ function reportLineCommentGroups(context) {
 
 		// The group's current source text.
 		const sourceText = context.sourceCode.text.slice(...groupToken.range);
+		// The first comment's undecorated text.
+		const firstText = standaloneComments[0].value.trim();
+		// Whether sentence punctuation applies to this group.
+		const formatPunctuation = firstText !== "" && !firstText.startsWith("@");
 
-		// The group's text after reindentation and line wrapping.
+		// The first comment's value, formatted as a sentence when needed.
+		let firstValue = standaloneComments[0].value;
+		// The last comment's value, given a full stop when punctuation applies.
+		let lastValue = standaloneComments.at(-1).value;
+
+		if (formatPunctuation) {
+			if (standaloneComments.length === 1) {
+				firstValue = formatSentence(firstValue);
+				lastValue = firstValue;
+			} else {
+				firstValue = capitaliseSentence(firstValue);
+				lastValue = addTerminalPunctuation(lastValue);
+			}
+		}
+
+		// Whether sentence punctuation changes the group.
+		const sentenceChanged =
+			formatPunctuation &&
+			(firstValue !== standaloneComments[0].value || lastValue !== standaloneComments.at(-1).value);
+
+		// The group's text after punctuation, reindentation, and line wrapping.
 		const formattedText = standaloneComments
-			.map((comment) => {
-				// The comment's source text without its line indentation.
-				const commentText = getCommentText(context.sourceCode, comment);
+			.map((comment, index) => {
+				// The comment's value, using the group's first and last values.
+				let value = comment.value;
+
+				if (index === 0) {
+					value = firstValue;
+				} else if (index === standaloneComments.length - 1) {
+					value = lastValue;
+				}
+
+				// The comment's source text after sentence formatting.
+				const commentText = replaceLineCommentValue(context.sourceCode, comment, value);
 				// The comment's text after applying the group's indentation.
 				const reindentedText = `${firstIndent}${commentText}`;
 
@@ -132,7 +311,8 @@ function reportLineCommentGroups(context) {
 				// the limit.
 				const formattedComment =
 					getDisplayWidth(reindentedText) > maximumLineLength
-						? (formatLineComment(context.sourceCode, comment, firstIndent) ?? commentText)
+						? (formatLineComment(context.sourceCode, comment, firstIndent, commentText) ??
+							commentText)
 						: commentText;
 
 				return `${firstIndent}${formattedComment}`;
@@ -154,14 +334,16 @@ function reportLineCommentGroups(context) {
 			 *     The fix for the complete comment group.
 			 */
 			fix: (fixer) => replaceMinimalComment(fixer, groupToken, sourceText, formattedText),
-			message: "Format this comment.",
+			message: sentenceChanged
+				? "Comment text must be a complete sentence."
+				: "Format this comment.",
 			node: firstStandaloneComment,
 		});
 	}
 }
 
 /**
- * Report block comments that need wrapping.
+ * Report block comments that need punctuation or wrapping.
  *
  * @param  {object}  context
  *     The Oxlint rule context.
@@ -174,22 +356,27 @@ function reportBlockComments(context) {
 
 		// The comment's raw source text.
 		const commentText = getCommentText(context.sourceCode, comment);
-		// The comment's individual source lines.
-		const lines = commentText.split(/\r\n|\n|\r/);
-		// The whitespace before the comment, absent when code precedes it.
-		const indentation = getLineIndent(context.sourceCode, comment.range[0]) ?? "";
-		// The comment lines as they appear on screen. The raw text omits the
-		// first line's indentation, so it is restored before measuring.
-		const displayLines = [`${indentation}${lines[0]}`, ...lines.slice(1)];
 
-		if (!displayLines.some((line) => getDisplayWidth(line) > maximumLineLength)) {
-			continue;
+		// The comment after sentence capitalisation and punctuation.
+		const punctuatedComment = isJSDoc(commentText)
+			? formatJSDocPunctuation(context.sourceCode, comment)
+			: formatOrdinaryBlockComment(context.sourceCode, comment);
+
+		// The comment lines as they appear on screen after punctuation.
+		const displayLines = getBlockCommentDisplayLines(
+			context.sourceCode,
+			comment,
+			punctuatedComment,
+		);
+
+		// The comment, rewrapped when punctuation leaves a line over the limit.
+		let formattedComment = punctuatedComment;
+
+		if (displayLines.some((line) => getDisplayWidth(line) > maximumLineLength)) {
+			formattedComment = isJSDoc(commentText)
+				? formatJSDocWrapping(context.sourceCode, comment, punctuatedComment)
+				: formatBlockComment(context.sourceCode, comment, punctuatedComment);
 		}
-
-		// The comment, rewrapped using the formatter matching its type.
-		const formattedComment = isJSDoc(commentText)
-			? formatJSDocWrapping(context.sourceCode, comment)
-			: formatBlockComment(context.sourceCode, comment);
 
 		if (formattedComment === null || formattedComment === commentText) {
 			continue;
@@ -206,15 +393,19 @@ function reportBlockComments(context) {
 			 *     The fix to apply.
 			 */
 			fix: (fixer) => replaceMinimalComment(fixer, comment, commentText, formattedComment),
-			message: "Format this comment.",
+			message:
+				punctuatedComment !== commentText
+					? "Comment text must be a complete sentence."
+					: "Format this comment.",
 			node: comment,
 		});
 	}
 }
 
 /**
- * The comment-formatting rule: reindents line-comment groups and wraps any
- * comment past 80 columns, replacing each comment in one edit.
+ * The comment-formatting rule: punctuates comments as sentences, reindents
+ * line-comment groups and wraps any comment past 80 columns, replacing each
+ * comment in one edit.
  */
 export default {
 	meta: {

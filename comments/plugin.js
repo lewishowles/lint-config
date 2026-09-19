@@ -5,7 +5,6 @@ import formatting from "./rules/formatting.js";
 import functionDocumentation from "./rules/function-documentation.js";
 import jsdocTagFormatting from "./rules/jsdoc-tag-formatting.js";
 import placement from "./rules/placement.js";
-import sentencePunctuation from "./rules/sentence-punctuation.js";
 import variableDeclarations from "./rules/variable-declarations.js";
 import vueComponentDocumentation from "./rules/vue-component-documentation.js";
 import vueEmitDocumentation from "./rules/vue-emit-documentation.js";
@@ -21,7 +20,6 @@ export default {
 		"function-documentation": functionDocumentation,
 		"jsdoc-tag-formatting": jsdocTagFormatting,
 		placement,
-		"sentence-punctuation": sentencePunctuation,
 		"variable-declarations": variableDeclarations,
 		"vue-component-documentation": vueComponentDocumentation,
 		"vue-emit-documentation": vueEmitDocumentation,
