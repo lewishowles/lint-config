@@ -35,18 +35,27 @@ ruleTester.run("comments/formatting", rule, {
 		"// oxlint-disable-next-line comments/formatting\nconst value = 1;",
 		"/* oxlint-disable comments/formatting */",
 		{
-			name: "leaves prose-to-tag spacing to the block-comment rule",
+			name: "keeps canonical prose-to-tag spacing",
 			code: `/**
  * Open the dialog.
- * @param {object} options
+ *
+ * @param  {object}  options
  *     The dialog options.
  */
-function openDialog(options) {}`,
+			function openDialog(options) {}`,
 		},
 		`/**
  * Open the dialog with the supplied options.
  */
 	function openDialog(options) {}`,
+		{
+			name: "keeps deliberate line breaks in tag-less JSDoc prose",
+			code: `/**
+ * Open the dialog.
+ * Restore focus when it closes.
+ */
+function openDialog() {}`,
+		},
 		`/**
  * Convert a value.
  *
@@ -56,6 +65,55 @@ function openDialog(options) {}`,
  * openDialog({ restoreFocus: true })
  */
 function convertValue(options) {}`,
+		`/**
+ * Open the dialog.
+ *
+ * The dialog restores focus to the original trigger when it closes.
+ *
+ * @param  {object}  options
+ *     The dialog options.
+ */
+		function openDialog(options) {}`,
+		{
+			name: "keeps consecutive parameter tags together with aligned spacing",
+			code: `/**
+ * Move a tab to a new position.
+ *
+ * @param  {object}  tab
+ *     The tab to move.
+ * @param  {number}  index
+ *     The destination index.
+ */
+function moveTab(tab, index) {}`,
+		},
+		`/**
+ * Find a tab by its ID.
+ *
+ * @param  {string}  id
+ *     The ID of the tab to find.
+ *
+ * @throws  {TypeError}
+ *     Thrown when the ID is invalid.
+ *
+ * @returns  {object|null}
+ *     The matching tab, or null when none exists.
+ */
+		function findTab(id) {}`,
+		`/**
+ * Find a tab by its ID.
+ *
+ * @param  {string}  id
+ *     The ID of the tab to find.
+ *
+ * @example
+ * toCamelCase("hello world")
+ * ToCamelCase("already mixed")
+ * openDialog({ restoreFocus: true })
+ *
+ * @returns  {string}
+ *     The converted tab ID.
+ */
+function findTab(id) {}`,
 	],
 	invalid: [
 		{
@@ -134,7 +192,7 @@ function openDialog(options) {}`,
 			output: `/**
  * Open the dialog.
  *
- * @param {object} options
+ * @param  {object}  options
  *     The dialog options.
  */
 function openDialog(options) {}`,
@@ -262,6 +320,140 @@ openDialog();`,
 			errors: [{ message: "Format this comment.", line: 1, column: 1 }],
 			output:
 				"\t// Explain how this dialog restores focus after it closes and returns to the\n\t// original trigger.\n\t// Keep focus on the original trigger.\nopenDialog();",
+		},
+		{
+			name: "adds a blank line before the first JSDoc tag",
+			code: `/**
+ * Open the dialog.
+ * @param  {object}  options
+ *     The dialog options.
+ */
+function openDialog(options) {}`,
+			errors: [{ message: "Format this comment.", line: 1, column: 0 }],
+			output: `/**
+ * Open the dialog.
+ *
+ * @param  {object}  options
+ *     The dialog options.
+ */
+function openDialog(options) {}`,
+		},
+		{
+			name: "normalises JSDoc block structure, tags, and punctuation in one fix",
+			code: `/** Open the dialog.
+ *
+ * The dialog restores focus to the original trigger when it closes.
+ * @param {object} options
+ * The dialog options
+ */
+function openDialog(options) {}`,
+			errors: [{ message: "Comment text must be a complete sentence.", line: 1, column: 0 }],
+			output: `/**
+ * Open the dialog.
+ *
+ * The dialog restores focus to the original trigger when it closes.
+ *
+ * @param  {object}  options
+ *     The dialog options.
+ */
+function openDialog(options) {}`,
+		},
+		{
+			name: "expands a one-line JSDoc comment",
+			code: "/** Register the dialog. */\nregisterDialog();",
+			errors: [{ message: "Format this comment.", line: 1, column: 0 }],
+			output: `/**
+ * Register the dialog.
+ */
+registerDialog();`,
+		},
+		{
+			name: "orders and aligns a complete JSDoc tag set",
+			code: `/**
+ * Find a tab by its ID.
+ *
+ * @returns {object|null}
+ *     The matching tab, or null when none exists.
+ * @param {string} id
+ *     The ID of the tab to find.
+ */
+function findTab(id) {}`,
+			errors: [{ message: "Format this comment.", line: 1, column: 0 }],
+			output: `/**
+ * Find a tab by its ID.
+ *
+ * @param  {string}  id
+ *     The ID of the tab to find.
+ *
+ * @returns  {object|null}
+ *     The matching tab, or null when none exists.
+ */
+function findTab(id) {}`,
+		},
+		{
+			name: "normalises JSDoc tag spacing without changing tag order",
+			code: `/**
+ * Find a tab by its ID.
+ *
+ * @param {string} id
+ * The ID of the tab to find.
+ */
+function findTab(id) {}`,
+			errors: [{ message: "Format this comment.", line: 1, column: 0 }],
+			output: `/**
+ * Find a tab by its ID.
+ *
+ * @param  {string}  id
+ *     The ID of the tab to find.
+ */
+function findTab(id) {}`,
+		},
+		{
+			name: "groups consecutive parameters before returns",
+			code: `/**
+ * Move a tab to a new position.
+ *
+ * @param {object} tab
+ *     The tab to move.
+ *
+ * @param {number} index
+ *     The destination index.
+ * @returns {object}
+ *     The moved tab.
+ */
+function moveTab(tab, index) {}`,
+			errors: [{ message: "Format this comment.", line: 1, column: 0 }],
+			output: `/**
+ * Move a tab to a new position.
+ *
+ * @param  {object}  tab
+ *     The tab to move.
+ * @param  {number}  index
+ *     The destination index.
+ *
+ * @returns  {object}
+ *     The moved tab.
+ */
+function moveTab(tab, index) {}`,
+		},
+		{
+			name: "wraps tab-indented tag descriptions within 80 display columns",
+			code: `\t/**
+\t * Open the dialog.
+\t *
+\t * @param  {object}  options
+\t *     Explain how this modal restores focus after it closes and returns to the original trigger.
+\t */
+\tfunction openDialog(options) {}`,
+			errors: [{ message: "Format this comment.", line: 1, column: 1 }],
+			output: `\t/**
+\t * Open the dialog.
+\t *
+\t * @param  {object}  options
+\t *     Explain how this modal restores focus after it closes and returns to
+\t *     the original trigger.
+\t */
+\tfunction openDialog(options) {}`,
 		},
 	],
 });

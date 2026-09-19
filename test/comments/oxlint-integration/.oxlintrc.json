@@ -6,15 +6,11 @@
 		}
 	],
 	"rules": {
-		"comments/block-comments": "error",
 		"comments/class-documentation": "error",
 		"comments/configured-api-calls": "error",
+		"comments/formatting": "error",
 		"comments/function-documentation": "error",
-		"comments/jsdoc-tag-formatting": "error",
-		"comments/line-comments": "error",
-		"comments/max-line-length": "error",
 		"comments/placement": "error",
-		"comments/sentence-punctuation": "error",
 		"comments/variable-declarations": "error",
 		"comments/vue-component-documentation": "error",
 		"comments/vue-emit-documentation": "error",

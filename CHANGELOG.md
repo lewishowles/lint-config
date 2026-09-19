@@ -6,6 +6,7 @@
 
 - Breaking: replace `comments/line-comments` and `comments/max-line-length` with `comments/formatting`.
 - Breaking: fold `comments/sentence-punctuation` into `comments/formatting`.
+- Breaking: fold `comments/block-comments` and `comments/jsdoc-tag-formatting` into `comments/formatting`.
 - `comments/variable-declarations`: add a `rootOnly` option; `comments.json` enables it for test files so only root-level variables need comments there. If you override `comments.json` rules, concatenate the test-file override (see README).
 
 ### Fixes

@@ -1,5 +1,3 @@
-/* oxlint-disable comments/formatting */
-
-// oxlint-disable-next-line comments/block-comments
+// oxlint-disable-next-line comments/formatting
 /** Register the dialog. */
 registerDialog();

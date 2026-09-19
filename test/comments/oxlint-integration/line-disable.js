@@ -17,7 +17,7 @@ const placementValue = 1;
 // to the original trigger.
 onClickOutside(dialog, dismissDialog);
 
-// oxlint-disable-next-line comments/block-comments comments/jsdoc-tag-formatting comments/formatting
+// oxlint-disable-next-line comments/formatting
 /** Open the dialog.
  *
  * @param {object} options
@@ -25,7 +25,7 @@ onClickOutside(dialog, dismissDialog);
  */
 function openDialog(options) {}
 
-// oxlint-disable-next-line comments/jsdoc-tag-formatting
+// oxlint-disable-next-line comments/formatting
 /**
  * Find a tab by its ID.
  *

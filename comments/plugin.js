@@ -1,9 +1,7 @@
-import blockComments from "./rules/block-comments.js";
 import classDocumentation from "./rules/class-documentation.js";
 import configuredApiCalls from "./rules/configured-api-calls.js";
 import formatting from "./rules/formatting.js";
 import functionDocumentation from "./rules/function-documentation.js";
-import jsdocTagFormatting from "./rules/jsdoc-tag-formatting.js";
 import placement from "./rules/placement.js";
 import variableDeclarations from "./rules/variable-declarations.js";
 import vueComponentDocumentation from "./rules/vue-component-documentation.js";
@@ -13,12 +11,10 @@ import vuePropDocumentation from "./rules/vue-prop-documentation.js";
 export default {
 	meta: { name: "comments" },
 	rules: {
-		"block-comments": blockComments,
 		"class-documentation": classDocumentation,
 		"configured-api-calls": configuredApiCalls,
 		formatting,
 		"function-documentation": functionDocumentation,
-		"jsdoc-tag-formatting": jsdocTagFormatting,
 		placement,
 		"variable-declarations": variableDeclarations,
 		"vue-component-documentation": vueComponentDocumentation,

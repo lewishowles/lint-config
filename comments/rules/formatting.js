@@ -1,4 +1,11 @@
-import { formatJSDocPunctuation, formatJSDocWrapping, isJSDoc } from "../utils/jsdoc.js";
+import {
+	formatJSDocBlockStructure,
+	formatJSDocPunctuation,
+	formatJSDocTagFormatting,
+	formatJSDocWrapping,
+	hasTargetJSDocTag,
+	isJSDoc,
+} from "../utils/jsdoc.js";
 
 import {
 	getCommentText,
@@ -357,10 +364,37 @@ function reportBlockComments(context) {
 		// The comment's raw source text.
 		const commentText = getCommentText(context.sourceCode, comment);
 
-		// The comment after sentence capitalisation and punctuation.
-		const punctuatedComment = isJSDoc(commentText)
-			? formatJSDocPunctuation(context.sourceCode, comment)
-			: formatOrdinaryBlockComment(context.sourceCode, comment);
+		// The comment with its layout and sentence punctuation fixed, before
+		// wrapping.
+		let punctuatedComment;
+		// Whether fixing sentence capitalisation or punctuation changed the
+		// comment.
+		let sentenceChanged;
+
+		// The indentation and newline style that the JSDoc formatters keep.
+		const jsdocLayout = {
+			indent: getLineIndent(context.sourceCode, comment.range[0]) ?? "",
+			newline: getNewline(context.sourceCode.text),
+		};
+
+		if (isJSDoc(commentText)) {
+			// The JSDoc comment with its block structure fixed before tag
+			// formatting.
+			const structuredComment = formatJSDocBlockStructure(commentText, jsdocLayout);
+
+			// The JSDoc comment with its tags spaced, ordered, and grouped.
+			// Comments
+			// without the tags this formats keep their prose line breaks.
+			const laidOutComment = hasTargetJSDocTag(commentText)
+				? formatJSDocTagFormatting(structuredComment, jsdocLayout)
+				: structuredComment;
+
+			punctuatedComment = formatJSDocPunctuation(laidOutComment, jsdocLayout);
+			sentenceChanged = punctuatedComment !== laidOutComment;
+		} else {
+			punctuatedComment = formatOrdinaryBlockComment(context.sourceCode, comment);
+			sentenceChanged = punctuatedComment !== commentText;
+		}
 
 		// The comment lines as they appear on screen after punctuation.
 		const displayLines = getBlockCommentDisplayLines(
@@ -373,9 +407,11 @@ function reportBlockComments(context) {
 		let formattedComment = punctuatedComment;
 
 		if (displayLines.some((line) => getDisplayWidth(line) > maximumLineLength)) {
-			formattedComment = isJSDoc(commentText)
-				? formatJSDocWrapping(context.sourceCode, comment, punctuatedComment)
-				: formatBlockComment(context.sourceCode, comment, punctuatedComment);
+			if (isJSDoc(commentText)) {
+				formattedComment = formatJSDocWrapping(punctuatedComment, jsdocLayout);
+			} else {
+				formattedComment = formatBlockComment(context.sourceCode, comment, punctuatedComment);
+			}
 		}
 
 		if (formattedComment === null || formattedComment === commentText) {
@@ -393,10 +429,9 @@ function reportBlockComments(context) {
 			 *     The fix to apply.
 			 */
 			fix: (fixer) => replaceMinimalComment(fixer, comment, commentText, formattedComment),
-			message:
-				punctuatedComment !== commentText
-					? "Comment text must be a complete sentence."
-					: "Format this comment.",
+			message: sentenceChanged
+				? "Comment text must be a complete sentence."
+				: "Format this comment.",
 			node: comment,
 		});
 	}

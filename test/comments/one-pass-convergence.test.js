@@ -5,17 +5,22 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-test("comment formatting settles wrap-punctuation collisions in one pass", () => {
+test("comment formatting settles comment-formatting collisions in one pass", () => {
 	const repositoryDirectory = process.cwd();
 	const fixtureDirectory = join(repositoryDirectory, "test/comments/oxlint-integration");
 	const temporaryDirectory = mkdtempSync(join(tmpdir(), "lint-config-one-pass-convergence-"));
 
-	const fixtureNames = readdirSync(fixtureDirectory).filter((name) =>
-		name.endsWith("-wrap-punctuation-collision.js.txt"),
+	const fixtureNames = readdirSync(fixtureDirectory).filter(
+		(name) =>
+			name.endsWith("-wrap-punctuation-collision.js.txt") ||
+			name === "fixer-range-collision.js.txt",
 	);
 
 	try {
-		assert.ok(fixtureNames.length > 0, "Expected at least one wrap-punctuation collision fixture.");
+		assert.ok(
+			fixtureNames.length > 0,
+			"Expected at least one comment-formatting collision fixture.",
+		);
 
 		for (const fixtureName of fixtureNames) {
 			const source = readFileSync(join(fixtureDirectory, fixtureName), "utf8");
@@ -61,11 +66,14 @@ test("comment formatting settles wrap-punctuation collisions in one pass", () =>
 				"utf8",
 			);
 
-			assert.match(
-				fixedSource,
-				/original\s+(?:\*\s+)?trigger\./,
-				`${fixtureName} lost its comment text.`,
-			);
+			// The source phrase that proves the fixer kept each fixture's
+			// comment text.
+			const expectedText =
+				fixtureName === "fixer-range-collision.js.txt"
+					? /Open the dialog\./
+					: /original\s+(?:\*\s+)?trigger\./;
+
+			assert.match(fixedSource, expectedText, `${fixtureName} lost its comment text.`);
 		}
 	} finally {
 		rmSync(temporaryDirectory, { force: true, recursive: true });

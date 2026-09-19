@@ -1,4 +1,4 @@
-import { getCommentText, getDisplayWidth, getLineIndent, getNewline } from "./source.js";
+import { getDisplayWidth } from "./source.js";
 import { addTerminalPunctuation, capitaliseSentence, formatSentence, wrapWords } from "./wrap.js";
 
 // The JSDoc tags this package formats, in their required output order.
@@ -521,25 +521,18 @@ function formatTagDescriptions(lines, width, addPunctuation) {
 /**
  * Return the details needed to format a JSDoc block comment.
  *
- * @param  {object}  sourceCode
- *     The Oxlint source code object.
- * @param  {object}  comment
- *     The JSDoc comment token.
  * @param  {string}  commentText
- *     The comment text to format. Defaults to the comment's source text.
+ *     The JSDoc comment text.
+ * @param  {object}  formattingOptions
+ *     The indentation (`indent`) and newline style (`newline`) of the source
+ *     around the comment.
  *
  * @returns  {object}
  *     The JSDoc content and layout details.
  */
-function getJSDocFormattingContext(
-	sourceCode,
-	comment,
-	commentText = getCommentText(sourceCode, comment),
-) {
-	// The indentation the comment's lines are aligned to.
-	const indent = getLineIndent(sourceCode, comment.range[0]) ?? "";
-	// The newline style used by the surrounding source.
-	const newline = getNewline(sourceCode.text);
+function getJSDocFormattingContext(commentText, formattingOptions) {
+	// The indentation and newline style used by the surrounding source.
+	const { indent, newline } = formattingOptions;
 	// The available content width, allowing for the indent and " * " prefix.
 	const width = Math.max(1, 80 - getDisplayWidth(indent) - 3);
 	// The undecorated comment content lines.
@@ -626,17 +619,18 @@ function renderJSDocComment(formattingContext, outputLines) {
 /**
  * Format JSDoc block structure and delimiters.
  *
- * @param  {object}  sourceCode
- *     The Oxlint source code object.
- * @param  {object}  comment
- *     The JSDoc comment token.
+ * @param  {string}  commentText
+ *     The JSDoc comment text.
+ * @param  {object}  formattingOptions
+ *     The indentation (`indent`) and newline style (`newline`) of the source
+ *     around the comment.
  *
  * @returns  {string}
  *     The formatted comment text.
  */
-export function formatJSDocBlockStructure(sourceCode, comment) {
+export function formatJSDocBlockStructure(commentText, formattingOptions) {
 	// The comment's parsed content and layout details.
-	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
+	const formattingContext = getJSDocFormattingContext(commentText, formattingOptions);
 	// The prose lines, rewrapped without changing existing line breaks.
 	const prose = formatUnwrappedProse(formattingContext.proseLines, false);
 
@@ -657,19 +651,33 @@ export function formatJSDocBlockStructure(sourceCode, comment) {
 }
 
 /**
+ * Return whether a JSDoc comment contains a @param, @throws, or @returns tag.
+ *
+ * @param  {string}  commentText
+ *     The JSDoc comment text.
+ *
+ * @returns  {boolean}
+ *     Whether one of those tags is present.
+ */
+export function hasTargetJSDocTag(commentText) {
+	return getJSDocContent(commentText).some(isTargetTag);
+}
+
+/**
  * Format JSDoc tag spacing, order, and grouping.
  *
- * @param  {object}  sourceCode
- *     The Oxlint source code object.
- * @param  {object}  comment
- *     The JSDoc comment token.
+ * @param  {string}  commentText
+ *     The JSDoc comment text.
+ * @param  {object}  formattingOptions
+ *     The indentation (`indent`) and newline style (`newline`) of the source
+ *     around the comment.
  *
  * @returns  {string}
  *     The formatted comment text.
  */
-export function formatJSDocTagFormatting(sourceCode, comment) {
+export function formatJSDocTagFormatting(commentText, formattingOptions) {
 	// The comment's parsed content and layout details.
-	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
+	const formattingContext = getJSDocFormattingContext(commentText, formattingOptions);
 	// The prose, rewrapped to the comment's available width.
 	const prose = formatProse(formattingContext.proseLines, formattingContext.width, false);
 
@@ -692,17 +700,18 @@ export function formatJSDocTagFormatting(sourceCode, comment) {
 /**
  * Format JSDoc sentence capitalisation and punctuation.
  *
- * @param  {object}  sourceCode
- *     The Oxlint source code object.
- * @param  {object}  comment
- *     The JSDoc comment token.
+ * @param  {string}  commentText
+ *     The JSDoc comment text.
+ * @param  {object}  formattingOptions
+ *     The indentation (`indent`) and newline style (`newline`) of the source
+ *     around the comment.
  *
  * @returns  {string}
  *     The formatted comment text.
  */
-export function formatJSDocPunctuation(sourceCode, comment) {
+export function formatJSDocPunctuation(commentText, formattingOptions) {
 	// The comment's parsed content and layout details.
-	const formattingContext = getJSDocFormattingContext(sourceCode, comment);
+	const formattingContext = getJSDocFormattingContext(commentText, formattingOptions);
 	// The prose, capitalised and punctuated as sentences.
 	const prose = formatUnwrappedProse(formattingContext.proseLines, true);
 
@@ -725,23 +734,18 @@ export function formatJSDocPunctuation(sourceCode, comment) {
 /**
  * Format JSDoc prose and tags to the configured line width.
  *
- * @param  {object}  sourceCode
- *     The Oxlint source code object.
- * @param  {object}  comment
- *     The JSDoc comment token.
  * @param  {string}  commentText
- *     The comment text to wrap. Defaults to the comment's source text.
+ *     The JSDoc comment text.
+ * @param  {object}  formattingOptions
+ *     The indentation (`indent`) and newline style (`newline`) of the source
+ *     around the comment.
  *
  * @returns  {string}
  *     The formatted comment text.
  */
-export function formatJSDocWrapping(
-	sourceCode,
-	comment,
-	commentText = getCommentText(sourceCode, comment),
-) {
+export function formatJSDocWrapping(commentText, formattingOptions) {
 	// The comment's parsed content and layout details.
-	const formattingContext = getJSDocFormattingContext(sourceCode, comment, commentText);
+	const formattingContext = getJSDocFormattingContext(commentText, formattingOptions);
 	// The prose, rewrapped to the comment's available width.
 	const prose = formatProse(formattingContext.proseLines, formattingContext.width, false);
 
@@ -759,19 +763,4 @@ export function formatJSDocWrapping(
 	appendJSDocTags(outputLines, tags);
 
 	return renderJSDocComment(formattingContext, outputLines);
-}
-
-/**
- * Return whether a JSDoc comment contains a target tag.
- *
- * @param  {object}  sourceCode
- *     The Oxlint source code object.
- * @param  {object}  comment
- *     The comment token.
- *
- * @returns  {boolean}
- *     Whether a Phase 1 tag is present.
- */
-export function hasTargetJSDocTag(sourceCode, comment) {
-	return getJSDocContent(getCommentText(sourceCode, comment)).some(isTargetTag);
 }
