@@ -171,7 +171,6 @@ function getCommentGapFix(sourceCode, comment, next, followingComment, expectedI
 
 	// Stop at an intervening directive so the fix range never overlaps it.
 	const gapEnd = followingCommentIntervenes ? followingComment.range[0] : next.range[0];
-
 	// What currently follows the comment, up to the code or directive.
 	const gap = sourceCode.text.slice(comment.range[1], gapEnd);
 	// The gap the documented code's indentation requires.

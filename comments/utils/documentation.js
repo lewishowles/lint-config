@@ -293,7 +293,6 @@ function hasValueReturn(node) {
 export function reportFunctionDocumentation(context, node, functionNode, options = {}) {
 	// Defaults to "Functions" when the caller names no declaration kind.
 	const subject = options.subject ?? "Functions";
-
 	// Finds the JSDoc block documenting this function, when present.
 	const comment = getDocumentationComment(context.sourceCode, node);
 

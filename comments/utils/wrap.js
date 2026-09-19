@@ -23,6 +23,7 @@ export function wrapWords(text, width) {
 			for (let index = 0; index < word.length; index += width) {
 				lines.push(word.slice(index, index + width));
 			}
+
 			continue;
 		}
 
@@ -32,6 +33,7 @@ export function wrapWords(text, width) {
 			currentLine += ` ${word}`;
 		} else {
 			lines.push(currentLine);
+
 			currentLine = word;
 		}
 	}

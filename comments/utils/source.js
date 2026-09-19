@@ -315,7 +315,6 @@ export function hasImmediateLineComment(sourceCode, node) {
 
 	// Checks the comments immediately around the node.
 	const { next, previous } = getCommentNeighbours(sourceCode, comment);
-
 	// Confirms there is no blank line before the node.
 	const gap = sourceCode.text.slice(comment.range[1], node.range[0]);
 
@@ -349,7 +348,6 @@ export function hasImmediateBlockComment(sourceCode, node) {
 
 	// Checks the comments immediately around the node.
 	const { next, previous } = getCommentNeighbours(sourceCode, comment);
-
 	// Confirms there is no blank line before the node.
 	const gap = sourceCode.text.slice(comment.range[1], node.range[0]);
 

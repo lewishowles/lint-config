@@ -148,6 +148,7 @@ function parseTargetTags(tagLines) {
 				rest: match[2].trim(),
 				type: match[1],
 			};
+
 			entries.push(currentEntry);
 		} else if (currentEntry) {
 			currentEntry.description.push(line);
@@ -282,12 +283,14 @@ function formatProse(lines, width, addPunctuation) {
 		}
 
 		result.push(...wrapWords(text, width));
+
 		paragraph = [];
 	}
 
 	for (const line of lines) {
 		if (line.trim() === "") {
 			flushParagraph();
+
 			if (result.at(-1) !== "") {
 				result.push("");
 			}
@@ -408,15 +411,18 @@ function formatMixedTags(lines, width, addPunctuation) {
 				type: match[1],
 			};
 			preserveSection = false;
+
 			result.push(formatTagHeader(currentEntry));
 		} else if (tagName !== null) {
 			currentEntry = null;
 			preserveSection = isPreservedSectionTag(line);
+
 			result.push(line.trim());
 		} else if (preserveSection) {
 			result.push(line);
 		} else if (line.trim() === "") {
 			currentEntry = null;
+
 			if (result.at(-1) !== "") {
 				result.push("");
 			}
@@ -477,6 +483,7 @@ function formatTagDescriptions(lines, width, addPunctuation) {
 		}
 
 		result.push(...wrapWords(text, width).map((line) => `    ${line}`));
+
 		description = [];
 	}
 
@@ -487,11 +494,13 @@ function formatTagDescriptions(lines, width, addPunctuation) {
 		if (tagName !== null) {
 			flushDescription();
 			result.push(line.trim());
+
 			preserveSection = isPreservedSectionTag(line);
 		} else if (preserveSection) {
 			result.push(line);
 		} else if (line.trim() === "") {
 			flushDescription();
+
 			if (result.at(-1) !== "") {
 				result.push("");
 			}

@@ -120,7 +120,6 @@ export default {
 					const commentText = getCommentText(context.sourceCode, comment);
 					// The comment's individual source lines.
 					const lines = commentText.split(/\r\n|\n|\r/);
-
 					// The whitespace before the comment, absent when code
 					// precedes it.
 					const indentation = getLineIndent(context.sourceCode, comment.range[0]) ?? "";
