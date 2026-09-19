@@ -4,6 +4,7 @@
 
 ### Changes
 
+- Breaking: replace `comments/line-comments` and `comments/max-line-length` with `comments/formatting`.
 - `comments/variable-declarations`: add a `rootOnly` option; `comments.json` enables it for test files so only root-level variables need comments there. If you override `comments.json` rules, concatenate the test-file override (see README).
 
 ### Fixes

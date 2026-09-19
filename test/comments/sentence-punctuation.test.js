@@ -8,7 +8,7 @@ ruleTester.run("comments/sentence-punctuation", rule, {
 	valid: [
 		"const value = 1;",
 		"// Close the dialog.",
-		"// oxlint-disable-next-line comments/max-line-length\nconst value = 1;",
+		"// oxlint-disable-next-line comments/formatting\nconst value = 1;",
 		"/* oxlint-disable comments/sentence-punctuation */",
 		`/**
  * Open the dialog.
@@ -52,23 +52,23 @@ function openDialog(options) {}`,
 		},
 		{
 			name: "formats comments separated by an ESLint directive independently",
-			code: "// first comment\n// eslint-disable-next-line comments/line-comments\n  // second comment\nconst value = 1;",
+			code: "// first comment\n// eslint-disable-next-line comments/formatting\n  // second comment\nconst value = 1;",
 			errors: [
 				{ message: "Comment text must be a complete sentence.", line: 1, column: 0 },
 				{ message: "Comment text must be a complete sentence.", line: 3, column: 2 },
 			],
 			output:
-				"// First comment.\n// eslint-disable-next-line comments/line-comments\n  // Second comment.\nconst value = 1;",
+				"// First comment.\n// eslint-disable-next-line comments/formatting\n  // Second comment.\nconst value = 1;",
 		},
 		{
 			name: "formats comments separated by an Oxlint directive independently",
-			code: "// first comment\n// oxlint-disable-next-line comments/line-comments\n  // second comment\nconst value = 1;",
+			code: "// first comment\n// oxlint-disable-next-line comments/formatting\n  // second comment\nconst value = 1;",
 			errors: [
 				{ message: "Comment text must be a complete sentence.", line: 1, column: 0 },
 				{ message: "Comment text must be a complete sentence.", line: 3, column: 2 },
 			],
 			output:
-				"// First comment.\n// oxlint-disable-next-line comments/line-comments\n  // Second comment.\nconst value = 1;",
+				"// First comment.\n// oxlint-disable-next-line comments/formatting\n  // Second comment.\nconst value = 1;",
 		},
 		{
 			name: "formats comments separated by an Istanbul directive independently",

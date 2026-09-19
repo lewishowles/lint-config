@@ -73,7 +73,7 @@ The Vue component rule reads the raw `.vue` file because Oxlint's JS Plugin API 
 		}
 	],
 	"rules": {
-		"comments/line-comments": "error"
+		"comments/formatting": "error"
 	}
 }
 ```
