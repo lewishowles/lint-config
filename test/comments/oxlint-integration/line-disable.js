@@ -1,3 +1,4 @@
+/* oxlint-disable @stylistic/padding-line-between-statements */
 // oxlint-disable-next-line comments/max-line-length
 // Explain how this dialog restores focus after it closes and returns to the original trigger.
 const maxLengthValue = 1;

@@ -8,7 +8,8 @@
 		"**/.*",
 		"dist/**",
 		"build/**",
-		"AGENTS.md"
+		"AGENTS.md",
+		"test/base/statement-spacing/**"
 	],
 	"overrides": [
 		{
