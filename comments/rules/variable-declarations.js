@@ -1,4 +1,4 @@
-import { getDocumentationNode } from "../utils/documentation.js";
+import { getDocumentationNode, isFunctionValue } from "../utils/documentation.js";
 import { hasImmediateLineComment } from "../utils/source.js";
 
 // Declaration kinds that require an immediately preceding line comment.
@@ -79,10 +79,19 @@ export default {
 					return;
 				}
 
+				// Whether every name in this const holds a function. The
+				// function-documentation rule already requires a JSDoc
+				// block on those, so asking for a line comment as well
+				// would make the two rules impossible to satisfy together.
+				const isFunctionValuedConst =
+					node.kind === "const" &&
+					node.declarations.every(
+						({ id, init }) => id.type === "Identifier" && isFunctionValue(init),
+					);
+
 				// The rule's resolved options for the file currently being
 				// visited.
 				const options = context.options?.[0];
-
 				// Resolves any export wrapper before checking for
 				// documentation.
 				const documentationNode = getDocumentationNode(node);
@@ -94,6 +103,7 @@ export default {
 					!options?.rootOnly || documentationNode.parent?.type === "Program";
 
 				if (
+					!isFunctionValuedConst &&
 					shouldCheckDocumentation &&
 					!hasImmediateLineComment(context.sourceCode, documentationNode)
 				) {

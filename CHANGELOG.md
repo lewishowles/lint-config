@@ -9,6 +9,7 @@
 ### Fixes
 
 - Measure comment width in display columns, with tabs counted as four, so indented comments wrap and validate against the visible 80-column limit.
+- `comments/variable-declarations`: skip the line-comment requirement for `const` declarations assigned to arrow functions or function expressions.
 
 ## 0.4.0: 2026-08-28
 
