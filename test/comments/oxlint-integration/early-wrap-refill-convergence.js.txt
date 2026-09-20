@@ -1,0 +1,4 @@
+  // Explain the dialog when opening
+  // the original trigger.
+
+openDialog();

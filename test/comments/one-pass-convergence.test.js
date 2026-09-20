@@ -14,7 +14,8 @@ test("comment formatting settles comment-formatting collisions in one pass", () 
 		(name) =>
 			name.endsWith("-wrap-punctuation-collision.js.txt") ||
 			name === "fixer-range-collision.js.txt" ||
-			name === "placement-formatting-convergence.js.txt",
+			name === "placement-formatting-convergence.js.txt" ||
+			name === "early-wrap-refill-convergence.js.txt",
 	);
 
 	try {

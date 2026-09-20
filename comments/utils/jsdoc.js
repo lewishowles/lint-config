@@ -1,5 +1,11 @@
 import { getDisplayWidth } from "./source.js";
-import { addTerminalPunctuation, capitaliseSentence, formatSentence, wrapWords } from "./wrap.js";
+import {
+	addTerminalPunctuation,
+	capitaliseSentence,
+	formatSentence,
+	refillCommentLines,
+	wrapWords,
+} from "./wrap.js";
 
 // The JSDoc tags this package formats, in their required output order.
 const tagOrder = ["param", "throws", "returns"];
@@ -204,19 +210,24 @@ function getInlineTagDescription(entry) {
 }
 
 /**
- * Format prose without changing its existing line wrapping.
+ * Format and refill JSDoc prose while preserving paragraph and list boundaries.
  *
  * @param  {string[]}  lines
  *     The prose content lines.
  * @param  {boolean}  addPunctuation
  *     Whether to format each paragraph as a sentence.
+ * @param  {string}  indentation
+ *     The indentation used by the comment.
  *
  * @returns  {string[]}
  *     The formatted prose lines.
  */
-function formatUnwrappedProse(lines, addPunctuation) {
-	// The formatted lines, built up in place.
-	const result = lines.map((line) => line.trim());
+function formatUnwrappedProse(lines, addPunctuation, indentation) {
+	// The prose lines after refilling, then formatted in place below.
+	const result = refillCommentLines(
+		lines.map((line) => ({ prefix: `${indentation} * `, text: line })),
+		80,
+	).map(({ text }) => text);
 
 	// The index of the current paragraph's first line, or null between
 	// paragraphs.
@@ -631,8 +642,8 @@ function renderJSDocComment(formattingContext, outputLines) {
 export function formatJSDocBlockStructure(commentText, formattingOptions) {
 	// The comment's parsed content and layout details.
 	const formattingContext = getJSDocFormattingContext(commentText, formattingOptions);
-	// The prose lines, rewrapped without changing existing line breaks.
-	const prose = formatUnwrappedProse(formattingContext.proseLines, false);
+	// The prose lines, refilled before tags are appended.
+	const prose = formatUnwrappedProse(formattingContext.proseLines, false, formattingContext.indent);
 
 	// The tag lines, without spacing or grouping normalisation.
 	const tags = formatTags(
@@ -713,7 +724,7 @@ export function formatJSDocPunctuation(commentText, formattingOptions) {
 	// The comment's parsed content and layout details.
 	const formattingContext = getJSDocFormattingContext(commentText, formattingOptions);
 	// The prose, capitalised and punctuated as sentences.
-	const prose = formatUnwrappedProse(formattingContext.proseLines, true);
+	const prose = formatUnwrappedProse(formattingContext.proseLines, true, formattingContext.indent);
 
 	// The tag lines, with descriptions punctuated as sentences.
 	const tags = formatTags(

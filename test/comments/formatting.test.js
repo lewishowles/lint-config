@@ -14,7 +14,27 @@ ruleTester.run("comments/formatting", rule, {
 		},
 		{
 			name: "keeps wrapped continuation lines aligned",
-			code: "// Close the dialog when focus moves outside the component and restore focus\n// to the original trigger.\nonClickOutside(dialog, closeDialog);",
+			code: "// Close the dialog when focus moves outside the component and restore focus to\n// the original trigger.\nonClickOutside(dialog, closeDialog);",
+		},
+		{
+			name: "keeps sentence and list boundaries when refilling",
+			code: "// Explain the dialog.\n// - First item\n// - Second item.\nopenDialog();",
+		},
+		{
+			name: "keeps a hanging indent under a line-comment list item",
+			code: "// - First item that\n//   continues on a hanging indent.\nopenDialog();",
+		},
+		{
+			name: "keeps a hanging indent under a block-comment list item",
+			code: `/*
+ * - First item that
+ *   continues on a hanging indent.
+ */
+openDialog();`,
+		},
+		{
+			name: "keeps blank comment lines when refilling",
+			code: "// Explain the dialog when opening\n//\n// the panel.\nopenDialog();",
 		},
 		{
 			name: "treats comments separated by an ESLint directive as standalone",
@@ -138,7 +158,13 @@ registerDialog();`,
 			code: "// close the dialog when focus moves outside the component\n// and restore focus to the original trigger.\nonClickOutside(dialog, closeDialog);",
 			errors: [{ message: "Comment text must be a complete sentence.", line: 1, column: 0 }],
 			output:
-				"// Close the dialog when focus moves outside the component\n// and restore focus to the original trigger.\nonClickOutside(dialog, closeDialog);",
+				"// Close the dialog when focus moves outside the component and restore focus to\n// the original trigger.\nonClickOutside(dialog, closeDialog);",
+		},
+		{
+			name: "refills a line-comment group that wraps too early",
+			code: "// Explain the dialog when opening\n// the panel.\nopenDialog();",
+			errors: [{ message: "Format this comment.", line: 1, column: 0 }],
+			output: "// Explain the dialog when opening the panel.\nopenDialog();",
 		},
 		{
 			name: "formats comments separated by an ESLint directive independently",
@@ -219,6 +245,32 @@ function openDialog() {}`,
 			output: `/**
  * Explain how this dialog restores focus after it closes and returns to the
  * original trigger.
+ */
+function openDialog() {}`,
+		},
+		{
+			name: "refills early-wrapped ordinary block prose",
+			code: `/*
+ * Explain the dialog when opening
+ * the panel.
+ */
+openDialog();`,
+			errors: [{ message: "Format this comment.", line: 1, column: 0 }],
+			output: `/*
+ * Explain the dialog when opening the panel.
+ */
+openDialog();`,
+		},
+		{
+			name: "refills early-wrapped JSDoc prose",
+			code: `/**
+ * Explain the dialog when opening
+ * the panel.
+ */
+function openDialog() {}`,
+			errors: [{ message: "Format this comment.", line: 1, column: 0 }],
+			output: `/**
+ * Explain the dialog when opening the panel.
  */
 function openDialog() {}`,
 		},
@@ -524,7 +576,7 @@ function moveTab(tab, index) {}`,
 				{ message: "Comment must be immediately before the documented code.", line: 2, column: 1 },
 			],
 			output:
-				"// oxlint-disable-next-line comments/formatting\n// Explain the value across two lines and\n// continue on the second line.\nconst value = 1;",
+				"// oxlint-disable-next-line comments/formatting\n// Explain the value across two lines and continue on the second line.\nconst value = 1;",
 		},
 		{
 			name: "does not treat comments separated by a directive as continuations",
@@ -536,13 +588,13 @@ function moveTab(tab, index) {}`,
 				"if (isReady) {\n\t// First comment.\n\t// oxlint-disable-next-line comments/formatting\n\t// Second comment.\n\trunTask();\n}",
 		},
 		{
-			name: "reindents every line of a wrapped continuation comment to match its declaration",
+			name: "reindents and refills a wrapped continuation comment",
 			code: "\t// Explain the value across two lines and\n\t// continue on the second line.\nconst value = 1;",
 			errors: [
 				{ message: "Comment must be immediately before the documented code.", line: 1, column: 1 },
 			],
 			output:
-				"// Explain the value across two lines and\n// continue on the second line.\nconst value = 1;",
+				"// Explain the value across two lines and continue on the second line.\nconst value = 1;",
 		},
 	],
 });

@@ -24,6 +24,7 @@ import {
 	addTerminalPunctuation,
 	capitaliseSentence,
 	formatSentence,
+	refillCommentLines,
 	wrapWords,
 } from "../utils/wrap.js";
 
@@ -148,7 +149,7 @@ function getReindentedCommentText(commentText, commentIndent, expectedIndent, ne
  */
 function formatBlockCommentLine(line, formatProse) {
 	// The line's leading `*` decoration, when present.
-	const marker = line.match(/^\s*\*\s?/);
+	const marker = line.match(/^\s*\*\s*/);
 
 	if (marker === null) {
 		return line;
@@ -260,6 +261,65 @@ function formatBlockComment(sourceCode, commentText, indentation) {
 	return ["/*", ...lines.map((line) => `${indentation} * ${line}`), `${indentation} */`].join(
 		getNewline(sourceCode.text),
 	);
+}
+
+/**
+ * Reindent and refill an ordinary block comment.
+ *
+ * @param  {string}  commentText
+ *     The sentence-formatted comment text.
+ * @param  {string}  indentation
+ *     The comment's current indentation.
+ * @param  {string}  expectedIndent
+ *     The indentation used by the formatted comment.
+ * @param  {string}  newline
+ *     The source file's newline sequence.
+ *
+ * @returns  {string}
+ *     The refilled comment text.
+ */
+function refillBlockComment(commentText, indentation, expectedIndent, newline) {
+	if (!commentText.includes("\n") && !commentText.includes("\r")) {
+		return commentText;
+	}
+
+	// The comment after applying the indentation used to measure its width.
+	const reindentedComment = getReindentedCommentText(
+		commentText,
+		indentation,
+		expectedIndent,
+		newline,
+	);
+
+	// The comment's individual source lines, without the first line's outer
+	// indent.
+	const lines = reindentedComment.split(/\r\n|\n|\r/);
+
+	lines[0] = lines[0].slice(expectedIndent.length);
+
+	if (lines[0] !== "/*" || lines.at(-1).trim() !== "*/") {
+		return commentText;
+	}
+
+	// The comment prose lines with their existing display prefixes.
+	const proseLines = lines.slice(1, -1).map((line) => {
+		// The line's `*` decoration and the indentation around it.
+		const prefix = line.match(/^\s*\*\s*/)?.[0] ?? "";
+
+		return {
+			prefix,
+			text: line.slice(prefix.length),
+		};
+	});
+
+	// The prose after moving words from early-wrapped lines.
+	const refilledLines = refillCommentLines(proseLines, maximumLineLength);
+
+	return [
+		"/*",
+		...refilledLines.map(({ prefix, text }) => `${prefix}${text}`.trimEnd()),
+		`${expectedIndent} */`,
+	].join(newline);
 }
 
 /**
@@ -451,53 +511,58 @@ function reportLineCommentGroups(context) {
 			formatPunctuation &&
 			(firstValue !== standaloneComments[0].value || lastValue !== standaloneComments.at(-1).value);
 
-		// The group's text after punctuation, reindentation, and line wrapping.
+		// The group's lines after punctuation, reindentation, and line
+		// wrapping.
+		const formattedLines = standaloneComments.flatMap((comment, index) => {
+			// The comment's value, using the group's first and last values.
+			let value = comment.value;
+
+			if (index === 0) {
+				value = firstValue;
+			} else if (index === standaloneComments.length - 1) {
+				value = lastValue;
+			}
+
+			// The comment's source text after sentence formatting.
+			const commentText = replaceLineCommentValue(context.sourceCode, comment, value);
+			// The comment's current indentation, falling back to the leader's.
+			const commentIndent = getLineIndent(context.sourceCode, comment.range[0]) ?? firstIndent;
+			// The comment's extra indentation beyond the group leader's.
+			const relativeIndent = getRelativeIndent(commentIndent, firstIndent);
+			// The indentation this comment gets once the group is moved.
+			const commentExpectedIndent = expectedIndent + relativeIndent;
+			// The comment's text after applying the group's indentation.
+			const reindentedText = `${commentExpectedIndent}${commentText}`;
+
+			// The wrapped comment text, when the reindented line exceeds the
+			// limit.
+			const formattedComment =
+				getDisplayWidth(reindentedText) > maximumLineLength
+					? (formatLineComment(context.sourceCode, comment, commentExpectedIndent, commentText) ??
+						commentText)
+					: commentText;
+
+			return formattedComment.split(getNewline(context.sourceCode.text)).map((line) => {
+				// The line without its `//` marker.
+				const lineText = line.slice(2);
+				// The line's leading whitespace after the comment marker.
+				const leadingWhitespace = lineText.match(/^\s*/)[0];
+
+				return {
+					prefix: `${commentExpectedIndent}//${leadingWhitespace}`,
+					text: lineText.slice(leadingWhitespace.length).trimEnd(),
+				};
+			});
+		});
+
+		// The group's lines after refilling words from early-wrapped lines.
+		const refilledLines = refillCommentLines(formattedLines, maximumLineLength);
+
+		// The group's text after applying its final line formatting and
+		// placement gap.
 		const formattedText =
-			standaloneComments
-				.map((comment, index) => {
-					// The comment's value, using the group's first and last
-					// values.
-					let value = comment.value;
-
-					if (index === 0) {
-						value = firstValue;
-					} else if (index === standaloneComments.length - 1) {
-						value = lastValue;
-					}
-
-					// The comment's source text after sentence formatting.
-					const commentText = replaceLineCommentValue(context.sourceCode, comment, value);
-					// The comment's current indentation, falling back to the
-					// leader's.
-					const commentIndent = getLineIndent(context.sourceCode, comment.range[0]) ?? firstIndent;
-					// The comment's extra indentation beyond the group
-					// leader's.
-					const relativeIndent = getRelativeIndent(commentIndent, firstIndent);
-					// The indentation this comment gets once the group is
-					// moved.
-					const commentExpectedIndent = expectedIndent + relativeIndent;
-					// The comment's text after applying the group's
-					// indentation.
-					const reindentedText = `${commentExpectedIndent}${commentText}`;
-
-					// The wrapped comment text, when the reindented line
-					// exceeds
-					// the limit.
-					const formattedComment =
-						getDisplayWidth(reindentedText) > maximumLineLength
-							? (formatLineComment(
-									context.sourceCode,
-									comment,
-									commentExpectedIndent,
-									commentText,
-								) ?? commentText)
-							: commentText;
-
-					return formattedComment
-						.split(getNewline(context.sourceCode.text))
-						.map((line) => `${commentExpectedIndent}${line}`)
-						.join(getNewline(context.sourceCode.text));
-				})
+			refilledLines
+				.map(({ prefix, text }) => (text === "" ? prefix.trimEnd() : `${prefix}${text}`))
 				.join(getNewline(context.sourceCode.text)) + (placement?.gap ?? "");
 
 		if (formattedText === sourceText) {
@@ -568,8 +633,8 @@ function reportBlockComments(context) {
 			const structuredComment = formatJSDocBlockStructure(commentText, jsdocLayout);
 
 			// The JSDoc comment with its tags spaced, ordered, and grouped.
-			// Comments
-			// without the tags this formats keep their prose line breaks.
+			// Comments without the tags this formats keep their prose line
+			// breaks.
 			const laidOutComment = hasTargetJSDocTag(commentText)
 				? formatJSDocTagFormatting(structuredComment, jsdocLayout)
 				: structuredComment;
@@ -581,11 +646,24 @@ function reportBlockComments(context) {
 			sentenceChanged = punctuatedComment !== commentText;
 		}
 
-		// The comment lines as they appear on screen after punctuation.
-		const displayLines = getBlockCommentDisplayLines(punctuatedComment, expectedIndent);
+		// The comment after refilling prose lines that ended early.
+		const refilledComment = isJSDoc(commentText)
+			? punctuatedComment
+			: refillBlockComment(
+					punctuatedComment,
+					actualIndent,
+					expectedIndent,
+					getNewline(context.sourceCode.text),
+				);
+
+		// Whether refilling changed the comment's layout.
+		const refillChanged = refilledComment !== punctuatedComment;
+		// The comment lines as they appear on screen after punctuation and
+		// refill.
+		const displayLines = getBlockCommentDisplayLines(refilledComment, expectedIndent);
 
 		// The comment, rewrapped when punctuation leaves a line over the limit.
-		let formattedComment = punctuatedComment;
+		let formattedComment = refilledComment;
 
 		// Whether any formatted line exceeds the width limit.
 		const hasOverlongLine = displayLines.some((line) => getDisplayWidth(line) > maximumLineLength);
@@ -594,11 +672,7 @@ function reportBlockComments(context) {
 			if (isJSDoc(commentText)) {
 				formattedComment = formatJSDocWrapping(punctuatedComment, jsdocLayout);
 			} else {
-				formattedComment = formatBlockComment(
-					context.sourceCode,
-					punctuatedComment,
-					expectedIndent,
-				);
+				formattedComment = formatBlockComment(context.sourceCode, refilledComment, expectedIndent);
 			}
 		}
 
@@ -609,9 +683,10 @@ function reportBlockComments(context) {
 		}
 
 		// The indentation the formatted comment was built with. JSDoc and
-		// rewrapped comments use the new indentation; other comments keep
-		// their current one until they are moved below.
-		const formattedIndent = isJSDoc(commentText) || hasOverlongLine ? expectedIndent : actualIndent;
+		// rewrapped comments use the new indentation; other comments keep their
+		// current one until they are moved below.
+		const formattedIndent =
+			isJSDoc(commentText) || hasOverlongLine || refillChanged ? expectedIndent : actualIndent;
 
 		// The formatted comment text with its leading indentation.
 		const replacementComment =
@@ -657,9 +732,9 @@ function reportBlockComments(context) {
 }
 
 /**
- * The comment-formatting rule: punctuates comments as sentences, reindents
- * line-comment groups and wraps any comment past 80 columns, replacing each
- * comment in one edit.
+ * The comment-formatting rule: punctuates comments as sentences, refills
+ * early-wrapped lines, reindents line-comment groups and wraps any comment past
+ * 80 columns, replacing each comment in one edit.
  */
 export default {
 	meta: {
