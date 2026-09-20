@@ -18,19 +18,19 @@ ruleTester.run("comments/formatting", rule, {
 		},
 		{
 			name: "treats comments separated by an ESLint directive as standalone",
-			code: "// First comment.\n// eslint-disable-next-line comments/formatting\n  // Second comment.\nconst value = 1;",
+			code: "// First comment.\n// eslint-disable-next-line comments/formatting\n// Second comment.\nconst value = 1;",
 		},
 		{
 			name: "treats comments separated by an Oxlint directive as standalone",
-			code: "// First comment.\n// oxlint-disable-next-line comments/formatting\n  // Second comment.\nconst value = 1;",
+			code: "// First comment.\n// oxlint-disable-next-line comments/formatting\n// Second comment.\nconst value = 1;",
 		},
 		{
 			name: "treats comments separated by an Istanbul directive as standalone",
-			code: "// First comment.\n// istanbul-ignore-next\n  // Second comment.\nconst value = 1;",
+			code: "// First comment.\n// istanbul-ignore-next\n// Second comment.\nconst value = 1;",
 		},
 		{
 			name: "treats comments separated by a c8 directive as standalone",
-			code: "// First comment.\n// c8-ignore-next\n  // Second comment.\nconst value = 1;",
+			code: "// First comment.\n// c8-ignore-next\n// Second comment.\nconst value = 1;",
 		},
 		"// oxlint-disable-next-line comments/formatting\nconst value = 1;",
 		"/* oxlint-disable comments/formatting */",
@@ -42,12 +42,12 @@ ruleTester.run("comments/formatting", rule, {
  * @param  {object}  options
  *     The dialog options.
  */
-			function openDialog(options) {}`,
+function openDialog(options) {}`,
 		},
 		`/**
  * Open the dialog with the supplied options.
  */
-	function openDialog(options) {}`,
+function openDialog(options) {}`,
 		{
 			name: "keeps deliberate line breaks in tag-less JSDoc prose",
 			code: `/**
@@ -73,7 +73,7 @@ function convertValue(options) {}`,
  * @param  {object}  options
  *     The dialog options.
  */
-		function openDialog(options) {}`,
+function openDialog(options) {}`,
 		{
 			name: "keeps consecutive parameter tags together with aligned spacing",
 			code: `/**
@@ -98,7 +98,7 @@ function moveTab(tab, index) {}`,
  * @returns  {object|null}
  *     The matching tab, or null when none exists.
  */
-		function findTab(id) {}`,
+function findTab(id) {}`,
 		`/**
  * Find a tab by its ID.
  *
@@ -114,6 +114,17 @@ function moveTab(tab, index) {}`,
  *     The converted tab ID.
  */
 function findTab(id) {}`,
+		{
+			name: "keeps a leading line comment immediately before its declaration",
+			code: "// Explain the value.\nconst value = 1;",
+		},
+		{
+			name: "keeps a leading block comment immediately before its call",
+			code: `/**
+ * Register a dialog.
+ */
+registerDialog();`,
+		},
 	],
 	invalid: [
 		{
@@ -137,7 +148,7 @@ function findTab(id) {}`,
 				{ message: "Comment text must be a complete sentence.", line: 3, column: 2 },
 			],
 			output:
-				"// First comment.\n// eslint-disable-next-line comments/formatting\n  // Second comment.\nconst value = 1;",
+				"// First comment.\n// eslint-disable-next-line comments/formatting\n// Second comment.\nconst value = 1;",
 		},
 		{
 			name: "formats comments separated by an Oxlint directive independently",
@@ -147,7 +158,7 @@ function findTab(id) {}`,
 				{ message: "Comment text must be a complete sentence.", line: 3, column: 2 },
 			],
 			output:
-				"// First comment.\n// oxlint-disable-next-line comments/formatting\n  // Second comment.\nconst value = 1;",
+				"// First comment.\n// oxlint-disable-next-line comments/formatting\n// Second comment.\nconst value = 1;",
 		},
 		{
 			name: "formats comments separated by an Istanbul directive independently",
@@ -156,7 +167,7 @@ function findTab(id) {}`,
 				{ message: "Comment text must be a complete sentence.", line: 1, column: 0 },
 				{ message: "Comment text must be a complete sentence.", line: 3, column: 2 },
 			],
-			output: "// First comment.\n// istanbul-ignore-next\n  // Second comment.\nconst value = 1;",
+			output: "// First comment.\n// istanbul-ignore-next\n// Second comment.\nconst value = 1;",
 		},
 		{
 			name: "formats comments separated by a c8 directive independently",
@@ -165,7 +176,7 @@ function findTab(id) {}`,
 				{ message: "Comment text must be a complete sentence.", line: 1, column: 0 },
 				{ message: "Comment text must be a complete sentence.", line: 3, column: 2 },
 			],
-			output: "// First comment.\n// c8-ignore-next\n  // Second comment.\nconst value = 1;",
+			output: "// First comment.\n// c8-ignore-next\n// Second comment.\nconst value = 1;",
 		},
 		{
 			name: "formats multiline ordinary block-comment prose",
@@ -225,17 +236,17 @@ function openDialog() {}`,
 		},
 		{
 			name: "aligns a continuation line with the first marker",
-			code: "\t// Close the dialog when focus moves outside the component and restore focus\n  // to the original trigger.\nonClickOutside(dialog, closeDialog);",
+			code: "\t// Close the dialog when focus moves outside the component and restore focus\n  // to the original trigger.\n\tonClickOutside(dialog, closeDialog);",
 			errors: [{ message: "Format this comment.", line: 1, column: 1 }],
 			output:
-				"\t// Close the dialog when focus moves outside the component and restore focus\n\t// to the original trigger.\nonClickOutside(dialog, closeDialog);",
+				"\t// Close the dialog when focus moves outside the component and restore focus\n\t// to the original trigger.\n\tonClickOutside(dialog, closeDialog);",
 		},
 		{
 			name: "adds the leading indentation to an unindented continuation line",
-			code: "\t// Close the dialog when focus moves outside the component and restore focus\n// to the original trigger.\nonClickOutside(dialog, closeDialog);",
+			code: "\t// Close the dialog when focus moves outside the component and restore focus\n// to the original trigger.\n\tonClickOutside(dialog, closeDialog);",
 			errors: [{ message: "Format this comment.", line: 1, column: 1 }],
 			output:
-				"\t// Close the dialog when focus moves outside the component and restore focus\n\t// to the original trigger.\nonClickOutside(dialog, closeDialog);",
+				"\t// Close the dialog when focus moves outside the component and restore focus\n\t// to the original trigger.\n\tonClickOutside(dialog, closeDialog);",
 		},
 		{
 			name: "wraps an overlong standalone line comment",
@@ -266,31 +277,31 @@ function openDialog() {}`,
 		},
 		{
 			name: "counts indentation and the line marker when wrapping",
-			code: "\t// Explain how this dialog restores focus after it closes, then returns to the original trigger.\nopenDialog();",
+			code: "\t// Explain how this dialog restores focus after it closes, then returns to the original trigger.\n\topenDialog();",
 			errors: [{ message: "Format this comment.", line: 1, column: 1 }],
 			output:
-				"\t// Explain how this dialog restores focus after it closes, then returns to\n\t// the original trigger.\nopenDialog();",
+				"\t// Explain how this dialog restores focus after it closes, then returns to\n\t// the original trigger.\n\topenDialog();",
 		},
 		{
 			name: "wraps two-tab comments within 80 display columns",
-			code: "\t\t// Explain how this dialog restores focus after it closes and returns to the original trigger.\nopenDialog();",
+			code: "\t\t// Explain how this dialog restores focus after it closes and returns to the original trigger.\n\t\topenDialog();",
 			errors: [{ message: "Format this comment.", line: 1, column: 2 }],
 			output:
-				"\t\t// Explain how this dialog restores focus after it closes and returns to\n\t\t// the original trigger.\nopenDialog();",
+				"\t\t// Explain how this dialog restores focus after it closes and returns to\n\t\t// the original trigger.\n\t\topenDialog();",
 		},
 		{
 			name: "reports a two-tab comment under 80 raw characters",
-			code: "\t\t// Explain how this dialog restores focus after closing and returns to focus.\nopenDialog();",
+			code: "\t\t// Explain how this dialog restores focus after closing and returns to focus.\n\t\topenDialog();",
 			errors: [{ message: "Format this comment.", line: 1, column: 2 }],
 			output:
-				"\t\t// Explain how this dialog restores focus after closing and returns to\n\t\t// focus.\nopenDialog();",
+				"\t\t// Explain how this dialog restores focus after closing and returns to\n\t\t// focus.\n\t\topenDialog();",
 		},
 		{
 			name: "reports an eight-space comment the same as the two-tab comment",
-			code: "        // Explain how this dialog restores focus after closing and returns to focus.\nopenDialog();",
+			code: "        // Explain how this dialog restores focus after closing and returns to focus.\n        openDialog();",
 			errors: [{ message: "Format this comment.", line: 1, column: 8 }],
 			output:
-				"        // Explain how this dialog restores focus after closing and returns to\n        // focus.\nopenDialog();",
+				"        // Explain how this dialog restores focus after closing and returns to\n        // focus.\n        openDialog();",
 		},
 		{
 			name: "wraps an overlong ordinary block comment",
@@ -298,6 +309,15 @@ function openDialog() {}`,
 			errors: [{ message: "Format this comment.", line: 1, column: 0 }],
 			output:
 				"/*\n * Explain how this dialog restores focus after it closes and returns to the\n * original trigger.\n */\nopenDialog();",
+		},
+		{
+			name: "wraps a block comment against its new indentation in one pass",
+			code: "/* Explain how dialog focus returns to its trigger after closing the dialog. */\n\t\topenDialog();",
+			errors: [
+				{ message: "Comment must be immediately before the documented code.", line: 1, column: 0 },
+			],
+			output:
+				"\t\t/*\n\t\t * Explain how dialog focus returns to its trigger after closing the\n\t\t * dialog.\n\t\t */\n\t\topenDialog();",
 		},
 		{
 			name: "wraps and punctuates a canonical multiline block comment in one fix",
@@ -316,10 +336,10 @@ openDialog();`,
 		},
 		{
 			name: "combines line-comment reindentation and wrapping in one fix",
-			code: "\t// Explain how this dialog restores focus after it closes and returns to the original trigger.\n  // Keep focus on the original trigger.\nopenDialog();",
+			code: "\t// Explain how this dialog restores focus after it closes and returns to the original trigger.\n  // Keep focus on the original trigger.\n\topenDialog();",
 			errors: [{ message: "Format this comment.", line: 1, column: 1 }],
 			output:
-				"\t// Explain how this dialog restores focus after it closes and returns to the\n\t// original trigger.\n\t// Keep focus on the original trigger.\nopenDialog();",
+				"\t// Explain how this dialog restores focus after it closes and returns to the\n\t// original trigger.\n\t// Keep focus on the original trigger.\n\topenDialog();",
 		},
 		{
 			name: "adds a blank line before the first JSDoc tag",
@@ -454,6 +474,75 @@ function moveTab(tab, index) {}`,
 \t *     the original trigger.
 \t */
 \tfunction openDialog(options) {}`,
+		},
+		{
+			name: "removes a blank line before a declaration comment",
+			code: "  // Explain the value.\n\nconst value = 1;",
+			errors: [
+				{ message: "Comment must be immediately before the documented code.", line: 1, column: 2 },
+			],
+			output: "// Explain the value.\nconst value = 1;",
+		},
+		{
+			name: "removes a blank line before a directive after a block comment",
+			code: "/* Explain the value. */\n\n// oxlint-disable-next-line comments/variable-declarations\nconst value = 1;",
+			errors: [
+				{ message: "Comment must be immediately before the documented code.", line: 1, column: 0 },
+			],
+			output:
+				"/* Explain the value. */\n// oxlint-disable-next-line comments/variable-declarations\nconst value = 1;",
+		},
+		{
+			name: "reindents a directive that separates a comment from its code",
+			code: "if (isReady) {\n\t// Explain the value.\n  // oxlint-disable-next-line comments/variable-declarations\n\trunTask();\n}",
+			errors: [
+				{ message: "Comment must be immediately before the documented code.", line: 2, column: 1 },
+			],
+			output:
+				"if (isReady) {\n\t// Explain the value.\n\t// oxlint-disable-next-line comments/variable-declarations\n\trunTask();\n}",
+		},
+		{
+			name: "matches block-comment indentation to its declaration",
+			code: "\t/**\n\t * Explain the value.\n\t */\nconst value = 1;",
+			errors: [
+				{ message: "Comment must be immediately before the documented code.", line: 1, column: 1 },
+			],
+			output: "/**\n * Explain the value.\n */\nconst value = 1;",
+		},
+		{
+			name: "reindents a leading block comment once inside an indented block",
+			code: "if (isReady) {\n/**\n * Explain the value.\n */\n\trunTask();\n}",
+			errors: [
+				{ message: "Comment must be immediately before the documented code.", line: 2, column: 0 },
+			],
+			output: "if (isReady) {\n\t/**\n\t * Explain the value.\n\t */\n\trunTask();\n}",
+		},
+		{
+			name: "ignores directives when finding a continuation-comment leader",
+			code: "// oxlint-disable-next-line comments/formatting\n\t// Explain the value across two lines and\n\t// continue on the second line.\nconst value = 1;",
+			errors: [
+				{ message: "Comment must be immediately before the documented code.", line: 2, column: 1 },
+			],
+			output:
+				"// oxlint-disable-next-line comments/formatting\n// Explain the value across two lines and\n// continue on the second line.\nconst value = 1;",
+		},
+		{
+			name: "does not treat comments separated by a directive as continuations",
+			code: "if (isReady) {\n\t// First comment.\n\t// oxlint-disable-next-line comments/formatting\n  // Second comment.\n\trunTask();\n}",
+			errors: [
+				{ message: "Comment must be immediately before the documented code.", line: 4, column: 2 },
+			],
+			output:
+				"if (isReady) {\n\t// First comment.\n\t// oxlint-disable-next-line comments/formatting\n\t// Second comment.\n\trunTask();\n}",
+		},
+		{
+			name: "reindents every line of a wrapped continuation comment to match its declaration",
+			code: "\t// Explain the value across two lines and\n\t// continue on the second line.\nconst value = 1;",
+			errors: [
+				{ message: "Comment must be immediately before the documented code.", line: 1, column: 1 },
+			],
+			output:
+				"// Explain the value across two lines and\n// continue on the second line.\nconst value = 1;",
 		},
 	],
 });

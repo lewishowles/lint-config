@@ -8,6 +8,7 @@ import {
 } from "../utils/jsdoc.js";
 
 import {
+	getCommentNeighbours,
 	getCommentText,
 	getDisplayWidth,
 	getLineCommentGroups,
@@ -15,6 +16,7 @@ import {
 	getLineStart,
 	getNewline,
 	isDirectiveComment,
+	isLeadingComment,
 	replaceMinimalComment,
 } from "../utils/source.js";
 
@@ -79,8 +81,58 @@ function formatLineComment(sourceCode, comment, indentation, commentText) {
 	}
 
 	return wrapWords(text, Math.max(1, width))
-		.map((line, index) => `${index === 0 ? "" : indentation}// ${line}`)
+		.map((line) => `// ${line}`)
 		.join(getNewline(sourceCode.text));
+}
+
+/**
+ * Return the part of a line's indentation that goes beyond the comment's own
+ * indentation, so nested lines keep their offset when the comment moves.
+ *
+ * @param  {string}  indentation
+ *     The indentation of one line inside the comment.
+ * @param  {string}  commentIndent
+ *     The indentation of the comment's first line.
+ *
+ * @returns  {string}
+ *     The extra indentation, or an empty string when the line does not start
+ *     with the comment's indentation.
+ */
+function getRelativeIndent(indentation, commentIndent) {
+	return indentation.startsWith(commentIndent) ? indentation.slice(commentIndent.length) : "";
+}
+
+/**
+ * Reindent a formatted leading comment while preserving inner indentation.
+ *
+ * @param  {string}  commentText
+ *     The formatted comment source text.
+ * @param  {string}  commentIndent
+ *     The comment's current indentation.
+ * @param  {string}  expectedIndent
+ *     The documented code's indentation.
+ * @param  {string}  newline
+ *     The source file's newline sequence.
+ *
+ * @returns  {string}
+ *     The reindented comment with its leading indentation.
+ */
+function getReindentedCommentText(commentText, commentIndent, expectedIndent, newline) {
+	return commentText
+		.split(/\r\n|\n|\r/)
+		.map((line, lineIndex) => {
+			if (lineIndex === 0) {
+				return `${expectedIndent}${line}`;
+			}
+
+			// The line's current indentation.
+			const lineIndent = line.match(/^[ \t]*/)[0];
+			// The indentation to preserve relative to the comment's own indent.
+			const relativeIndent = getRelativeIndent(lineIndent, commentIndent);
+
+			return `${expectedIndent}${relativeIndent}${line.slice(lineIndent.length)}`;
+		})
+		.join(newline);
 }
 
 /**
@@ -179,18 +231,15 @@ function formatOrdinaryBlockComment(sourceCode, comment) {
  *
  * @param  {object}  sourceCode
  *     The Oxlint source code object.
- * @param  {object}  comment
- *     The block comment token.
  * @param  {string}  commentText
  *     The sentence-formatted comment text to wrap.
+ * @param  {string|null}  indentation
+ *     The indentation used by the wrapped comment.
  *
  * @returns  {string|null}
  *     The wrapped comment, or null when it is not a standalone comment.
  */
-function formatBlockComment(sourceCode, comment, commentText) {
-	// The comment's current indentation.
-	const indentation = getLineIndent(sourceCode, comment.range[0]);
-
+function formatBlockComment(sourceCode, commentText, indentation) {
 	if (indentation === null) {
 		return null;
 	}
@@ -216,23 +265,114 @@ function formatBlockComment(sourceCode, comment, commentText) {
 /**
  * Return the display lines for a formatted block comment.
  *
- * @param  {object}  sourceCode
- *     The Oxlint source code object.
- * @param  {object}  comment
- *     The block comment token.
  * @param  {string}  commentText
  *     The formatted comment text.
+ * @param  {string}  indentation
+ *     The indentation used to measure the comment.
  *
  * @returns  {string[]}
  *     The comment lines as they appear on screen.
  */
-function getBlockCommentDisplayLines(sourceCode, comment, commentText) {
-	// The comment's current indentation.
-	const indentation = getLineIndent(sourceCode, comment.range[0]) ?? "";
+function getBlockCommentDisplayLines(commentText, indentation) {
 	// The comment's individual source lines.
 	const lines = commentText.split(/\r\n|\n|\r/);
 
 	return [`${indentation}${lines[0]}`, ...lines.slice(1)];
+}
+
+/**
+ * Work out where a comment above code should sit: the code's indentation, and
+ * the end of the gap to replace so exactly one line break separates them.
+ *
+ * The gap stops before a directive comment between the comment and its code, so
+ * the fix never edits the directive. When an ordinary comment sits between them
+ * instead, only the indentation is fixed and the gap is left alone.
+ *
+ * @param  {object}  sourceCode
+ *     The Oxlint source code object.
+ * @param  {object}  comment
+ *     The first comment in the formatted unit.
+ * @param  {object}  lastComment
+ *     The last comment in the formatted unit.
+ * @param  {object[]}  comments
+ *     Every comment token in source order.
+ *
+ * @returns  {object|null}
+ *     Placement details with `actualIndent`, `changed`, `expectedIndent`,
+ *     `gap`, and `rangeEnd`; or null when the comment does not sit above code.
+ */
+function getLeadingCommentPlacement(sourceCode, comment, lastComment, comments) {
+	// The code token the comment documents, and the token before the comment.
+	const { next, previous } = getCommentNeighbours(sourceCode, comment);
+
+	if (next === null || !isLeadingComment(sourceCode, comment, previous)) {
+		return null;
+	}
+
+	// The indentation required by the documented source token.
+	const expectedIndent = getLineIndent(sourceCode, next.range[0]);
+	// The comment's current indentation.
+	const actualIndent = getLineIndent(sourceCode, comment.range[0]);
+
+	if (expectedIndent === null || actualIndent === null) {
+		return null;
+	}
+
+	// The next comment after this unit, when one exists.
+	const followingComment = comments.find((candidate) => candidate.range[0] > lastComment.range[1]);
+
+	// Whether another comment sits between this one and its documented code.
+	const followingCommentIntervenes =
+		followingComment !== undefined && followingComment.range[0] <= next.range[0];
+
+	if (followingCommentIntervenes && !isDirectiveComment(followingComment)) {
+		return {
+			actualIndent,
+			changed: actualIndent !== expectedIndent,
+			expectedIndent,
+			gap: "",
+			rangeEnd: lastComment.range[1],
+		};
+	}
+
+	// Stop before an intervening directive so the replacement never overlaps
+	// it.
+	const rangeEnd = followingCommentIntervenes ? followingComment.range[0] : next.range[0];
+	// The source gap after the final comment, up to the code or directive.
+	const sourceGap = sourceCode.text.slice(lastComment.range[1], rangeEnd);
+	// The gap the documented code's indentation requires.
+	const gap = `${getNewline(sourceCode.text)}${expectedIndent}`;
+
+	return {
+		actualIndent,
+		changed: actualIndent !== expectedIndent || sourceGap !== gap,
+		expectedIndent,
+		gap,
+		rangeEnd,
+	};
+}
+
+/**
+ * Return the diagnostic message for a comment formatting report.
+ *
+ * @param  {boolean}  sentenceChanged
+ *     Whether the comment's sentence punctuation needs changing.
+ * @param  {boolean}  placementChanged
+ *     Whether the comment's placement needs changing.
+ *
+ * @returns  {string}
+ *     The diagnostic message.
+ */
+function getReportMessage(sentenceChanged, placementChanged) {
+	if (sentenceChanged) {
+		return "Comment text must be a complete sentence.";
+	}
+
+	if (placementChanged) {
+		return "Comment must be immediately before the documented code.";
+	}
+
+	return "Format this comment.";
 }
 
 /**
@@ -242,6 +382,9 @@ function getBlockCommentDisplayLines(sourceCode, comment, commentText) {
  *     The Oxlint rule context.
  */
 function reportLineCommentGroups(context) {
+	// Every comment in the file, used to find what follows each group.
+	const comments = context.sourceCode.getAllComments();
+
 	for (const commentGroup of getLineCommentGroups(context.sourceCode)) {
 		// The first standalone comment is the group leader for formatting.
 		const firstStandaloneIndex = commentGroup.findIndex(
@@ -256,6 +399,17 @@ function reportLineCommentGroups(context) {
 		const firstStandaloneComment = commentGroup[firstStandaloneIndex];
 		// The indentation applied to every standalone comment in the group.
 		const firstIndent = getLineIndent(context.sourceCode, firstStandaloneComment.range[0]);
+
+		// The placement of a leading group, when it documents the next token.
+		const placement = getLeadingCommentPlacement(
+			context.sourceCode,
+			firstStandaloneComment,
+			commentGroup.at(-1),
+			comments,
+		);
+
+		// The indentation applied to the comment group's replacement.
+		const expectedIndent = placement?.expectedIndent ?? firstIndent;
 		// The comments this rule may reindent or wrap; a leading comment that
 		// trails code is left alone.
 		const standaloneComments = commentGroup.slice(firstStandaloneIndex);
@@ -266,7 +420,7 @@ function reportLineCommentGroups(context) {
 		const groupToken = {
 			range: [
 				getLineStart(context.sourceCode, firstStandaloneComment.range[0]),
-				commentGroup.at(-1).range[1],
+				placement?.rangeEnd ?? commentGroup.at(-1).range[1],
 			],
 		};
 
@@ -298,37 +452,60 @@ function reportLineCommentGroups(context) {
 			(firstValue !== standaloneComments[0].value || lastValue !== standaloneComments.at(-1).value);
 
 		// The group's text after punctuation, reindentation, and line wrapping.
-		const formattedText = standaloneComments
-			.map((comment, index) => {
-				// The comment's value, using the group's first and last values.
-				let value = comment.value;
+		const formattedText =
+			standaloneComments
+				.map((comment, index) => {
+					// The comment's value, using the group's first and last
+					// values.
+					let value = comment.value;
 
-				if (index === 0) {
-					value = firstValue;
-				} else if (index === standaloneComments.length - 1) {
-					value = lastValue;
-				}
+					if (index === 0) {
+						value = firstValue;
+					} else if (index === standaloneComments.length - 1) {
+						value = lastValue;
+					}
 
-				// The comment's source text after sentence formatting.
-				const commentText = replaceLineCommentValue(context.sourceCode, comment, value);
-				// The comment's text after applying the group's indentation.
-				const reindentedText = `${firstIndent}${commentText}`;
+					// The comment's source text after sentence formatting.
+					const commentText = replaceLineCommentValue(context.sourceCode, comment, value);
+					// The comment's current indentation, falling back to the
+					// leader's.
+					const commentIndent = getLineIndent(context.sourceCode, comment.range[0]) ?? firstIndent;
+					// The comment's extra indentation beyond the group
+					// leader's.
+					const relativeIndent = getRelativeIndent(commentIndent, firstIndent);
+					// The indentation this comment gets once the group is
+					// moved.
+					const commentExpectedIndent = expectedIndent + relativeIndent;
+					// The comment's text after applying the group's
+					// indentation.
+					const reindentedText = `${commentExpectedIndent}${commentText}`;
 
-				// The wrapped comment text, when the reindented line exceeds
-				// the limit.
-				const formattedComment =
-					getDisplayWidth(reindentedText) > maximumLineLength
-						? (formatLineComment(context.sourceCode, comment, firstIndent, commentText) ??
-							commentText)
-						: commentText;
+					// The wrapped comment text, when the reindented line
+					// exceeds
+					// the limit.
+					const formattedComment =
+						getDisplayWidth(reindentedText) > maximumLineLength
+							? (formatLineComment(
+									context.sourceCode,
+									comment,
+									commentExpectedIndent,
+									commentText,
+								) ?? commentText)
+							: commentText;
 
-				return `${firstIndent}${formattedComment}`;
-			})
-			.join(getNewline(context.sourceCode.text));
+					return formattedComment
+						.split(getNewline(context.sourceCode.text))
+						.map((line) => `${commentExpectedIndent}${line}`)
+						.join(getNewline(context.sourceCode.text));
+				})
+				.join(getNewline(context.sourceCode.text)) + (placement?.gap ?? "");
 
 		if (formattedText === sourceText) {
 			continue;
 		}
+
+		// The diagnostic message for the group's changes.
+		const message = getReportMessage(sentenceChanged, placement?.changed ?? false);
 
 		context.report({
 			/**
@@ -341,9 +518,7 @@ function reportLineCommentGroups(context) {
 			 *     The fix for the complete comment group.
 			 */
 			fix: (fixer) => replaceMinimalComment(fixer, groupToken, sourceText, formattedText),
-			message: sentenceChanged
-				? "Comment text must be a complete sentence."
-				: "Format this comment.",
+			message,
 			node: firstStandaloneComment,
 		});
 	}
@@ -356,13 +531,23 @@ function reportLineCommentGroups(context) {
  *     The Oxlint rule context.
  */
 function reportBlockComments(context) {
-	for (const comment of context.sourceCode.getAllComments()) {
+	// Every comment in the file, used to find what follows each comment.
+	const comments = context.sourceCode.getAllComments();
+
+	for (const comment of comments) {
 		if (comment.type === "Shebang" || comment.type === "Line" || isDirectiveComment(comment)) {
 			continue;
 		}
 
 		// The comment's raw source text.
 		const commentText = getCommentText(context.sourceCode, comment);
+		// The placement of a leading comment, when it documents the next token.
+		const placement = getLeadingCommentPlacement(context.sourceCode, comment, comment, comments);
+		// The comment's current indentation, or an empty string for inline
+		// comments.
+		const actualIndent = getLineIndent(context.sourceCode, comment.range[0]) ?? "";
+		// The indentation the formatted comment should use.
+		const expectedIndent = placement?.expectedIndent ?? actualIndent;
 
 		// The comment with its layout and sentence punctuation fixed, before
 		// wrapping.
@@ -373,7 +558,7 @@ function reportBlockComments(context) {
 
 		// The indentation and newline style that the JSDoc formatters keep.
 		const jsdocLayout = {
-			indent: getLineIndent(context.sourceCode, comment.range[0]) ?? "",
+			indent: expectedIndent,
 			newline: getNewline(context.sourceCode.text),
 		};
 
@@ -397,26 +582,62 @@ function reportBlockComments(context) {
 		}
 
 		// The comment lines as they appear on screen after punctuation.
-		const displayLines = getBlockCommentDisplayLines(
-			context.sourceCode,
-			comment,
-			punctuatedComment,
-		);
+		const displayLines = getBlockCommentDisplayLines(punctuatedComment, expectedIndent);
 
 		// The comment, rewrapped when punctuation leaves a line over the limit.
 		let formattedComment = punctuatedComment;
 
-		if (displayLines.some((line) => getDisplayWidth(line) > maximumLineLength)) {
+		// Whether any formatted line exceeds the width limit.
+		const hasOverlongLine = displayLines.some((line) => getDisplayWidth(line) > maximumLineLength);
+
+		if (hasOverlongLine) {
 			if (isJSDoc(commentText)) {
 				formattedComment = formatJSDocWrapping(punctuatedComment, jsdocLayout);
 			} else {
-				formattedComment = formatBlockComment(context.sourceCode, comment, punctuatedComment);
+				formattedComment = formatBlockComment(
+					context.sourceCode,
+					punctuatedComment,
+					expectedIndent,
+				);
 			}
 		}
 
 		if (formattedComment === null || formattedComment === commentText) {
-			continue;
+			if (placement === null || !placement.changed) {
+				continue;
+			}
 		}
+
+		// The indentation the formatted comment was built with. JSDoc and
+		// rewrapped comments use the new indentation; other comments keep
+		// their current one until they are moved below.
+		const formattedIndent = isJSDoc(commentText) || hasOverlongLine ? expectedIndent : actualIndent;
+
+		// The formatted comment text with its leading indentation.
+		const replacementComment =
+			placement === null
+				? formattedComment
+				: getReindentedCommentText(
+						formattedComment,
+						formattedIndent,
+						expectedIndent,
+						getNewline(context.sourceCode.text),
+					);
+
+		// The source range includes the comment's line start and its placement
+		// gap.
+		const replacementToken =
+			placement === null
+				? comment
+				: { range: [getLineStart(context.sourceCode, comment.range[0]), placement.rangeEnd] };
+
+		// The current source text for the complete replacement.
+		const sourceText = getCommentText(context.sourceCode, replacementToken);
+		// The replacement text, including the required gap before code or a
+		// directive.
+		const replacementText = `${replacementComment}${placement?.gap ?? ""}`;
+		// The diagnostic message for the comment's changes.
+		const message = getReportMessage(sentenceChanged, placement?.changed ?? false);
 
 		context.report({
 			/**
@@ -428,10 +649,8 @@ function reportBlockComments(context) {
 			 * @returns  {object}
 			 *     The fix to apply.
 			 */
-			fix: (fixer) => replaceMinimalComment(fixer, comment, commentText, formattedComment),
-			message: sentenceChanged
-				? "Comment text must be a complete sentence."
-				: "Format this comment.",
+			fix: (fixer) => replaceMinimalComment(fixer, replacementToken, sourceText, replacementText),
+			message,
 			node: comment,
 		});
 	}

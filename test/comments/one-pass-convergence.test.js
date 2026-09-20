@@ -13,7 +13,8 @@ test("comment formatting settles comment-formatting collisions in one pass", () 
 	const fixtureNames = readdirSync(fixtureDirectory).filter(
 		(name) =>
 			name.endsWith("-wrap-punctuation-collision.js.txt") ||
-			name === "fixer-range-collision.js.txt",
+			name === "fixer-range-collision.js.txt" ||
+			name === "placement-formatting-convergence.js.txt",
 	);
 
 	try {

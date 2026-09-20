@@ -7,7 +7,7 @@ const maxLengthValue = 1;
 // close the dialog
 const punctuationValue = 1;
 
-// oxlint-disable-next-line comments/placement
+// oxlint-disable-next-line comments/formatting
 /* Explain the value. */
 
 // oxlint-disable-next-line comments/variable-declarations

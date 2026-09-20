@@ -1,0 +1,3 @@
+  // close the dialog when focus moves outside the component and restore focus to the original trigger
+
+openDialog();
