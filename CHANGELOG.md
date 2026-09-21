@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.1: 2026-09-21
+
+### Fixes
+
+- `comments/function-documentation`: accept the name the JSDoc gives a destructured object parameter, instead of always expecting `options`.
+
 ## 0.6.0: 2026-09-21
 
 ### Changes

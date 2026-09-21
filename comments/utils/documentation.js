@@ -157,11 +157,14 @@ function getObjectPatternPaths(sourceCode, node, parentPath) {
  *     The Oxlint source code object.
  * @param  {object}  node
  *     The parameter node.
+ * @param  {string}  [rootPath]
+ *     The documented name that starts each path for a destructured object
+ *     parameter. Defaults to options.
  *
  * @returns  {string[]}
  *     The required JSDoc parameter paths.
  */
-function getParameterPaths(sourceCode, node) {
+function getParameterPaths(sourceCode, node, rootPath = "options") {
 	if (node.type === "Identifier") {
 		return [node.name];
 	}
@@ -171,11 +174,11 @@ function getParameterPaths(sourceCode, node) {
 	}
 
 	if (node.type === "ObjectPattern") {
-		return getObjectPatternPaths(sourceCode, node, "options");
+		return getObjectPatternPaths(sourceCode, node, rootPath);
 	}
 
 	if (node.type === "AssignmentPattern") {
-		return getParameterPaths(sourceCode, node.left);
+		return getParameterPaths(sourceCode, node.left, rootPath);
 	}
 
 	return [];
@@ -189,25 +192,40 @@ function getParameterPaths(sourceCode, node) {
  * @param  {object}  comment
  *     The JSDoc comment token.
  *
- * @returns  {Set<string>}
- *     The documented parameter names.
+ * @returns  {object}
+ *     An object with names, the set of every documented parameter path, and
+ *     topLevelNames, the top-level names in the order they are documented.
  */
 function getDocumentedParameters(sourceCode, comment) {
 	// Splits the JSDoc block into its individual lines.
 	const content = getJSDocContent(getCommentText(sourceCode, comment));
 	// Collects the parameter paths documented by @param tags.
 	const names = new Set();
+	// Collects top-level parameter names in their documented order.
+	const topLevelNames = [];
 
 	for (const line of content) {
 		// Matches an @param tag and captures its documented path.
 		const match = line.trim().match(/^@param(?:\s+\{[^}]+\})?\s+(\[[^\]]+\]|\S+)/);
 
 		if (match) {
-			names.add(match[1]);
+			// The documented name as written, including optional brackets and
+			// any default value.
+			const name = match[1];
+
+			names.add(name);
+
+			// Removes optional and default-value syntax before checking for a
+			// nested path.
+			const topLevelName = name.replace(/^\[|\]$/g, "").split("=")[0];
+
+			if (!topLevelName.includes(".")) {
+				topLevelNames.push(topLevelName);
+			}
 		}
 	}
 
-	return names;
+	return { names, topLevelNames };
 }
 
 /**
@@ -306,11 +324,14 @@ export function reportFunctionDocumentation(context, node, functionNode, options
 	}
 
 	// Reads the parameter paths already documented by @param tags.
-	const documentedParameters = getDocumentedParameters(context.sourceCode, comment);
+	const { names: documentedParameters, topLevelNames } = getDocumentedParameters(
+		context.sourceCode,
+		comment,
+	);
 
 	// Derives the parameter paths the function actually requires.
-	const parameterPaths = functionNode.params.flatMap((parameter) =>
-		getParameterPaths(context.sourceCode, parameter),
+	const parameterPaths = functionNode.params.flatMap((parameter, index) =>
+		getParameterPaths(context.sourceCode, parameter, topLevelNames[index]),
 	);
 
 	for (const path of parameterPaths) {

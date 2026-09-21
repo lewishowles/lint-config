@@ -30,6 +30,8 @@ ruleTester.run("comments/function-documentation", rule, {
 		"/** Open the dialog.\n *\n * @param {object} options\n * @param {object} options.trigger\n * @param {string} options.trigger.id\n * @param {number} [options.count=1]\n */\nfunction openDialog({ trigger: { id }, count = 1 }) {}",
 		"/** Open the dialog.\n *\n * @param {object} options\n * @param {string} options.id\n */\nfunction openDialog({ id: dialogId }) {}",
 		"/** Open the dialog.\n *\n * @param {object} [options]\n */\nfunction openDialog(options) {}",
+		"/** Check the report.\n *\n * @param {object} result\n * @param {object} options\n * @param {object} resultLabels\n * @param {string} resultLabels.failed\n * @param {string} resultLabels.success\n * @param {string} [resultLabels.hintText]\n */\nfunction reportCheckResult(result, options, { failed, success, hintText }) {}",
+		"/** Open the dialog.\n *\n * @param {object} options\n * @param {string} options.id\n */\nfunction openDialog({ id }) {}",
 		"const dialog = {\n\t/** Open the dialog.\n\t *\n\t * @param {string} id\n\t */\n\topen(id) {},\n};",
 		"const dialog = {\n\t/** Open the dialog.\n\t *\n\t * @param {string} id\n\t */\n\topen: (id) => {},\n};",
 		"const dialog = {\n\t/** Open the dialog.\n\t *\n\t * @param {string} id\n\t */\n\topen(id) {},\n\t/** Close the dialog.\n\t *\n\t * @param {string} reason\n\t */\n\tclose: (reason) => {},\n};",
@@ -76,6 +78,20 @@ ruleTester.run("comments/function-documentation", rule, {
 				{ message: "Functions require an @param for options.trigger." },
 				{ message: "Functions require an @param for options.trigger.id." },
 				{ message: "Functions require an @param for [options.count=1]." },
+			],
+		},
+		{
+			name: "matches a destructured parameter to its documented root",
+			code: "/** Check the report.\n *\n * @param {object} result\n * @param {object} options\n * @param {object} resultLabels\n * @param {string} resultLabels.failed\n * @param {string} resultLabels.success\n */\nfunction reportCheckResult(result, options, { failed, success, hintText }) {}",
+			errors: [{ message: "Functions require an @param for resultLabels.hintText." }],
+		},
+		{
+			name: "falls back to options when a destructured parameter has no documented root",
+			code: "/** Check the report.\n *\n * @param {object} result\n * @param {object} options\n */\nfunction reportCheckResult(result, options, { failed, success, hintText }) {}",
+			errors: [
+				{ message: "Functions require an @param for options.failed." },
+				{ message: "Functions require an @param for options.success." },
+				{ message: "Functions require an @param for options.hintText." },
 			],
 		},
 		{
