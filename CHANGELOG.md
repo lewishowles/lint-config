@@ -1,26 +1,27 @@
 # Changelog
 
-## Unreleased
+## 0.6.0: 2026-09-21
 
 ### Changes
 
-- `comments/formatting` now moves trailing line comments onto their own line.
+- Breaking: replace `comments/line-comments`, `comments/max-line-length`, `comments/sentence-punctuation`, `comments/block-comments`, `comments/jsdoc-tag-formatting`, and `comments/placement` with a single `comments/formatting` rule. Remove the old rule IDs from your configuration; `comments.json` already enables `comments/formatting`.
+- Breaking: `base` now reports an error when statements of different kinds, such as a declaration followed by a function call, have no blank line between them, and when consecutive `const` or `let` declarations are separated by a blank line. Run `--fix` once to update existing code.
+- `comments/formatting` moves trailing line comments onto their own line above the code.
+
+### Fixes
+
+- `comments/formatting`: refill comment lines that were wrapped before the 80-column limit.
+- `comments/variable-declarations`: skip the line-comment requirement for `const` declarations assigned to arrow functions or function expressions.
 
 ## 0.5.0: 2026-09-11
 
 ### Changes
 
-- Breaking: replace `comments/line-comments` and `comments/max-line-length` with `comments/formatting`.
-- Breaking: fold `comments/sentence-punctuation` into `comments/formatting`.
-- Breaking: fold `comments/block-comments` and `comments/jsdoc-tag-formatting` into `comments/formatting`.
-- Breaking: fold `comments/placement` into `comments/formatting`.
 - `comments/variable-declarations`: add a `rootOnly` option; `comments.json` enables it for test files so only root-level variables need comments there. If you override `comments.json` rules, concatenate the test-file override (see README).
 
 ### Fixes
 
 - Measure comment width in display columns, with tabs counted as four, so indented comments wrap and validate against the visible 80-column limit.
-- Refill comment lines that were wrapped before the 80-column limit.
-- `comments/variable-declarations`: skip the line-comment requirement for `const` declarations assigned to arrow functions or function expressions.
 
 ## 0.4.0: 2026-08-28
 
