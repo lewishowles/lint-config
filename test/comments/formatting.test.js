@@ -9,10 +9,6 @@ ruleTester.run("comments/formatting", rule, {
 		"const value = 1;",
 		"// A short comment.",
 		{
-			name: "keeps a short standalone comment after a trailing comment",
-			code: "run(); // note\n// A short standalone comment.\nopenDialog();",
-		},
-		{
 			name: "keeps wrapped continuation lines aligned",
 			code: "// Close the dialog when focus moves outside the component and restore focus to\n// the original trigger.\nonClickOutside(dialog, closeDialog);",
 		},
@@ -145,8 +141,51 @@ function findTab(id) {}`,
  */
 registerDialog();`,
 		},
+		{
+			name: "keeps a directive trailing comment in place",
+			code: "const value = 1; // oxlint-disable-next-line comments/formatting",
+		},
 	],
 	invalid: [
+		{
+			name: "moves a trailing comment above a simple statement",
+			code: "const value = 1; // Note.",
+			errors: [{ message: "Line comments must be on their own line." }],
+			output: "// Note.\nconst value = 1;",
+		},
+		{
+			name: "moves a trailing comment above a middle line with its indentation",
+			code: "const values = {\n\tfirst: 1,\n\tsecond: 2, // Note.\n\tthird: 3,\n};",
+			errors: [{ message: "Line comments must be on their own line." }],
+			output: "const values = {\n\tfirst: 1,\n\t// Note.\n\tsecond: 2,\n\tthird: 3,\n};",
+		},
+		{
+			name: "moves a trailing comment above a class member with its indentation",
+			code: "class A {\n\tvalue = 1; // Note.\n}",
+			errors: [{ message: "Line comments must be on their own line." }],
+			output: "class A {\n\t// Note.\n\tvalue = 1;\n}",
+		},
+		{
+			name: "keeps an existing comment before the moved comment",
+			code: "openDialog();\n// Explain the dialog.\ncloseDialog(); // Note.",
+			errors: [{ message: "Line comments must be on their own line." }],
+			output: "openDialog();\n// Explain the dialog.\n// Note.\ncloseDialog();",
+		},
+		{
+			name: "formats a moved trailing comment in the same fix",
+			code: "const value = 1; // explain the value",
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: "// Explain the value.\nconst value = 1;",
+		},
+		{
+			name: "formats an existing and trailing comment in one run",
+			code: "openDialog();\n// explain the dialog\ncloseDialog(); // note",
+			errors: [
+				{ message: "Comment text must be a complete sentence." },
+				{ message: "Comment text must be a complete sentence." },
+			],
+			output: "openDialog();\n// Explain the dialog.\n// Note.\ncloseDialog();",
+		},
 		{
 			name: "capitalises and punctuates a standalone line comment",
 			code: "// close the dialog\ncloseDialog();",
@@ -310,9 +349,12 @@ function openDialog() {}`,
 		{
 			name: "wraps a standalone comment after a trailing comment",
 			code: "run(); // note\n// Explain how this dialog restores focus after it closes and returns to the original trigger.\nopenDialog();",
-			errors: [{ message: "Format this comment.", line: 2, column: 0 }],
+			errors: [
+				{ message: "Comment text must be a complete sentence.", line: 1, column: 7 },
+				{ message: "Format this comment.", line: 2, column: 0 },
+			],
 			output:
-				"run(); // note\n// Explain how this dialog restores focus after it closes and returns to the\n// original trigger.\nopenDialog();",
+				"// Note.\nrun();\n// Explain how this dialog restores focus after it closes and returns to the\n// original trigger.\nopenDialog();",
 		},
 		{
 			name: "wraps an overlong JSDoc prose line",

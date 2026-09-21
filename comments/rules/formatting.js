@@ -436,6 +436,110 @@ function getReportMessage(sentenceChanged, placementChanged) {
 }
 
 /**
+ * Report line comments that trail code on their source line.
+ *
+ * @param  {object}  context
+ *     The Oxlint rule context.
+ */
+function reportTrailingLineComments(context) {
+	// Every comment in the file, used to find trailing line comments.
+	const comments = context.sourceCode.getAllComments();
+
+	for (const comment of comments) {
+		if (
+			comment.type !== "Line" ||
+			isDirectiveComment(comment) ||
+			getLineIndent(context.sourceCode, comment.range[0]) !== null
+		) {
+			continue;
+		}
+
+		// The source line where the trailing comment begins.
+		const commentLineStart = getLineStart(context.sourceCode, comment.range[0]);
+		// The text before the comment on its source line.
+		const linePrefix = context.sourceCode.text.slice(commentLineStart, comment.range[0]);
+		// The indentation shared by the code and the moved comment line.
+		const lineIndent = linePrefix.match(/^[ \t]*/)[0];
+		// Whether the comment gets sentence formatting; empty comments and
+		// comments that start with a tag are left as written.
+		const formatPunctuation = comment.value.trim() !== "" && !comment.value.trim().startsWith("@");
+		// The comment's value after sentence formatting.
+		const formattedValue = formatPunctuation ? formatSentence(comment.value) : comment.value;
+		// The comment source text after sentence formatting.
+		const commentText = replaceLineCommentValue(context.sourceCode, comment, formattedValue);
+		// The comment text with the line's indentation for width measurement.
+		const reindentedText = `${lineIndent}${commentText}`;
+
+		// The comment text after wrapping it to the line's available width.
+		const wrappedComment =
+			getDisplayWidth(reindentedText) > maximumLineLength
+				? (formatLineComment(context.sourceCode, comment, lineIndent, commentText) ?? commentText)
+				: commentText;
+
+		// The formatted comment with indentation on every wrapped line.
+		const formattedComment = wrappedComment
+			.split(getNewline(context.sourceCode.text))
+			.map((line) => `${lineIndent}${line}`)
+			.join(getNewline(context.sourceCode.text));
+
+		// Whether sentence punctuation or capitalisation changed the comment.
+		const sentenceChanged = formattedValue !== comment.value;
+
+		context.report({
+			fix: getTrailingCommentFix(
+				context.sourceCode,
+				comment,
+				formattedComment,
+				commentLineStart,
+				linePrefix,
+			),
+			message: sentenceChanged
+				? "Comment text must be a complete sentence."
+				: "Line comments must be on their own line.",
+			node: comment,
+		});
+	}
+}
+
+/**
+ * Move a trailing line comment above its source line.
+ *
+ * @param  {object}  sourceCode
+ *     The Oxlint source code object.
+ * @param  {object}  comment
+ *     The trailing line comment.
+ * @param  {string}  formattedComment
+ *     The formatted comment text, including line indentation.
+ * @param  {number}  commentLineStart
+ *     The offset at which the comment's source line starts.
+ * @param  {string}  linePrefix
+ *     The source text before the comment on its line.
+ *
+ * @returns  {function}
+ *     A fixer callback that inserts the comment above its source line and
+ *     removes it from the code line.
+ */
+function getTrailingCommentFix(
+	sourceCode,
+	comment,
+	formattedComment,
+	commentLineStart,
+	linePrefix,
+) {
+	// The whitespace separating the code from the comment.
+	const trailingWhitespace = linePrefix.match(/[ \t]*$/)[0];
+	// The first character removed after the code on the comment's line.
+	const removalStart = comment.range[0] - trailingWhitespace.length;
+	// The newline sequence used by the source file.
+	const newline = getNewline(sourceCode.text);
+
+	return (fixer) => [
+		fixer.replaceTextRange([commentLineStart, commentLineStart], `${formattedComment}${newline}`),
+		fixer.removeRange([removalStart, comment.range[1]]),
+	];
+}
+
+/**
  * Report line-comment groups that need punctuation, reindentation or wrapping.
  *
  * @param  {object}  context
@@ -445,18 +549,19 @@ function reportLineCommentGroups(context) {
 	// Every comment in the file, used to find what follows each group.
 	const comments = context.sourceCode.getAllComments();
 
-	for (const commentGroup of getLineCommentGroups(context.sourceCode)) {
-		// The first standalone comment is the group leader for formatting.
-		const firstStandaloneIndex = commentGroup.findIndex(
-			(comment) => getLineIndent(context.sourceCode, comment.range[0]) !== null,
-		);
+	// Groups without comments that trail code, because those comments have
+	// their own placement fix.
+	const standaloneCommentGroups = getLineCommentGroups(context.sourceCode).map((commentGroup) =>
+		commentGroup.filter((comment) => getLineIndent(context.sourceCode, comment.range[0]) !== null),
+	);
 
-		if (firstStandaloneIndex < 0) {
+	for (const commentGroup of standaloneCommentGroups) {
+		if (commentGroup.length === 0) {
 			continue;
 		}
 
 		// The comment whose indentation the rest of the group follows.
-		const firstStandaloneComment = commentGroup[firstStandaloneIndex];
+		const firstStandaloneComment = commentGroup[0];
 		// The indentation applied to every standalone comment in the group.
 		const firstIndent = getLineIndent(context.sourceCode, firstStandaloneComment.range[0]);
 
@@ -470,9 +575,6 @@ function reportLineCommentGroups(context) {
 
 		// The indentation applied to the comment group's replacement.
 		const expectedIndent = placement?.expectedIndent ?? firstIndent;
-		// The comments this rule may reindent or wrap; a leading comment that
-		// trails code is left alone.
-		const standaloneComments = commentGroup.slice(firstStandaloneIndex);
 
 		// A stand-in for a comment token: replaceMinimalComment only reads its
 		// range, and the range spans every standalone comment plus its
@@ -487,17 +589,17 @@ function reportLineCommentGroups(context) {
 		// The group's current source text.
 		const sourceText = context.sourceCode.text.slice(...groupToken.range);
 		// The first comment's undecorated text.
-		const firstText = standaloneComments[0].value.trim();
+		const firstText = commentGroup[0].value.trim();
 		// Whether sentence punctuation applies to this group.
 		const formatPunctuation = firstText !== "" && !firstText.startsWith("@");
 
 		// The first comment's value, formatted as a sentence when needed.
-		let firstValue = standaloneComments[0].value;
+		let firstValue = commentGroup[0].value;
 		// The last comment's value, given a full stop when punctuation applies.
-		let lastValue = standaloneComments.at(-1).value;
+		let lastValue = commentGroup.at(-1).value;
 
 		if (formatPunctuation) {
-			if (standaloneComments.length === 1) {
+			if (commentGroup.length === 1) {
 				firstValue = formatSentence(firstValue);
 				lastValue = firstValue;
 			} else {
@@ -509,17 +611,17 @@ function reportLineCommentGroups(context) {
 		// Whether sentence punctuation changes the group.
 		const sentenceChanged =
 			formatPunctuation &&
-			(firstValue !== standaloneComments[0].value || lastValue !== standaloneComments.at(-1).value);
+			(firstValue !== commentGroup[0].value || lastValue !== commentGroup.at(-1).value);
 
 		// The group's lines after punctuation, reindentation, and line
 		// wrapping.
-		const formattedLines = standaloneComments.flatMap((comment, index) => {
+		const formattedLines = commentGroup.flatMap((comment, index) => {
 			// The comment's value, using the group's first and last values.
 			let value = comment.value;
 
 			if (index === 0) {
 				value = firstValue;
-			} else if (index === standaloneComments.length - 1) {
+			} else if (index === commentGroup.length - 1) {
 				value = lastValue;
 			}
 
@@ -757,6 +859,7 @@ export default {
 			 * Format every non-directive comment in the file.
 			 */
 			Program() {
+				reportTrailingLineComments(context);
 				reportLineCommentGroups(context);
 				reportBlockComments(context);
 			},

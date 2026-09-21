@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changes
+
+- `comments/formatting` now moves trailing line comments onto their own line.
+
 ## 0.5.0: 2026-09-11
 
 ### Changes

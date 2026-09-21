@@ -49,7 +49,7 @@ The Vue layer extends `base.json` internally, so you only need to extend `vue.js
 
 ### Comment formatting (optional)
 
-Add the comments layer alongside the base or Vue layer to enforce the comment-formatting rules, variable-declaration documentation, JSDoc on named functions and first-level object methods, documentation directly after each Vue `<script setup>` opening tag, and block comments for runtime `defineProps` properties:
+Add the comments layer alongside the base or Vue layer to enforce the comment-formatting rules, including moving trailing line comments onto their own line, variable-declaration documentation, JSDoc on named functions and first-level object methods, documentation directly after each Vue `<script setup>` opening tag, and block comments for runtime `defineProps` properties:
 
 ```json
 {
