@@ -80,9 +80,9 @@ export default {
 				}
 
 				// Whether every name in this const holds a function. The
-				// function-documentation rule already requires a JSDoc
-				// block on those, so asking for a line comment as well
-				// would make the two rules impossible to satisfy together.
+				// function-documentation rule already requires a JSDoc block on
+				// those, so asking for a line comment as well would make the
+				// two rules impossible to satisfy together.
 				const isFunctionValuedConst =
 					node.kind === "const" &&
 					node.declarations.every(
@@ -96,9 +96,9 @@ export default {
 				// documentation.
 				const documentationNode = getDocumentationNode(node);
 
-				// With rootOnly, only declarations directly under the
-				// Program need a comment, so a nested variable inside
-				// a function is left alone.
+				// With rootOnly, only declarations directly under the Program
+				// need a comment, so a nested variable inside a function is
+				// left alone.
 				const shouldCheckDocumentation =
 					!options?.rootOnly || documentationNode.parent?.type === "Program";
 

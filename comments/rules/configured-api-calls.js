@@ -118,10 +118,8 @@ export default {
 			 */
 			CallExpression(node) {
 				// Read fresh for every call: createOnce's visitor is shared
-				// across every file
-				// in the run, so caching this at closure-creation time would
-				// freeze the first
-				// file's options.
+				// across every file in the run, so caching this at
+				// closure-creation time would freeze the first file's options.
 				const configuredApis = getConfiguredApis(context);
 
 				if (node.callee.type !== "Identifier" || !configuredApis.has(node.callee.name)) {

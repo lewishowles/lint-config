@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { isDirectiveComment } from "../utils/source.js";
 
-// Captures the opening tag's attributes separately, so the setup attribute
-// can be tested without the tag being available from Oxlint's extracted AST.
+// Captures the opening tag's attributes separately, so the setup attribute can
+// be tested without the tag being available from Oxlint's extracted AST.
 const scriptBlockPattern =
 	/(?<openingTag><script\b(?<attributes>[^>]*)>)(?<content>[\s\S]*?)<\/script\s*>/gi;
 
@@ -69,8 +69,8 @@ function getScriptBlocks(context) {
  *     The matching raw script block, when one is found.
  */
 function findScriptBlock(context) {
-	// Re-read on every call rather than caching, since this file's other
-	// script blocks may not have been visited yet or ever in this run.
+	// Re-read on every call rather than caching, since this file's other script
+	// blocks may not have been visited yet or ever in this run.
 	const scriptBlocks = getScriptBlocks(context);
 
 	return scriptBlocks.find(
@@ -153,8 +153,7 @@ export default {
 				// createOnce builds this visitor once for the whole run, and a
 				// single file's script blocks are not necessarily visited
 				// consecutively, so the matching block is looked up fresh on
-				// each
-				// call rather than tracked with shared state.
+				// each call rather than tracked with shared state.
 				const scriptBlock = findScriptBlock(context);
 
 				if (hasComponentDocumentation(context, scriptBlock)) {
