@@ -421,6 +421,7 @@ function formatMixedTags(lines, width, addPunctuation) {
 				rest: match[2].trim(),
 				type: match[1],
 			};
+
 			preserveSection = false;
 
 			result.push(formatTagHeader(currentEntry));

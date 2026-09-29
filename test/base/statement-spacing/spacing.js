@@ -37,6 +37,58 @@
 	bar();
 	foo((x = 1));
 
+	await loadValue();
+	await nextTick();
+
+	expect(firstValue).toBe(1);
+
+	expect(firstValue).toEqual({
+		first: 1,
+		second: 2,
+	});
+
+	expect(firstValue).toBeDefined();
+	expect(secondValue).toBeDefined();
+
+	await loadValue();
+
+	await updateValue({
+		first: firstValue,
+		second: secondValue,
+	});
+
+	await nextTick();
+
+	clearPaneFailures();
+	// oxlint-disable-next-line @stylistic/padding-line-between-statements
+	await loadValue();
+
+	// oxlint-disable-next-line @stylistic/padding-line-between-statements
+	await nextTick();
+	await loadValue();
+	// oxlint-disable-next-line @stylistic/padding-line-between-statements
+	clearPaneFailures();
+
+	expect(firstValue).toBe(1);
+	// oxlint-disable-next-line @stylistic/padding-line-between-statements
+	expect(firstValue).toEqual({
+		first: 1,
+		second: 2,
+	});
+	// oxlint-disable-next-line @stylistic/padding-line-between-statements
+	expect(firstValue).toBeDefined();
+
+	await loadValue();
+	// oxlint-disable-next-line @stylistic/padding-line-between-statements
+	await updateValue({
+		first: firstValue,
+		second: secondValue,
+	});
+
+	// A const assigned from an await follows the const rules, not the await rules.
+	const awaitedValue = await loadValue();
+	const nextValue = 1;
+
 	for (const item of items) {
 		useItem(item);
 	}

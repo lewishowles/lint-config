@@ -62,7 +62,24 @@
 			{ "blankLine": "never", "prev": "const", "next": "const" },
 			{ "blankLine": "never", "prev": "let", "next": "let" },
 			{ "blankLine": "always", "prev": "multiline-const", "next": "*" },
-			{ "blankLine": "always", "prev": "*", "next": "multiline-const" }
+			{ "blankLine": "always", "prev": "*", "next": "multiline-const" },
+			{
+				"blankLine": "always",
+				"prev": "*",
+				"next": { "selector": "ExpressionStatement[expression.type=\"AwaitExpression\"]" }
+			},
+			{
+				"blankLine": "always",
+				"prev": { "selector": "ExpressionStatement[expression.type=\"AwaitExpression\"]" },
+				"next": "*"
+			},
+			{
+				"blankLine": "never",
+				"prev": { "selector": "ExpressionStatement[expression.type=\"AwaitExpression\"]" },
+				"next": { "selector": "ExpressionStatement[expression.type=\"AwaitExpression\"]" }
+			},
+			{ "blankLine": "always", "prev": "multiline-expression", "next": "*" },
+			{ "blankLine": "always", "prev": "*", "next": "multiline-expression" }
 		],
 
 		"vite-plus/prefer-vite-plus-imports": "error"

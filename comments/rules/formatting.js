@@ -207,6 +207,7 @@ function formatOrdinaryBlockComment(sourceCode, comment) {
 			formattedLines[firstProseLine],
 			capitaliseSentence,
 		);
+
 		formattedLines[lastProseLine] = formatBlockCommentLine(
 			formattedLines[lastProseLine],
 			addTerminalPunctuation,

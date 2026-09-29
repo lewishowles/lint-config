@@ -44,12 +44,14 @@ test("Keeps separate JSDoc fixes in separate source ranges", () => {
 			commentText.slice(blockReplacement.range[1] - comment.range[0]),
 		blockFormattedComment,
 	);
+
 	assert.equal(
 		commentText.slice(0, tagReplacement.range[0] - comment.range[0]) +
 			tagReplacement.text +
 			commentText.slice(tagReplacement.range[1] - comment.range[0]),
 		tagFormattedComment,
 	);
+
 	assert.ok(blockReplacement.range[1] <= tagReplacement.range[0]);
 });
 
