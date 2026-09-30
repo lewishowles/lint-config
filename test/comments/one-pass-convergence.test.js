@@ -1,8 +1,9 @@
-import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
+import assert from "node:assert/strict";
 import test from "node:test";
 
 test("comment formatting settles comment-formatting collisions in one pass", () => {

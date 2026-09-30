@@ -1,8 +1,10 @@
 import { defineConfig } from "vite-plus";
-import lintConfigBase from "./base.json" with { type: "json" };
-import lintConfigComments from "./comments.json" with { type: "json" };
+
 import oxfmtrc from "./.oxfmtrc.json" with { type: "json" };
 import oxlintrc from "./.oxlintrc.json" with { type: "json" };
+import lintConfigBase from "./base.json" with { type: "json" };
+import lintConfigComments from "./comments.json" with { type: "json" };
+import imports from "./imports.json" with { type: "json" };
 
 // Combines the base and comments lint layers.
 const lint = {
@@ -20,9 +22,11 @@ const lint = {
 
 export default defineConfig({
 	fmt: {
-		// For whatever reason, ignorePatterns is, well, ignored from the
-		// oxfmtrc file; adding it explicitly seems to fix.
-		ignorePatterns: oxfmtrc.ignorePatterns,
+		// Vite+ takes formatter settings from this block and may not apply
+		// .oxfmtrc.json on its own, so those settings are copied in here
+		// alongside the shared import sorting.
+		...oxfmtrc,
+		...imports,
 	},
 	staged: {
 		"*": "vp check --fix",

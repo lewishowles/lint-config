@@ -1,4 +1,5 @@
 import { RuleTester } from "oxlint/plugins-dev";
+
 import rule from "#comments/rules/class-documentation.js";
 
 // Runs the rule's valid and invalid examples.

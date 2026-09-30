@@ -6,7 +6,6 @@ import {
 	hasTargetJSDocTag,
 	isJSDoc,
 } from "#comments/utils/jsdoc.js";
-
 import {
 	getCommentNeighbours,
 	getCommentText,
@@ -19,7 +18,6 @@ import {
 	isLeadingComment,
 	replaceMinimalComment,
 } from "#comments/utils/source.js";
-
 import {
 	addTerminalPunctuation,
 	capitaliseSentence,

@@ -1,4 +1,5 @@
 import { RuleTester } from "oxlint/plugins-dev";
+
 import rule from "#comments/rules/formatting.js";
 
 // The RuleTester instance used for every case below.

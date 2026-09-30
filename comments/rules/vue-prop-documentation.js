@@ -1,14 +1,14 @@
 import {
+	getCommentNeighbours,
+	isDirectiveComment,
+	isLeadingComment,
+} from "#comments/utils/source.js";
+import {
 	getObjectArgument,
 	getObjectProperties,
 	getPropertyName,
 	isNamedCall,
 } from "#comments/utils/vue-macro.js";
-import {
-	getCommentNeighbours,
-	isDirectiveComment,
-	isLeadingComment,
-} from "#comments/utils/source.js";
 
 // Matches the single newline and indentation allowed between a comment and a
 // prop.

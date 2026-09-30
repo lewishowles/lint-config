@@ -1,12 +1,11 @@
 import { getJSDocContent, isJSDoc } from "./jsdoc.js";
-import { getPropertyName } from "./vue-macro.js";
-
 import {
 	getCommentNeighbours,
 	getCommentText,
 	isDirectiveComment,
 	isLeadingComment,
 } from "./source.js";
+import { getPropertyName } from "./vue-macro.js";
 
 /**
  * Return the declaration node that owns the documentation position.
