@@ -9,6 +9,7 @@
 		"dist/**",
 		"build/**",
 		"AGENTS.md",
+		"test/base/parent-imports/**",
 		"test/base/statement-spacing/**"
 	],
 	"overrides": [

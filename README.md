@@ -186,15 +186,19 @@ Plugins are additive and deduplicated: your local plugins are added to the share
 
 ## Layers
 
-| Layer      | File            | Contents                                                                               |
-| ---------- | --------------- | -------------------------------------------------------------------------------------- |
-| `base`     | `base.json`     | Correctness and formatting rules, import sorting, `oxc`/`typescript`/`unicorn` plugins |
-| `comments` | `comments.json` | Optional comment-formatting rules, variable-declaration documentation, JSDoc checks    |
-| `vue`      | `vue.json`      | Extends `base`, adds the `vue` plugin, Vue compiler macro globals, Vue-specific rules  |
+| Layer      | File            | Contents                                                                                        |
+| ---------- | --------------- | ----------------------------------------------------------------------------------------------- |
+| `base`     | `base.json`     | Correctness and formatting rules, import sorting, `import`/`oxc`/`typescript`/`unicorn` plugins |
+| `comments` | `comments.json` | Optional comment-formatting rules, variable-declaration documentation, JSDoc checks             |
+| `vue`      | `vue.json`      | Extends `base`, adds the `vue` plugin, Vue compiler macro globals, Vue-specific rules           |
 
 ### Import sorting
 
 The base layer sorts named members within each import statement, but leaves declaration order (which import comes first) to Oxfmt: enable Oxfmt's `sortImports` option in your local `.oxfmtrc.json` if you want that sorted and fixed automatically.
+
+### Parent-folder imports
+
+The base layer reports imports from a parent folder (`../`), with no automatic fix. Same-folder (`./`), `@/` alias and package `#` subpath imports are allowed. After upgrading, any existing `../` imports fail lint until they move to an `@/` alias or, in a package without one, to [package subpath imports](https://nodejs.org/api/packages.html#subpath-imports).
 
 ## What stays repo-local
 
