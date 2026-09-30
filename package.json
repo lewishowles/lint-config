@@ -23,6 +23,7 @@
 		"base.json",
 		"comments",
 		"comments.json",
+		"imports.json",
 		"vue.json",
 		"README.md"
 	],
@@ -34,6 +35,7 @@
 		"./base.json": "./base.json",
 		"./comments.json": "./comments.json",
 		"./comments/plugin": "./comments/plugin.js",
+		"./imports.json": "./imports.json",
 		"./vue.json": "./vue.json"
 	},
 	"publishConfig": {

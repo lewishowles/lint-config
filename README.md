@@ -194,7 +194,21 @@ Plugins are additive and deduplicated: your local plugins are added to the share
 
 ### Import sorting
 
-The base layer sorts named members within each import statement, but leaves declaration order (which import comes first) to Oxfmt: enable Oxfmt's `sortImports` option in your local `.oxfmtrc.json` if you want that sorted and fixed automatically.
+The base lint layer sorts named members within each import statement. To sort whole import statements, opt in to `imports.json`. It contains Oxfmt settings, not an Oxlint layer, so add it to the `fmt` block in `vite.config.js`:
+
+```js
+import { defineConfig } from "vite-plus";
+import importFormat from "@lewishowles/lint-config/imports.json" with { type: "json" };
+import oxfmtrc from "./.oxfmtrc.json" with { type: "json" };
+
+export default defineConfig({
+	fmt: { ...oxfmtrc, ...importFormat },
+});
+```
+
+If your `vite.config.js` already has a `lint` block, add `fmt` to the same `defineConfig` call: `defineConfig({ lint, fmt: { ...oxfmtrc, ...importFormat } })`.
+
+This puts named imports first, including `import type { … }` and imports with both default and named members. Other default imports come second, along with `import type` default imports and namespace imports (`import * as`). `.vue` imports come last. Oxfmt sorts each group by module path, ignoring letter case, and separates the groups with blank lines. Side-effect imports keep their written order and position, so keep them at the top or bottom of your imports: one written among the other imports stays where it is and splits the group around it.
 
 ### Parent-folder imports
 

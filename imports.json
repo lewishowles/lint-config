@@ -1,0 +1,13 @@
+{
+	"sortImports": {
+		"groups": ["named", "default", "vue"],
+		"customGroups": [
+			{ "groupName": "vue", "elementNamePattern": ["**/*.vue"] },
+			{ "groupName": "named", "modifiers": ["named"] },
+			{ "groupName": "default", "modifiers": ["default"] }
+		],
+		"newlinesBetween": true,
+		"order": "asc",
+		"sortSideEffects": false
+	}
+}
