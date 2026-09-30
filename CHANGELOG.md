@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0: 2026-09-30
+
+### Changes
+
+- Breaking: `base` now reports an error for imports that reach into a parent folder, such as `../utils`. Use the package's subpath imports or an alias instead; `--fix` can't rewrite these.
+- Breaking: `base` now expects a blank line before an `await` statement that follows other code, and around `const` declarations that span several lines. Run `--fix` once to update existing code.
+- New opt-in `imports.json` layer with formatter settings that sort imports. See the README for how to add it.
+
 ## 0.6.1: 2026-09-21
 
 ### Fixes
