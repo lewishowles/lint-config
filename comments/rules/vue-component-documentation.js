@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { isDirectiveComment } from "../utils/source.js";
+import { isDirectiveComment } from "#comments/utils/source.js";
 
 // Captures the opening tag's attributes separately, so the setup attribute can
 // be tested without the tag being available from Oxlint's extracted AST.

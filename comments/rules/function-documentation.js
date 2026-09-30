@@ -1,4 +1,4 @@
-import { isFunctionValue, reportFunctionDocumentation } from "../utils/documentation.js";
+import { isFunctionValue, reportFunctionDocumentation } from "#comments/utils/documentation.js";
 
 /**
  * Return the declaration node that owns the documentation position.

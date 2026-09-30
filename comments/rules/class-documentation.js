@@ -1,5 +1,8 @@
-import { getDocumentationNode, reportFunctionDocumentation } from "../utils/documentation.js";
-import { hasImmediateBlockComment, hasImmediateLineComment } from "../utils/source.js";
+import {
+	getDocumentationNode,
+	reportFunctionDocumentation,
+} from "#comments/utils/documentation.js";
+import { hasImmediateBlockComment, hasImmediateLineComment } from "#comments/utils/source.js";
 
 /**
  * Create the class-documentation rule.

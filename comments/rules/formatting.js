@@ -5,7 +5,7 @@ import {
 	formatJSDocWrapping,
 	hasTargetJSDocTag,
 	isJSDoc,
-} from "../utils/jsdoc.js";
+} from "#comments/utils/jsdoc.js";
 
 import {
 	getCommentNeighbours,
@@ -18,7 +18,7 @@ import {
 	isDirectiveComment,
 	isLeadingComment,
 	replaceMinimalComment,
-} from "../utils/source.js";
+} from "#comments/utils/source.js";
 
 import {
 	addTerminalPunctuation,
@@ -26,7 +26,7 @@ import {
 	formatSentence,
 	refillCommentLines,
 	wrapWords,
-} from "../utils/wrap.js";
+} from "#comments/utils/wrap.js";
 
 // The line length this rule wraps comments to.
 const maximumLineLength = 80;

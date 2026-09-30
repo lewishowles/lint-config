@@ -27,6 +27,9 @@
 		"README.md"
 	],
 	"type": "module",
+	"imports": {
+		"#comments/*": "./comments/*"
+	},
 	"exports": {
 		"./base.json": "./base.json",
 		"./comments.json": "./comments.json",

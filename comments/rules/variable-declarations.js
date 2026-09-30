@@ -1,5 +1,5 @@
-import { getDocumentationNode, isFunctionValue } from "../utils/documentation.js";
-import { hasImmediateLineComment } from "../utils/source.js";
+import { getDocumentationNode, isFunctionValue } from "#comments/utils/documentation.js";
+import { hasImmediateLineComment } from "#comments/utils/source.js";
 
 // Declaration kinds that require an immediately preceding line comment.
 const documentedKinds = new Set(["await using", "const", "let", "using"]);

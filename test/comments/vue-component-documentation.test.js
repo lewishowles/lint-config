@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { RuleTester } from "oxlint/plugins-dev";
-import rule from "../../comments/rules/vue-component-documentation.js";
+import rule from "#comments/rules/vue-component-documentation.js";
 
 /**
  * Create one temporary physical Vue fixture for a RuleTester case.

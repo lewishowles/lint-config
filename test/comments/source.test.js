@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-	getMinimalCommentReplacement,
-	replaceMinimalComment,
-} from "../../comments/utils/source.js";
+import { getMinimalCommentReplacement, replaceMinimalComment } from "#comments/utils/source.js";
 
 test("Keeps separate JSDoc fixes in separate source ranges", () => {
 	// The original, unformatted JSDoc comment.

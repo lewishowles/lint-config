@@ -1,5 +1,5 @@
-import { getDocumentationNode } from "../utils/documentation.js";
-import { hasImmediateLineComment } from "../utils/source.js";
+import { getDocumentationNode } from "#comments/utils/documentation.js";
+import { hasImmediateLineComment } from "#comments/utils/source.js";
 
 // The built-in APIs that require a preceding comment by default.
 const builtInApis = new Set([

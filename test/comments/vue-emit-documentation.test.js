@@ -1,5 +1,5 @@
 import { RuleTester } from "oxlint/plugins-dev";
-import rule from "../../comments/rules/vue-emit-documentation.js";
+import rule from "#comments/rules/vue-emit-documentation.js";
 
 // Runs the rule's valid and invalid examples.
 const ruleTester = new RuleTester();
