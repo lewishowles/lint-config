@@ -50,11 +50,11 @@
 	},
 	"devDependencies": {
 		"publint": "^0.3.22",
-		"vite-plus": "0.2.8"
+		"vite-plus": "1.0.0"
 	},
 	"peerDependencies": {
 		"@stylistic/eslint-plugin": "*",
-		"vite-plus": "0.2.8"
+		"vite-plus": "^1.0.0"
 	},
 	"engines": {
 		"node": ">=20"

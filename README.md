@@ -106,9 +106,9 @@ The `comments/class-documentation` rule requires an immediately preceding block 
 
 ### `vp check` configuration
 
-The `vp check` and `vp lint` commands read Oxlint settings only from a `lint` block in `vite.config.js`; they do not read `.oxlintrc.json` directly. If `vite.config.js` is missing, they silently use an unrelated default configuration. You may still see plausible warnings and exit codes, but none of your rules are applied.
+On vite-plus 1.0.0, `vp check` and `vp lint` take their Oxlint settings from the `lint` block in `vite.config.js`. They ignore a `.oxlintrc.json` on its own, even though the Vite+ documentation says `vp lint` finds Oxlint config files by itself. If `vite.config.js` is missing, both commands quietly fall back to default settings. You still see plausible warnings and exit codes, but none of your rules are applied.
 
-Each consuming repo needs a `vite.config.js` with a `lint` block built from the config layer(s) and the repo's `.oxlintrc.json`, imported as JSON. Concatenate the `overrides` arrays from every imported layer before the local overrides so shared file-specific rules still apply. Verify the setup with `vp lint --print-config <file>` and check that your real values, not defaults, are active.
+Each consuming repo needs a `vite.config.js` with a `lint` block built from the config layer(s) and the repo's `.oxlintrc.json`, imported as JSON. Concatenate the `overrides` arrays from every imported layer before the local overrides so shared file-specific rules still apply. Verify the setup with `vp lint --print-config <file>` and check that your real values, not defaults, are active. The printed `rules` leave out every rule that comes from a plugin, such as `comments/*` and `@stylistic/*`, even when those rules are running. To check a plugin layer, confirm the plugin is listed in `jsPlugins`, then lint a file that breaks one of its rules.
 
 ```js
 import { defineConfig } from "vite-plus";
@@ -131,6 +131,8 @@ const lint = {
 
 export default defineConfig({ lint });
 ```
+
+Vite+ also adds its own `vite-plus` lint plugin, so `vp check` can report rules that this package doesn't define. For example, `vite-plus/prefer-vite-plus-imports` reports imports from `oxlint` packages that Vite+ already provides, such as `oxlint/plugins-dev`.
 
 ## Customising
 
