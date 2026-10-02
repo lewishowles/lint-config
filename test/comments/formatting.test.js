@@ -9,6 +9,24 @@ ruleTester.run("comments/formatting", rule, {
 	valid: [
 		"const value = 1;",
 		"// A short comment.",
+		"// `getValue`\ngetValue();",
+		'// "one two"\nshowValue();',
+		"// 😀 is ready.\nshowValue();",
+		"// Available values:\nshowValue();",
+		"// “one two”\nshowValue();",
+		"/* 'one two' */\nshowValue();",
+		"/* ‘one two’ */\nshowValue();",
+		"/* Available values: */\nshowValue();",
+		`/**
+ * \`getValue\`
+ */
+function getValue() {}`,
+		`/**
+ * Read the value.
+ *
+ * @note Available values:
+ */
+function readValue() {}`,
 		{
 			name: "keeps wrapped continuation lines aligned",
 			code: "// Close the dialog when focus moves outside the component and restore focus to\n// the original trigger.\nonClickOutside(dialog, closeDialog);",
@@ -194,6 +212,54 @@ registerDialog();`,
 			output: "// Close the dialog.\ncloseDialog();",
 		},
 		{
+			name: "leaves a leading code span unchanged and punctuates following prose",
+			code: "// `getValue` returns a result\ngetValue();",
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: "// `getValue` returns a result.\ngetValue();",
+		},
+		{
+			name: "adds a full stop after a closing code span",
+			code: "// Read `getValue`\ngetValue();",
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: "// Read `getValue`.\ngetValue();",
+		},
+		{
+			name: "leaves a leading quote in a block comment unchanged",
+			code: '/* "one two" explains the value */\nshowValue();',
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: '/* "one two" explains the value. */\nshowValue();',
+		},
+		{
+			name: "leaves a leading emoji and following word unchanged",
+			code: "// 😀 is ready\nshowValue();",
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: "// 😀 is ready.\nshowValue();",
+		},
+		{
+			name: "keeps code inside JSDoc unchanged",
+			code: `/**
+ * \`getValue\` returns a result
+ */
+function getValue() {}`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/**
+ * \`getValue\` returns a result.
+ */
+function getValue() {}`,
+		},
+		{
+			name: "adds a full stop after a closing quote in JSDoc",
+			code: `/**
+ * Read "one two"
+ */
+function readValue() {}`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/**
+ * Read "one two".
+ */
+function readValue() {}`,
+		},
+		{
 			name: "formats a wrapped line comment as one sentence",
 			code: "// close the dialog when focus moves outside the component\n// and restore focus to the original trigger.\nonClickOutside(dialog, closeDialog);",
 			errors: [{ message: "Comment text must be a complete sentence.", line: 1, column: 0 }],
@@ -346,6 +412,45 @@ function openDialog() {}`,
 			errors: [{ message: "Format this comment.", line: 1, column: 0 }],
 			output:
 				"// Explain how this dialog restores focus after it closes and returns to the\n// original trigger.\nopenDialog();",
+		},
+		{
+			name: "keeps an overlong inline code span whole on its own line",
+			code: "// Read `an inline code span with several words that must remain together despite exceeding the available comment width` now.\nreadValue();",
+			errors: [{ message: "Format this comment." }],
+			output:
+				"// Read\n// `an inline code span with several words that must remain together despite exceeding the available comment width`\n// now.\nreadValue();",
+		},
+		{
+			name: "keeps an overlong inline code span whole in a block comment",
+			code: `/*
+ * Read \`an inline code span with several words that must remain together despite exceeding the available comment width\` now and later
+ */
+readValue();`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/*
+ * Read
+ * \`an inline code span with several words that must remain together despite exceeding the available comment width\`
+ * now and later.
+ */
+readValue();`,
+		},
+		{
+			name: "keeps an overlong inline code span whole in JSDoc prose",
+			code: `/**
+ * Read \`an inline code span with several words that must remain together despite exceeding the available comment width\` now and later
+ *
+ * @note Available values:
+ */
+function readValue() {}`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/**
+ * Read
+ * \`an inline code span with several words that must remain together despite exceeding the available comment width\`
+ * now and later.
+ *
+ * @note Available values:
+ */
+function readValue() {}`,
 		},
 		{
 			name: "wraps a standalone comment after a trailing comment",

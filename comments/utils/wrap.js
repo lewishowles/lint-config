@@ -1,7 +1,21 @@
 import { getDisplayWidth } from "./source.js";
 
+// One word of comment text. A backtick code span counts as part of the word
+// around it, so wrapping never splits the code inside it across lines.
+const wordPattern = /(?:`[^`]*`|[^\s`]+|`)+/g;
+// Text that is only an inline code span, which reads as code, not a sentence.
+const codeSpanOnlyPattern = /^`[^`]*`$/;
+// An inline code span anywhere in the text.
+const codeSpanPattern = /`[^`]*`/;
+// Text that is only a quotation, in straight or curly quotes.
+const quoteOnlyPattern = /^(?:"[^"]*"|'[^']*'|“[^”]*”|‘[^’]*’)$/;
+
 /**
  * Wrap words to a maximum line width.
+ *
+ * A code span is never split: one wider than the line goes whole on its own
+ * line. Any other word wider than the line also gets its own line, and is cut
+ * at the width only when nothing comes before it on the line.
  *
  * @param  {string}  text
  *     The text to wrap.
@@ -12,8 +26,8 @@ import { getDisplayWidth } from "./source.js";
  *     Wrapped lines.
  */
 export function wrapWords(text, width) {
-	// The text's individual words.
-	const words = text.trim().split(/\s+/).filter(Boolean);
+	// The text's words, with code spans kept whole.
+	const words = text.trim().match(wordPattern) ?? [];
 	// The wrapped lines, built up in place.
 	const lines = [];
 
@@ -22,6 +36,13 @@ export function wrapWords(text, width) {
 
 	for (const word of words) {
 		if (word.length > width && currentLine === "") {
+			// Code stays whole even when it overflows the line.
+			if (codeSpanPattern.test(word)) {
+				lines.push(word);
+
+				continue;
+			}
+
 			for (let index = 0; index < word.length; index += width) {
 				lines.push(word.slice(index, index + width));
 			}
@@ -74,8 +95,8 @@ export function refillCommentLines(lines, maximumLineLength) {
 				break;
 			}
 
-			// The words still waiting on the following line.
-			const nextWords = nextLine.text.split(/\s+/).filter(Boolean);
+			// The next line's words, with code spans kept whole.
+			const nextWords = nextLine.text.match(wordPattern) ?? [];
 
 			// Whether the following line was removed after giving up all its
 			// words.
@@ -180,6 +201,9 @@ export function formatSentence(text) {
 /**
  * Capitalise the first letter of sentence text.
  *
+ * Text that starts with anything other than a letter, such as a code span, a
+ * quote or an emoji, is returned unchanged.
+ *
  * @param  {string}  text
  *     The sentence text.
  *
@@ -194,15 +218,14 @@ export function capitaliseSentence(text) {
 		return text;
 	}
 
-	// The index of the first letter character, ignoring leading punctuation.
-	const firstLetter = trimmedText.search(/\p{L}/u);
-
-	if (firstLetter < 0) {
+	// Code, quoted text and emoji keep their own casing, so only a sentence
+	// that starts with a letter is capitalised.
+	if (!/^\p{L}/u.test(trimmedText)) {
 		return text;
 	}
 
-	// The leading word, starting from the first letter character.
-	const leadingWord = trimmedText.slice(firstLetter).match(/^\p{L}[\p{L}\p{N}]*/u)?.[0] ?? "";
+	// The leading word, before any space or punctuation.
+	const leadingWord = trimmedText.match(/^\p{L}[\p{L}\p{N}]*/u)?.[0] ?? "";
 
 	// A camelCase word (lowercase start, later uppercase) is a code identifier
 	// and must keep its own casing rather than sentence casing.
@@ -211,15 +234,20 @@ export function capitaliseSentence(text) {
 	}
 
 	// The first letter character.
-	const letter = trimmedText[firstLetter];
+	const letter = trimmedText[0];
 	// The text with its first letter capitalised.
-	const formattedText = `${trimmedText.slice(0, firstLetter)}${letter.toLocaleUpperCase()}${trimmedText.slice(firstLetter + 1)}`;
+	const formattedText = `${letter.toLocaleUpperCase()}${trimmedText.slice(1)}`;
 
 	return text.replace(trimmedText, formattedText);
 }
 
 /**
- * Add terminal punctuation to sentence text.
+ * Add a full stop to sentence text that has no closing punctuation.
+ *
+ * Text ending in a colon introduces what follows, and text that is only a code
+ * span or a quotation is not a sentence, so both are returned unchanged. A
+ * sentence that ends in a code span or quotation gets its full stop after the
+ * closing mark.
  *
  * @param  {string}  text
  *     The sentence text.
@@ -231,7 +259,13 @@ export function addTerminalPunctuation(text) {
 	// The sentence text, without leading or trailing whitespace.
 	const trimmedText = text.trim();
 
-	if (trimmedText === "" || trimmedText.startsWith("@") || /[.!?]$/.test(trimmedText)) {
+	if (
+		trimmedText === "" ||
+		trimmedText.startsWith("@") ||
+		/[.!?:]$/.test(trimmedText) ||
+		codeSpanOnlyPattern.test(trimmedText) ||
+		quoteOnlyPattern.test(trimmedText)
+	) {
 		return text;
 	}
 
