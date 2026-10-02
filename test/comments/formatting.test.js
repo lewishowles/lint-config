@@ -341,6 +341,68 @@ function openDialog(options) {}`,
 function openDialog(options) {}`,
 		},
 		{
+			name: "wraps description text at the comment margin in one fix",
+			code: `/**
+ * Explain the dialog.
+ *
+ * @description
+ *     Describe how the dialog restores focus to its trigger after closing and keeps the selected tab available.
+ */
+function openDialog() {}`,
+			errors: [{ message: "Format this comment." }],
+			output: `/**
+ * Explain the dialog.
+ *
+ * @description
+ * Describe how the dialog restores focus to its trigger after closing and keeps
+ * the selected tab available.
+ */
+function openDialog() {}`,
+		},
+		{
+			name: "wraps note text at the comment margin in one fix",
+			code: `/**
+ * Explain the dialog.
+ *
+ * @note
+ *     Note that the dialog restores focus to its trigger after closing and keeps the selected tab available.
+ */
+function openDialog() {}`,
+			errors: [{ message: "Format this comment." }],
+			output: `/**
+ * Explain the dialog.
+ *
+ * @note
+ * Note that the dialog restores focus to its trigger after closing and keeps
+ * the selected tab available.
+ */
+function openDialog() {}`,
+		},
+		{
+			name: "keeps the parameter indent but wraps mixed note text at the margin in one fix",
+			code: `/**
+ * Open the dialog.
+ *
+ * @param {object} options
+ *     The options determine how the dialog restores focus to its trigger after closing and keeps the selected tab available.
+ * @note
+ *     Note that the dialog restores focus to its trigger after closing and keeps the selected tab available.
+ */
+function openDialog(options) {}`,
+			errors: [{ message: "Format this comment." }],
+			output: `/**
+ * Open the dialog.
+ *
+ * @param  {object}  options
+ *     The options determine how the dialog restores focus to its trigger after
+ *     closing and keeps the selected tab available.
+ * @note
+ * Note that the dialog restores focus to its trigger after closing and keeps
+ * the selected tab available.
+ */
+function openDialog(options) {}`,
+		},
+		{
 			name: "preserves wrapped JSDoc prose while adding punctuation",
 			code: `/**
  * Explain how this dialog restores focus after it closes and returns to the

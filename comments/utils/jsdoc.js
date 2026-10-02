@@ -325,7 +325,8 @@ function formatProse(lines, width, addPunctuation) {
  * @param  {string[]}  tagLines
  *     The undecorated tag content.
  * @param  {number}  width
- *     The available description width.
+ *     The width of the comment text. @param, @returns and @throws descriptions
+ *     wrap four characters narrower to fit their indent.
  * @param  {boolean}  addPunctuation
  *     Whether to format tag descriptions as sentences.
  * @param  {boolean}  normaliseTags
@@ -378,7 +379,9 @@ function formatTags(tagLines, width, addPunctuation, normaliseTags) {
 		}
 
 		if (descriptionText !== "") {
-			result.push(...wrapWords(descriptionText, width).map((line) => `    ${line}`));
+			result.push(
+				...wrapWords(descriptionText, Math.max(1, width - 4)).map((line) => `    ${line}`),
+			);
 		}
 
 		lastType = entry.type;
@@ -393,7 +396,8 @@ function formatTags(tagLines, width, addPunctuation, normaliseTags) {
  * @param  {string[]}  lines
  *     The undecorated tag content lines.
  * @param  {number}  width
- *     The available description width.
+ *     The width of the comment text. @param, @returns and @throws descriptions
+ *     wrap four characters narrower to fit their indent.
  * @param  {boolean}  addPunctuation
  *     Whether to format descriptions as sentences.
  *
@@ -446,7 +450,15 @@ function formatMixedTags(lines, width, addPunctuation) {
 				text = formatSentence(text);
 			}
 
-			result.push(...wrapWords(text, width).map((wrappedLine) => `    ${wrappedLine}`));
+			// The wrapping width, four characters narrower for @param, @returns
+			// and @throws so their indent still fits.
+			const descriptionWidth = currentEntry ? Math.max(1, width - 4) : width;
+			// The indent applied to each wrapped description line.
+			const indent = currentEntry ? "    " : "";
+
+			result.push(
+				...wrapWords(text, descriptionWidth).map((wrappedLine) => `${indent}${wrappedLine}`),
+			);
 		}
 	}
 
@@ -463,7 +475,8 @@ function formatMixedTags(lines, width, addPunctuation) {
  * @param  {string[]}  lines
  *     The undecorated tag content lines.
  * @param  {number}  width
- *     The available description width.
+ *     The width of the comment text. @param, @returns and @throws descriptions
+ *     wrap four characters narrower to fit their indent.
  * @param  {boolean}  addPunctuation
  *     Whether to format descriptions as sentences.
  *
@@ -476,6 +489,9 @@ function formatTagDescriptions(lines, width, addPunctuation) {
 
 	// The description lines collected for the tag in progress.
 	let description = [];
+	// Whether the current tag is @param, @returns or @throws, whose description
+	// keeps a four-space indent.
+	let indentDescription = false;
 	// Whether the current tag's content is copied through unchanged.
 	let preserveSection = false;
 
@@ -494,7 +510,13 @@ function formatTagDescriptions(lines, width, addPunctuation) {
 			text = formatSentence(text);
 		}
 
-		result.push(...wrapWords(text, width).map((line) => `    ${line}`));
+		// The wrapping width, four characters narrower for @param, @returns and
+		// @throws so their indent still fits.
+		const descriptionWidth = indentDescription ? Math.max(1, width - 4) : width;
+		// The indent applied to each wrapped description line.
+		const indent = indentDescription ? "    " : "";
+
+		result.push(...wrapWords(text, descriptionWidth).map((line) => `${indent}${line}`));
 
 		description = [];
 	}
@@ -507,6 +529,7 @@ function formatTagDescriptions(lines, width, addPunctuation) {
 			flushDescription();
 			result.push(line.trim());
 
+			indentDescription = isTargetTag(line);
 			preserveSection = isPreservedSectionTag(line);
 		} else if (preserveSection) {
 			result.push(line);
@@ -645,15 +668,8 @@ export function formatJSDocBlockStructure(commentText, formattingOptions) {
 	const formattingContext = getJSDocFormattingContext(commentText, formattingOptions);
 	// The prose lines, refilled before tags are appended.
 	const prose = formatUnwrappedProse(formattingContext.proseLines, false, formattingContext.indent);
-
 	// The tag lines, without spacing or grouping normalisation.
-	const tags = formatTags(
-		formattingContext.tagLines,
-		Math.max(1, formattingContext.width - 4),
-		false,
-		false,
-	);
-
+	const tags = formatTags(formattingContext.tagLines, formattingContext.width, false, false);
 	// The formatted comment content, before tags are appended.
 	const outputLines = [...prose];
 
@@ -692,15 +708,8 @@ export function formatJSDocTagFormatting(commentText, formattingOptions) {
 	const formattingContext = getJSDocFormattingContext(commentText, formattingOptions);
 	// The prose, rewrapped to the comment's available width.
 	const prose = formatProse(formattingContext.proseLines, formattingContext.width, false);
-
 	// The tag lines, with spacing and grouping normalised.
-	const tags = formatTags(
-		formattingContext.tagLines,
-		Math.max(1, formattingContext.width - 4),
-		false,
-		true,
-	);
-
+	const tags = formatTags(formattingContext.tagLines, formattingContext.width, false, true);
 	// The formatted comment content, before tags are appended.
 	const outputLines = [...prose];
 
@@ -726,15 +735,8 @@ export function formatJSDocPunctuation(commentText, formattingOptions) {
 	const formattingContext = getJSDocFormattingContext(commentText, formattingOptions);
 	// The prose, capitalised and punctuated as sentences.
 	const prose = formatUnwrappedProse(formattingContext.proseLines, true, formattingContext.indent);
-
 	// The tag lines, with descriptions punctuated as sentences.
-	const tags = formatTags(
-		formattingContext.tagLines,
-		Math.max(1, formattingContext.width - 4),
-		true,
-		false,
-	);
-
+	const tags = formatTags(formattingContext.tagLines, formattingContext.width, true, false);
 	// The formatted comment content, before tags are appended.
 	const outputLines = [...prose];
 
@@ -760,15 +762,8 @@ export function formatJSDocWrapping(commentText, formattingOptions) {
 	const formattingContext = getJSDocFormattingContext(commentText, formattingOptions);
 	// The prose, rewrapped to the comment's available width.
 	const prose = formatProse(formattingContext.proseLines, formattingContext.width, false);
-
 	// The tag lines, without spacing or grouping normalisation.
-	const tags = formatTags(
-		formattingContext.tagLines,
-		Math.max(1, formattingContext.width - 4),
-		false,
-		false,
-	);
-
+	const tags = formatTags(formattingContext.tagLines, formattingContext.width, false, false);
 	// The formatted comment content, before tags are appended.
 	const outputLines = [...prose];
 
