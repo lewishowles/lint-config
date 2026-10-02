@@ -24,6 +24,7 @@
 		"comments",
 		"comments.json",
 		"imports.json",
+		"layers.js",
 		"vue.json",
 		"README.md"
 	],
@@ -36,6 +37,7 @@
 		"./comments.json": "./comments.json",
 		"./comments/plugin": "./comments/plugin.js",
 		"./imports.json": "./imports.json",
+		"./layers": "./layers.js",
 		"./vue.json": "./vue.json"
 	},
 	"publishConfig": {
@@ -46,7 +48,7 @@
 		"lint:fix": "vp check --fix",
 		"prepare": "vp config --no-agent",
 		"publint": "publint",
-		"test:unit": "node --test test/comments/*.test.js"
+		"test:unit": "node --test test/comments/*.test.js test/layers/*.test.js"
 	},
 	"devDependencies": {
 		"publint": "^0.3.22",

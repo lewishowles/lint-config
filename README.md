@@ -108,29 +108,21 @@ The `comments/class-documentation` rule requires an immediately preceding block 
 
 On vite-plus 1.0.0, `vp check` and `vp lint` take their Oxlint settings from the `lint` block in `vite.config.js`. They ignore a `.oxlintrc.json` on its own, even though the Vite+ documentation says `vp lint` finds Oxlint config files by itself. If `vite.config.js` is missing, both commands quietly fall back to default settings. You still see plausible warnings and exit codes, but none of your rules are applied.
 
-Each consuming repo needs a `vite.config.js` with a `lint` block built from the config layer(s) and the repo's `.oxlintrc.json`, imported as JSON. Concatenate the `overrides` arrays from every imported layer before the local overrides so shared file-specific rules still apply. Verify the setup with `vp lint --print-config <file>` and check that your real values, not defaults, are active. The printed `rules` leave out every rule that comes from a plugin, such as `comments/*` and `@stylistic/*`, even when those rules are running. To check a plugin layer, confirm the plugin is listed in `jsPlugins`, then lint a file that breaks one of its rules.
+Each consuming repo needs a `vite.config.js` with a `lint` block. Use `lintConfig` with the layers you want. Oxlint ignores `env` and `globals` in configs listed under `extends`, so `lintConfig` copies them into the `lint` block itself, including values from the layers each one extends. Without that, `no-undef` reports Vue macros such as `defineProps` and browser globals such as `window` (see [docs/limitations.md](docs/limitations.md)). The Vue layer already includes base; add comments only if you want the comment rules. You can pass your project's `.oxlintrc.json` as the second argument to keep its local settings. `lintConfig` ignores the `extends` list in that file, so list every layer you want in the first argument.
 
 ```js
 import { defineConfig } from "vite-plus";
-import lintConfigBase from "@lewishowles/lint-config/base.json" with { type: "json" };
-import lintConfigComments from "@lewishowles/lint-config/comments.json" with { type: "json" };
+import { base, comments, lintConfig } from "@lewishowles/lint-config/layers";
 import oxlintrc from "./.oxlintrc.json" with { type: "json" };
 
-const lint = {
-	...lintConfigBase,
-	env: oxlintrc.env,
-	ignorePatterns: oxlintrc.ignorePatterns,
-	jsPlugins: [...lintConfigBase.jsPlugins, ...lintConfigComments.jsPlugins],
-	overrides: [
-		...(lintConfigBase.overrides ?? []),
-		...(lintConfigComments.overrides ?? []),
-		...(oxlintrc.overrides ?? []),
-	],
-	rules: { ...lintConfigBase.rules, ...lintConfigComments.rules },
-};
-
-export default defineConfig({ lint });
+export default defineConfig({
+	lint: lintConfig([base, comments], oxlintrc),
+});
 ```
+
+For a Vue project, use `lintConfig([vue, comments], oxlintrc)` and import `vue` instead of `base`. The local config is optional; `lintConfig([vue, comments])` also works. If you combine layers by hand, use object layers in `extends` and lift their `env` and `globals` to the top level yourself. Spreading JSON layers together replaces earlier `jsPlugins`, `overrides`, and `rules` arrays or objects.
+
+Verify the setup with `vp lint --print-config <file>` and check that your real values, not defaults, are active. The printed `rules` leave out every rule that comes from a plugin, such as `comments/*` and `@stylistic/*`, even when those rules are running. To check a plugin layer, confirm the plugin is listed in `jsPlugins`, then lint a file that breaks one of its rules.
 
 Vite+ also adds its own `vite-plus` lint plugin, so `vp check` can report rules that this package doesn't define. For example, `vite-plus/prefer-vite-plus-imports` reports imports from `oxlint` packages that Vite+ already provides, such as `oxlint/plugins-dev`.
 

@@ -1,24 +1,9 @@
+import { base, comments, lintConfig } from "./layers.js";
 import { defineConfig } from "vite-plus";
 
 import oxfmtrc from "./.oxfmtrc.json" with { type: "json" };
 import oxlintrc from "./.oxlintrc.json" with { type: "json" };
-import lintConfigBase from "./base.json" with { type: "json" };
-import lintConfigComments from "./comments.json" with { type: "json" };
 import imports from "./imports.json" with { type: "json" };
-
-// Combines the base and comments lint layers.
-const lint = {
-	...lintConfigBase,
-	env: oxlintrc.env,
-	ignorePatterns: oxlintrc.ignorePatterns,
-	jsPlugins: [...lintConfigBase.jsPlugins, ...lintConfigComments.jsPlugins],
-	overrides: [
-		...(lintConfigBase.overrides ?? []),
-		...(lintConfigComments.overrides ?? []),
-		...(oxlintrc.overrides ?? []),
-	],
-	rules: { ...lintConfigBase.rules, ...lintConfigComments.rules },
-};
 
 export default defineConfig({
 	fmt: {
@@ -31,5 +16,5 @@ export default defineConfig({
 	staged: {
 		"*": "vp check --fix",
 	},
-	lint,
+	lint: lintConfig([base, comments], oxlintrc),
 });

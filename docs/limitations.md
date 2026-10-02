@@ -9,7 +9,7 @@ In practice:
 - `base.json`'s `env` (`builtin`, `browser`) and `vue.json`'s Vue macro `globals` (`defineProps`, `defineEmits`, etc.) won't reach a project that only does `{ "extends": ["./node_modules/@lewishowles/lint-config/vue.json"] }`. Every global from the shared layer gets flagged by `no-undef`.
 - Any `ignorePatterns` this package might declare would be silently dropped the same way, so it deliberately ships none. See "What stays repo-local" in the README.
 
-Until this is fixed upstream, redeclare the `env`/`globals` you need directly in your project's `.oxlintrc.json`, as shown in the README's usage examples, even though `base.json`/`vue.json` already declare them.
+For raw Oxlint config files, redeclare the `env`/`globals` you need directly in your project's `.oxlintrc.json`, as shown in the README's usage examples. For Vite+, use `lintConfig` from `@lewishowles/lint-config/layers`; it lifts those values into the top-level `lint` block.
 
 ## Function-valued Vue macro options can produce two diagnostics
 
@@ -19,15 +19,14 @@ An undocumented function-valued option in `defineProps` or `defineEmits` reports
 
 Raw Oxlint (CLI, editor integrations) accepts `"extends": ["./node_modules/@lewishowles/lint-config/vue.json"]` as string paths and resolves them at load time. `vite-plus`, when a project routes its Oxlint config through `vite.config.js`'s `lint` field (importing `.oxlintrc.json` as JSON and handing it to `vp check`/`vp lint`), doesn't resolve string paths in `extends`: every entry, at every nesting level, must already be a plain object. This means `vue.json`'s own internal `extends: ["./base.json"]` also breaks one level deeper.
 
-If your project uses `vite-plus`'s `lint` field rather than raw Oxlint, resolve the chain yourself in `vite.config.js`:
+For Vite+, use the exported `vue` object and `lintConfig` to resolve the chain and lift its `env` and `globals`:
 
 ```js
-import base from "@lewishowles/lint-config/base.json" with { type: "json" };
-import vue from "@lewishowles/lint-config/vue.json" with { type: "json" };
+import { lintConfig, vue } from "@lewishowles/lint-config/layers";
 
-const lint = { ...vue, extends: [base] };
+const lint = lintConfig([vue]);
 ```
 
-`vue`'s own `extends` array still contains the unresolved string `"./base.json"`, so don't spread it back in — replace it outright with the resolved `base` object.
+The exported `vue` object already extends `base` as an object. Importing `vue.json` directly leaves its `"./base.json"` string unresolved in Vite+.
 
 `.oxlintrc.json` itself should stay untouched (string `extends`) for raw Oxlint/editor consumption; this only applies to the `vite-plus` config path.
