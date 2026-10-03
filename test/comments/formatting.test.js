@@ -28,6 +28,29 @@ function getValue() {}`,
  */
 function readValue() {}`,
 		{
+			name: "keeps a long code span inside one note sentence",
+			code: `/**
+ * Read the value.
+ *
+ * @note
+ * See
+ * \`an inline code span with several words that must remain together despite exceeding the available comment width\`
+ * for details.
+ */
+function readValue() {}`,
+		},
+		{
+			name: "keeps a wrapped code-led note line in its prose paragraph",
+			code: `/**
+ * Read the value.
+ *
+ * @note
+ * Read the returned object when the request completes and use the value of
+ * \`{ valid: true }\` when deciding whether to continue.
+ */
+function readValue() {}`,
+		},
+		{
 			name: "keeps wrapped continuation lines aligned",
 			code: "// Close the dialog when focus moves outside the component and restore focus to\n// the original trigger.\nonClickOutside(dialog, closeDialog);",
 		},
@@ -69,6 +92,45 @@ openDialog();`,
 		},
 		"// oxlint-disable-next-line comments/formatting\nconst value = 1;",
 		"/* oxlint-disable comments/formatting */",
+		{
+			name: "keeps every word in a formatted return description",
+			code: `/**
+ * Format the value.
+ *
+ * @returns  {string}
+ *     The formatted value.
+ */
+function formatValue() {}`,
+		},
+		{
+			name: "keeps every word in a formatted throw description",
+			code: `/**
+ * Read the value.
+ *
+ * @throws  {Error}
+ *     The request failed.
+ */
+function readValue() {}`,
+		},
+		{
+			name: "keeps a one-word return description",
+			code: `/**
+ * Check the value.
+ *
+ * @returns  {boolean}
+ *     Ready.
+ */
+function checkValue() {}`,
+		},
+		{
+			name: "leaves an empty parameter description empty after a hyphen",
+			code: `/**
+ * Explain the name.
+ *
+ * @param  {string}  name
+ */
+function explainName(name) {}`,
+		},
 		{
 			name: "keeps canonical prose-to-tag spacing",
 			code: `/**
@@ -166,6 +228,308 @@ registerDialog();`,
 		},
 	],
 	invalid: [
+		{
+			name: "keeps a heading in a note while formatting surrounding prose",
+			code: `/**
+ * Explain the options.
+ *
+ * @note
+ * before the heading
+ * #### \`required\`
+ * after the heading
+ */
+function explainOptions() {}`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/**
+ * Explain the options.
+ *
+ * @note
+ * Before the heading.
+ * #### \`required\`
+ * After the heading.
+ */
+function explainOptions() {}`,
+		},
+		{
+			name: "keeps a dash list item in a description",
+			code: `/**
+ * Explain the options.
+ *
+ * @description
+ * before the list
+ * - \`string\`: A string, including an empty string
+ * after the list
+ */
+function explainOptions() {}`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/**
+ * Explain the options.
+ *
+ * @description
+ * Before the list.
+ * - \`string\`: A string, including an empty string
+ * After the list.
+ */
+function explainOptions() {}`,
+		},
+		{
+			name: "keeps a star list item in a note",
+			code: `/**
+ * Explain the options.
+ *
+ * @note
+ * before the list
+ * * \`number\`: A number without NaN
+ */
+function explainOptions() {}`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/**
+ * Explain the options.
+ *
+ * @note
+ * Before the list.
+ * * \`number\`: A number without NaN
+ */
+function explainOptions() {}`,
+		},
+		{
+			name: "keeps a numbered list item in a parameter description",
+			code: `/**
+ * Explain the options.
+ *
+ * @param {object} options
+ * 1. First item stays as written
+ */
+function explainOptions(options) {}`,
+			errors: [{ message: "Format this comment." }],
+			output: `/**
+ * Explain the options.
+ *
+ * @param  {object}  options
+ * 1. First item stays as written
+ */
+function explainOptions(options) {}`,
+		},
+		{
+			name: "drops the hyphen and wraps an inline parameter description with a hanging indent",
+			code: `/**
+ * Explain the options.
+ *
+ * @param {string} name - description that stays prose even when the text extends
+ * across another source line and must wrap under the tag with four spaces
+ */
+function explainOptions(name) {}`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/**
+ * Explain the options.
+ *
+ * @param  {string}  name
+ *     Description that stays prose even when the text extends across another
+ *     source line and must wrap under the tag with four spaces.
+ */
+function explainOptions(name) {}`,
+		},
+		{
+			name: "keeps every word in an inline return description",
+			code: `/**
+ * Format the value.
+ *
+ * @returns {string} The formatted value
+ */
+function formatValue() {}`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/**
+ * Format the value.
+ *
+ * @returns  {string}
+ *     The formatted value.
+ */
+function formatValue() {}`,
+		},
+		{
+			name: "keeps every word in an inline throw description",
+			code: `/**
+ * Read the value.
+ *
+ * @throws {Error} The request failed
+ */
+function readValue() {}`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/**
+ * Read the value.
+ *
+ * @throws  {Error}
+ *     The request failed.
+ */
+function readValue() {}`,
+		},
+		{
+			name: "keeps a one-word inline return description",
+			code: `/**
+ * Check the value.
+ *
+ * @returns {boolean} ready
+ */
+function checkValue() {}`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/**
+ * Check the value.
+ *
+ * @returns  {boolean}
+ *     Ready.
+ */
+function checkValue() {}`,
+		},
+		{
+			name: "drops a bare trailing hyphen from a parameter tag",
+			code: `/**
+ * Explain the name.
+ *
+ * @param {string} name -
+ */
+function explainName(name) {}`,
+			errors: [{ message: "Format this comment." }],
+			output: `/**
+ * Explain the name.
+ *
+ * @param  {string}  name
+ */
+function explainName(name) {}`,
+		},
+		{
+			name: "keeps a fenced block and blank lines in a parameter description",
+			code: `/**
+ * Explain the options.
+ *
+ * @param {object} options
+ * before the code
+ *
+ * \`\`\`js
+ * const value = 1;
+ *
+ * console.log(value);
+ * \`\`\`
+ * after the code
+ */
+function explainOptions(options) {}`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/**
+ * Explain the options.
+ *
+ * @param  {object}  options
+ *     Before the code.
+ *
+ * \`\`\`js
+ * const value = 1;
+ *
+ * console.log(value);
+ * \`\`\`
+ *     After the code.
+ */
+function explainOptions(options) {}`,
+		},
+		{
+			name: "keeps an indented list continuation",
+			code: `/**
+ * Explain the options.
+ *
+ * @note
+ * before the list
+ * - First item
+ *   continuation stays as written
+ */
+function explainOptions() {}`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/**
+ * Explain the options.
+ *
+ * @note
+ * Before the list.
+ * - First item
+ *   continuation stays as written
+ */
+function explainOptions() {}`,
+		},
+		{
+			name: "keeps a Markdown table row",
+			code: `/**
+ * Explain the options.
+ *
+ * @note
+ * before the table
+ *
+ * | Name | Value |
+ * | --- | --- |
+ * | One | two |
+ * after the table
+ */
+function explainOptions() {}`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/**
+ * Explain the options.
+ *
+ * @note
+ * Before the table.
+ *
+ * | Name | Value |
+ * | --- | --- |
+ * | One | two |
+ * After the table.
+ */
+function explainOptions() {}`,
+		},
+		{
+			name: "keeps fenced code and its blank lines",
+			code: `/**
+ * Explain the options.
+ *
+ * @note
+ * before the fence
+ * \`\`\`js
+ * const value = 1;
+ *
+ * console.log(value);
+ * \`\`\`
+ * after the fence
+ */
+function explainOptions() {}`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/**
+ * Explain the options.
+ *
+ * @note
+ * Before the fence.
+ * \`\`\`js
+ * const value = 1;
+ *
+ * console.log(value);
+ * \`\`\`
+ * After the fence.
+ */
+function explainOptions() {}`,
+		},
+		{
+			name: "keeps Markdown in the leading description",
+			code: `/**
+ * before the heading
+ * # Options
+ * - Item stays as written
+ * after the list
+ *
+ * @note Available values:
+ */
+function explainOptions() {}`,
+			errors: [{ message: "Comment text must be a complete sentence." }],
+			output: `/**
+ * Before the heading.
+ * # Options
+ * - Item stays as written
+ * After the list.
+ *
+ * @note Available values:
+ */
+function explainOptions() {}`,
+		},
 		{
 			name: "moves a trailing comment above a simple statement",
 			code: "const value = 1; // Note.",

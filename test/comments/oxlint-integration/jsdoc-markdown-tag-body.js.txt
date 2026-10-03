@@ -1,0 +1,32 @@
+/**
+ * explain the available rules
+ * # Available rules
+ *
+ * @note
+ * before the examples
+ * #### `required`
+ * `[{ rule: "required", message: "Enter your name so we know what to call you" }]`
+ * - `string`: A string, including an empty string
+ * * `boolean`: Strictly true or false
+ * 1. First item stays as written
+ *   continuation stays as written
+ * | Rule | Value |
+ * | --- | --- |
+ * | in | one |
+ * ```js
+ * const value = 1;
+ *
+ * console.log(value);
+ * ```
+ * `[{ rule: "in", options: ["a", "b", "c"] }]
+ * `[{ rule: "not_in", options: ["a", "b", "c"] }]
+ * `[{ rule: "regexp", regexp: /[abc]+/ }]
+ *
+ * This prose stays a single paragraph and reaches the comment width before 2024. marks the year in plain text.
+ *
+ * This prose stays a single paragraph and reaches the comment width before - describes a plain separator.
+ *
+ * This prose stays a single paragraph and reaches the comment width before string | number names a union.
+ * after the examples explain how the formatter keeps structural Markdown lines as written while wrapping the surrounding prose to the comment width
+ */
+function explainRules() {}

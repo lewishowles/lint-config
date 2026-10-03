@@ -13,6 +13,10 @@ const tagOrder = ["param", "throws", "returns"];
 const preservedSectionTags = new Set(["example"]);
 // Fast lookup set built from tagOrder.
 const targetTags = new Set(tagOrder);
+// Markdown headings start with one to six hashes and a space.
+const markdownHeadingPattern = /^#{1,6}\s/;
+// Markdown list items start with a bullet or numbered marker and a space.
+const markdownListItemPattern = /^(?:[-*]|\d+[.)])\s/;
 
 /**
  * Return whether source text is a JSDoc-style block comment.
@@ -174,19 +178,19 @@ function parseTargetTags(tagLines) {
  *     The aligned tag header.
  */
 function formatTagHeader(entry) {
-	// Splits the tag's remainder into its type, name, and description.
-	const typeMatch = entry.rest.match(/^(\{[^}]+\})(?:\s+(\S+))?(?:\s+(.*))?$/);
+	// The tag's type annotation, plus a name when the tag is @param.
+	const typeMatch = parseTargetTagRest(entry);
 
 	if (!typeMatch) {
 		return `@${entry.type}  ${entry.rest}`.trimEnd();
 	}
 
 	// The bare {type} annotation.
-	const type = typeMatch[1];
+	const type = typeMatch.groups.type;
 	// The parameter name, when the tag has one.
-	const name = typeMatch[2];
+	const name = typeMatch.groups.name;
 
-	if (entry.type === "param" && name) {
+	if (name) {
 		return `@param  ${type}  ${name}`;
 	}
 
@@ -194,23 +198,204 @@ function formatTagHeader(entry) {
 }
 
 /**
- * Return the inline description from a target tag.
+ * Return a target tag's inline description without a separator hyphen. Once the
+ * description moves onto its own line, a leading hyphen would read as a
+ * Markdown bullet.
  *
  * @param  {object}  entry
  *     The parsed tag entry.
  *
  * @returns  {string}
- *     The inline description, when present.
+ *     The inline description, or an empty string when there is none.
  */
 function getInlineTagDescription(entry) {
-	// Splits the tag's remainder into its type, name, and description.
-	const typeMatch = entry.rest.match(/^(\{[^}]+\})(?:\s+(\S+))?(?:\s+(.*))?$/);
+	// The parsed type and description, with a name only for parameters.
+	const tagParts = parseTargetTagRest(entry);
 
-	return typeMatch?.[3] ?? "";
+	return (tagParts?.groups.description ?? "").replace(/^-(?:\s+|$)/, "");
+}
+
+/**
+ * Parse a target tag's type and inline description, including a parameter name
+ * only when the tag is @param.
+ *
+ * @param  {object}  entry
+ *     The parsed tag entry.
+ *
+ * @returns  {RegExpMatchArray|null}
+ *     The type, name and description, or null when there is no type.
+ */
+function parseTargetTagRest(entry) {
+	if (entry.type === "param") {
+		return entry.rest.match(/^(?<type>\{[^}]+\})(?:\s+(?<name>\S+))?(?:\s+(?<description>.*))?$/);
+	}
+
+	return entry.rest.match(/^(?<type>\{[^}]+\})(?:\s+(?<description>.*))?$/);
+}
+
+/**
+ * Find the lines that belong to a Markdown heading, list, table or fenced code
+ * block, so formatting can leave them exactly as written.
+ *
+ * @param  {string[]}  lines
+ *     The undecorated JSDoc lines.
+ *
+ * @returns  {boolean[]}
+ *     True for each line that belongs to a Markdown block, in line order.
+ */
+function getMarkdownStructure(lines) {
+	// Whether each line read so far belongs to a Markdown block.
+	const structure = [];
+
+	// Whether the current line is inside a fenced code block.
+	let inFence = false;
+	// The indentation of the open list item; deeper lines continue it.
+	let listIndent = null;
+
+	for (const line of lines) {
+		// The line without surrounding whitespace.
+		const trimmed = line.trim();
+		// The number of whitespace characters before the line's text.
+		const indent = line.length - line.trimStart().length;
+
+		// A list or table can start on the first line, after a blank line, or
+		// straight after another Markdown block.
+		const blockBoundary =
+			structure.length === 0 || lines[structure.length - 1].trim() === "" || structure.at(-1);
+
+		if (inFence) {
+			structure.push(true);
+
+			inFence = !trimmed.startsWith("```");
+
+			continue;
+		}
+
+		if (trimmed.startsWith("```")) {
+			structure.push(true);
+
+			inFence = true;
+			listIndent = null;
+
+			continue;
+		}
+
+		// A bullet or a list numbered from 1 can follow prose directly. Other
+		// numbers need a block boundary, so prose such as "2) the second case"
+		// isn't read as a list.
+		if (
+			markdownListItemPattern.test(trimmed) &&
+			(blockBoundary || /^1[.)]\s/.test(trimmed) || /^[-*]\s/.test(trimmed))
+		) {
+			structure.push(true);
+
+			listIndent = indent;
+
+			continue;
+		}
+
+		// An indented line continues the list item above it.
+		if (trimmed !== "" && listIndent !== null && indent > listIndent) {
+			structure.push(true);
+
+			continue;
+		}
+
+		listIndent = null;
+
+		// A heading can start anywhere, but a table must start at a boundary.
+		structure.push(
+			markdownHeadingPattern.test(trimmed) || (blockBoundary && trimmed.startsWith("|")),
+		);
+	}
+
+	return structure;
+}
+
+/**
+ * Format the prose in a run of JSDoc lines and copy Markdown block lines
+ * through unchanged.
+ *
+ * @param  {string[]}  lines
+ *     The undecorated JSDoc lines.
+ * @param  {function}  formatPlainLines
+ *     Formats one run of prose lines and returns the formatted lines.
+ * @param  {string[]}  structureLines
+ *     The lines to check for Markdown blocks, when they differ from the lines
+ *     being formatted. Tag descriptions pass a blank line in place of the
+ *     inline description so it is never read as Markdown.
+ *
+ * @returns  {string[]}
+ *     The formatted prose and unchanged Markdown lines.
+ */
+function splitMarkdownProse(lines, formatPlainLines, structureLines = lines) {
+	// Whether each line belongs to a Markdown block.
+	const structure = getMarkdownStructure(structureLines);
+	// The formatted lines, including unchanged Markdown blocks.
+	const result = [];
+
+	// The prose waiting to be formatted.
+	let prose = [];
+
+	/**
+	 * Format the waiting prose, keeping the blank line that separated it from
+	 * the next Markdown block.
+	 *
+	 * @param  {boolean}  keepBlank
+	 *     Whether a Markdown block follows, so the blank line before it stays.
+	 */
+	function flushProse(keepBlank = false) {
+		if (prose.length > 0) {
+			// Whether the source separates the prose from the next block.
+			const endsWithBlank = prose.at(-1)?.trim() === "";
+
+			result.push(...formatPlainLines(prose));
+
+			if (keepBlank && endsWithBlank && result.at(-1) !== "") {
+				result.push("");
+			}
+
+			prose = [];
+		}
+	}
+
+	for (let index = 0; index < lines.length; index += 1) {
+		if (structure[index]) {
+			flushProse(true);
+			result.push(lines[index]);
+		} else {
+			prose.push(lines[index]);
+		}
+	}
+
+	flushProse();
+
+	return result;
+}
+
+/**
+ * Wrap prose without making a new line look like a Markdown block.
+ *
+ * @param  {string}  text
+ *     The prose to wrap.
+ * @param  {number}  width
+ *     The available content width.
+ *
+ * @returns  {string[]}
+ *     The wrapped prose lines.
+ */
+function wrapProse(text, width) {
+	// Joins each word that looks like a Markdown marker to the word before it
+	// with a word joiner (U+2060), so wrapping never starts a line with it. The
+	// joiner turns back into a space before the lines are returned.
+	const joined = text.replace(/(\S+)\s+([-*|]|\d+[.)]|#{1,6})(?=\s)/g, "$1\u2060$2");
+
+	return wrapWords(joined, width).map((line) => line.replaceAll("\u2060", " "));
 }
 
 /**
  * Format and refill JSDoc prose while preserving paragraph and list boundaries.
+ * Markdown blocks are left as written.
  *
  * @param  {string[]}  lines
  *     The prose content lines.
@@ -223,6 +408,25 @@ function getInlineTagDescription(entry) {
  *     The formatted prose lines.
  */
 function formatUnwrappedProse(lines, addPunctuation, indentation) {
+	return splitMarkdownProse(lines, (prose) =>
+		formatPlainUnwrappedProse(prose, addPunctuation, indentation),
+	);
+}
+
+/**
+ * Refill and format JSDoc prose that contains no Markdown blocks.
+ *
+ * @param  {string[]}  lines
+ *     The prose lines to refill.
+ * @param  {boolean}  addPunctuation
+ *     Whether to format each paragraph as a sentence.
+ * @param  {string}  indentation
+ *     The indentation used by the comment.
+ *
+ * @returns  {string[]}
+ *     The refilled prose lines.
+ */
+function formatPlainUnwrappedProse(lines, addPunctuation, indentation) {
 	// The prose lines after refilling, then formatted in place below.
 	const result = refillCommentLines(
 		lines.map((line) => ({ prefix: `${indentation} * `, text: line })),
@@ -259,7 +463,8 @@ function formatUnwrappedProse(lines, addPunctuation, indentation) {
 }
 
 /**
- * Format prose paragraphs to the block-comment width.
+ * Format prose paragraphs to the block-comment width, leaving Markdown blocks
+ * as written.
  *
  * @param  {string[]}  lines
  *     The prose content lines.
@@ -272,7 +477,26 @@ function formatUnwrappedProse(lines, addPunctuation, indentation) {
  *     Formatted prose content lines.
  */
 function formatProse(lines, width, addPunctuation) {
-	// The formatted lines, built up in place.
+	return splitMarkdownProse(lines, (proseLines) =>
+		formatPlainProse(proseLines, width, addPunctuation),
+	);
+}
+
+/**
+ * Format prose paragraphs that contain no Markdown blocks.
+ *
+ * @param  {string[]}  lines
+ *     The prose lines.
+ * @param  {number}  width
+ *     The available content width.
+ * @param  {boolean}  addPunctuation
+ *     Whether to format each paragraph as a sentence.
+ *
+ * @returns  {string[]}
+ *     The formatted prose lines.
+ */
+function formatPlainProse(lines, width, addPunctuation) {
+	// The formatted prose lines, built up in place.
 	const result = [];
 
 	// The prose lines collected for the paragraph in progress.
@@ -293,12 +517,15 @@ function formatProse(lines, width, addPunctuation) {
 			text = formatSentence(text);
 		}
 
-		result.push(...wrapWords(text, width));
+		result.push(...wrapProse(text, width));
 
 		paragraph = [];
 	}
 
-	for (const line of lines) {
+	for (let index = 0; index < lines.length; index += 1) {
+		// The current undecorated JSDoc line.
+		const line = lines[index];
+
 		if (line.trim() === "") {
 			flushParagraph();
 
@@ -366,23 +593,36 @@ function formatTags(tagLines, width, addPunctuation, normaliseTags) {
 
 		result.push(formatTagHeader(entry));
 
-		// The entry's inline and multi-line description text, combined.
-		const description = [getInlineTagDescription(entry), ...entry.description]
-			.filter((line) => line.trim() !== "")
-			.map((line) => line.trim());
+		// The description written on the tag line, without a leading hyphen.
+		const inlineDescription = getInlineTagDescription(entry);
+		// The full tag description, before wrapping.
+		const description = [inlineDescription, ...entry.description];
 
-		// The description text, punctuated as a sentence when requested.
-		let descriptionText = description.join(" ");
-
-		if (addPunctuation && descriptionText !== "") {
-			descriptionText = formatSentence(descriptionText);
+		// Drop blank lines around the description.
+		while (description[0]?.trim() === "") {
+			description.shift();
 		}
 
-		if (descriptionText !== "") {
-			result.push(
-				...wrapWords(descriptionText, Math.max(1, width - 4)).map((line) => `    ${line}`),
-			);
+		while (description.at(-1)?.trim() === "") {
+			description.pop();
 		}
+
+		// Ignore the inline description when finding Markdown blocks, so a
+		// description that starts with something like "1." or "#" stays prose.
+		const structuralDescription = inlineDescription ? ["", ...description.slice(1)] : description;
+
+		// The description with prose indented beneath the tag header.
+		const formatted = splitMarkdownProse(
+			description,
+			(prose) => {
+				return formatPlainProse(prose, Math.max(1, width - 4), addPunctuation).map((line) => {
+					return line === "" ? "" : `    ${line}`;
+				});
+			},
+			structuralDescription,
+		);
+
+		result.push(...formatted);
 
 		lastType = entry.type;
 	}
@@ -405,6 +645,9 @@ function formatTags(tagLines, width, addPunctuation, normaliseTags) {
  *     Formatted mixed tag content lines.
  */
 function formatMixedTags(lines, width, addPunctuation) {
+	// Whether each line belongs to a Markdown block. Tag lines count as blank
+	// so a list ends at the next tag.
+	const structure = getMarkdownStructure(lines.map((line) => (getJSDocTagName(line) ? "" : line)));
 	// The formatted lines, built up in place.
 	const result = [];
 
@@ -413,7 +656,9 @@ function formatMixedTags(lines, width, addPunctuation) {
 	// Whether the current tag's content is copied through unchanged.
 	let preserveSection = false;
 
-	for (const line of lines) {
+	for (let index = 0; index < lines.length; index += 1) {
+		// The current undecorated JSDoc line.
+		const line = lines[index];
 		// The tag name, or null when the line isn't a tag at all.
 		const tagName = getJSDocTagName(line);
 		// Matches a new @param/@throws/@returns tag line.
@@ -436,6 +681,8 @@ function formatMixedTags(lines, width, addPunctuation) {
 			result.push(line.trim());
 		} else if (preserveSection) {
 			result.push(line);
+		} else if (structure[index]) {
+			result.push(line);
 		} else if (line.trim() === "") {
 			currentEntry = null;
 
@@ -457,7 +704,7 @@ function formatMixedTags(lines, width, addPunctuation) {
 			const indent = currentEntry ? "    " : "";
 
 			result.push(
-				...wrapWords(text, descriptionWidth).map((wrappedLine) => `${indent}${wrappedLine}`),
+				...wrapProse(text, descriptionWidth).map((wrappedLine) => `${indent}${wrappedLine}`),
 			);
 		}
 	}
@@ -484,6 +731,9 @@ function formatMixedTags(lines, width, addPunctuation) {
  *     Formatted tag content lines.
  */
 function formatTagDescriptions(lines, width, addPunctuation) {
+	// Whether each line belongs to a Markdown block. Tag lines count as blank
+	// so a list ends at the next tag.
+	const structure = getMarkdownStructure(lines.map((line) => (getJSDocTagName(line) ? "" : line)));
 	// The formatted lines, built up in place.
 	const result = [];
 
@@ -516,12 +766,14 @@ function formatTagDescriptions(lines, width, addPunctuation) {
 		// The indent applied to each wrapped description line.
 		const indent = indentDescription ? "    " : "";
 
-		result.push(...wrapWords(text, descriptionWidth).map((line) => `${indent}${line}`));
+		result.push(...wrapProse(text, descriptionWidth).map((line) => `${indent}${line}`));
 
 		description = [];
 	}
 
-	for (const line of lines) {
+	for (let index = 0; index < lines.length; index += 1) {
+		// The current undecorated JSDoc line.
+		const line = lines[index];
 		// The tag name, or null when the line isn't a tag at all.
 		const tagName = getJSDocTagName(line);
 
@@ -532,6 +784,9 @@ function formatTagDescriptions(lines, width, addPunctuation) {
 			indentDescription = isTargetTag(line);
 			preserveSection = isPreservedSectionTag(line);
 		} else if (preserveSection) {
+			result.push(line);
+		} else if (structure[index]) {
+			flushDescription();
 			result.push(line);
 		} else if (line.trim() === "") {
 			flushDescription();

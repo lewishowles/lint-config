@@ -16,7 +16,8 @@ test("comment formatting settles comment-formatting collisions in one pass", () 
 			name.endsWith("-wrap-punctuation-collision.js.txt") ||
 			name === "fixer-range-collision.js.txt" ||
 			name === "placement-formatting-convergence.js.txt" ||
-			name === "early-wrap-refill-convergence.js.txt",
+			name === "early-wrap-refill-convergence.js.txt" ||
+			name === "jsdoc-markdown-tag-body.js.txt",
 	);
 
 	try {
@@ -31,6 +32,16 @@ test("comment formatting settles comment-formatting collisions in one pass", () 
 
 			writeFileSync(join(temporaryDirectory, targetName), source);
 		}
+
+		writeFileSync(
+			join(temporaryDirectory, "inline-hyphen-description.js"),
+			`/**
+ * Explain the name.
+ *
+ * @param {string} name - description stays on its own line
+ */
+function explainName(name) {}`,
+		);
 
 		execFileSync(
 			"./node_modules/.bin/oxlint",
@@ -63,6 +74,26 @@ test("comment formatting settles comment-formatting collisions in one pass", () 
 
 		assert.equal(secondRun.trim(), "", `Second lint run reported diagnostics:\n${secondRun}`);
 
+		// The hyphen-style @param fixture after one fix.
+		const fixedHyphenDescription = readFileSync(
+			join(temporaryDirectory, "inline-hyphen-description.js"),
+			"utf8",
+		);
+
+		assert.match(
+			fixedHyphenDescription,
+			/\* @param {2}\{string\} {2}name\n \* {5}Description stays on its own line\./,
+		);
+
+		assert.doesNotMatch(fixedHyphenDescription, /\u2060/);
+
+		// The comment text each fixture must still contain after fixing, where
+		// it differs from the shared default phrase.
+		const expectedTextByFixture = {
+			"fixer-range-collision.js.txt": /Open the dialog\./,
+			"jsdoc-markdown-tag-body.js.txt": /#### `required`/,
+		};
+
 		for (const fixtureName of fixtureNames) {
 			const fixedSource = readFileSync(
 				join(temporaryDirectory, fixtureName.slice(0, -".txt".length)),
@@ -71,12 +102,39 @@ test("comment formatting settles comment-formatting collisions in one pass", () 
 
 			// The source phrase that proves the fixer kept each fixture's
 			// comment text.
-			const expectedText =
-				fixtureName === "fixer-range-collision.js.txt"
-					? /Open the dialog\./
-					: /original\s+(?:\*\s+)?trigger\./;
+			const expectedText = expectedTextByFixture[fixtureName] ?? /original\s+(?:\*\s+)?trigger\./;
 
 			assert.match(fixedSource, expectedText, `${fixtureName} lost its comment text.`);
+
+			if (fixtureName === "jsdoc-markdown-tag-body.js.txt") {
+				assert.match(fixedSource, /2024\. /);
+				assert.match(fixedSource, / - /);
+				assert.match(fixedSource, /string \| number/);
+				assert.doesNotMatch(fixedSource, /^ \* (?:2024\. |\| number)/m);
+				assert.doesNotMatch(fixedSource, /^ \* - describes/m);
+
+				// The Markdown lines that must survive the first fix unchanged.
+				const structuralLines = [
+					" * # Available rules",
+					" * #### `required`",
+					" * - `string`: A string, including an empty string",
+					" * * `boolean`: Strictly true or false",
+					" * 1. First item stays as written",
+					" *   continuation stays as written",
+					" * | Rule | Value |",
+					" * | --- | --- |",
+					" * | in | one |",
+					" * ```js",
+					" * const value = 1;",
+					" *",
+					" * console.log(value);",
+					" * ```",
+				];
+
+				for (const line of structuralLines) {
+					assert.ok(fixedSource.split("\n").includes(line), `${fixtureName} changed ${line}`);
+				}
+			}
 		}
 	} finally {
 		rmSync(temporaryDirectory, { force: true, recursive: true });

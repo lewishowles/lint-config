@@ -62,7 +62,7 @@ Add the comments layer alongside the base or Vue layer to enforce the comment-fo
 }
 ```
 
-Lines below a free-form tag such as `@description` or `@note` start at the comment margin so they can be pasted into Markdown without becoming a code block. `@example` content is left as written. Wrapped `@param`, `@returns` and `@throws` descriptions keep a four-space hanging indent so each description is easy to scan beneath its tag.
+Lines below a free-form tag such as `@description` or `@note` start at the comment margin so they can be pasted into Markdown without becoming a code block. `@example` content is left as written. Wrapped `@param`, `@returns` and `@throws` descriptions keep a four-space hanging indent so each description is easy to scan beneath its tag. A description written as `name - description` loses the hyphen when it moves onto its own line.
 
 The Vue component rule reads the raw `.vue` file because Oxlint's JS Plugin API only receives the extracted script block. The comments layer loads its plugin for you, so there's no relative `jsPlugins` path to add. To pick rules yourself instead, add the plugin directly:
 
