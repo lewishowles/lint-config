@@ -592,37 +592,7 @@ function formatTags(tagLines, width, addPunctuation, normaliseTags) {
 		}
 
 		result.push(formatTagHeader(entry));
-
-		// The description written on the tag line, without a leading hyphen.
-		const inlineDescription = getInlineTagDescription(entry);
-		// The full tag description, before wrapping.
-		const description = [inlineDescription, ...entry.description];
-
-		// Drop blank lines around the description.
-		while (description[0]?.trim() === "") {
-			description.shift();
-		}
-
-		while (description.at(-1)?.trim() === "") {
-			description.pop();
-		}
-
-		// Ignore the inline description when finding Markdown blocks, so a
-		// description that starts with something like "1." or "#" stays prose.
-		const structuralDescription = inlineDescription ? ["", ...description.slice(1)] : description;
-
-		// The description with prose indented beneath the tag header.
-		const formatted = splitMarkdownProse(
-			description,
-			(prose) => {
-				return formatPlainProse(prose, Math.max(1, width - 4), addPunctuation).map((line) => {
-					return line === "" ? "" : `    ${line}`;
-				});
-			},
-			structuralDescription,
-		);
-
-		result.push(...formatted);
+		result.push(...formatTargetDescription(entry, width, addPunctuation));
 
 		lastType = entry.type;
 	}
@@ -664,6 +634,20 @@ function formatMixedTags(lines, width, addPunctuation) {
 		// Matches a new @param/@throws/@returns tag line.
 		const match = line.trim().match(/^@(param|throws|returns)\b(.*)$/);
 
+		if (tagName !== null && currentEntry) {
+			// Whether the author left a blank line between this description and
+			// the next tag.
+			const hasTagSeparator = currentEntry.description.at(-1)?.trim() === "";
+
+			result.push(...formatTargetDescription(currentEntry, width, addPunctuation));
+
+			if (hasTagSeparator && result.at(-1) !== "") {
+				result.push("");
+			}
+
+			currentEntry = null;
+		}
+
 		if (match) {
 			currentEntry = {
 				description: [],
@@ -675,38 +659,26 @@ function formatMixedTags(lines, width, addPunctuation) {
 
 			result.push(formatTagHeader(currentEntry));
 		} else if (tagName !== null) {
-			currentEntry = null;
 			preserveSection = isPreservedSectionTag(line);
 
 			result.push(line.trim());
+		} else if (currentEntry) {
+			currentEntry.description.push(line);
 		} else if (preserveSection) {
 			result.push(line);
 		} else if (structure[index]) {
 			result.push(line);
 		} else if (line.trim() === "") {
-			currentEntry = null;
-
 			if (result.at(-1) !== "") {
 				result.push("");
 			}
 		} else {
-			// The description text, punctuated as a sentence when requested.
-			let text = line.trim();
-
-			if (addPunctuation && currentEntry) {
-				text = formatSentence(text);
-			}
-
-			// The wrapping width, four characters narrower for @param, @returns
-			// and @throws so their indent still fits.
-			const descriptionWidth = currentEntry ? Math.max(1, width - 4) : width;
-			// The indent applied to each wrapped description line.
-			const indent = currentEntry ? "    " : "";
-
-			result.push(
-				...wrapProse(text, descriptionWidth).map((wrappedLine) => `${indent}${wrappedLine}`),
-			);
+			result.push(...wrapProse(line.trim(), width));
 		}
+	}
+
+	if (currentEntry) {
+		result.push(...formatTargetDescription(currentEntry, width, addPunctuation));
 	}
 
 	while (result.at(-1) === "") {
@@ -714,6 +686,52 @@ function formatMixedTags(lines, width, addPunctuation) {
 	}
 
 	return result;
+}
+
+/**
+ * Format the description of a @param, @returns or @throws tag, joining the text
+ * on the tag line with the lines below it.
+ *
+ * @param  {object}  entry
+ *     The parsed tag, with its tag-line text and the description lines
+ *     collected beneath it.
+ * @param  {number}  width
+ *     The width of the comment text. The description wraps four characters
+ *     narrower to fit its indent.
+ * @param  {boolean}  addPunctuation
+ *     Whether to format prose paragraphs as sentences.
+ *
+ * @returns  {string[]}
+ *     The formatted description lines beneath the tag header.
+ */
+function formatTargetDescription(entry, width, addPunctuation) {
+	// The description written on the tag line, without a leading hyphen.
+	const inlineDescription = getInlineTagDescription(entry);
+	// The full tag description, before wrapping.
+	const description = [inlineDescription, ...entry.description];
+
+	// Drop blank lines around the description.
+	while (description[0]?.trim() === "") {
+		description.shift();
+	}
+
+	while (description.at(-1)?.trim() === "") {
+		description.pop();
+	}
+
+	// Ignore the inline description when finding Markdown blocks, so a
+	// description that starts with something like "1." or "#" stays prose.
+	const structuralDescription = inlineDescription ? ["", ...description.slice(1)] : description;
+
+	return splitMarkdownProse(
+		description,
+		(prose) => {
+			return formatPlainProse(prose, Math.max(1, width - 4), addPunctuation).map((line) => {
+				return line === "" ? "" : `    ${line}`;
+			});
+		},
+		structuralDescription,
+	);
 }
 
 /**

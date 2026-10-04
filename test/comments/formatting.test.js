@@ -107,6 +107,53 @@ openDialog();`,
 function formatValue() {}`,
 		},
 		{
+			name: "keeps a formatted inline parameter description beside a see tag",
+			code: `/**
+ * Explain the name.
+ *
+ * @param  {string}  name
+ *     The name to explain.
+ * @see https://example.com
+ */
+function explainName(name) {}`,
+		},
+		{
+			name: "keeps a formatted inline return description beside a see tag",
+			code: `/**
+ * Format the value.
+ *
+ * @returns  {string}
+ *     The formatted value.
+ * @see https://example.com
+ */
+function formatValue() {}`,
+		},
+		{
+			name: "keeps a wrapped inline parameter description beside a see tag",
+			code: `/**
+ * Explain the options.
+ *
+ * @param  {string}  name
+ *     The description stays prose even when it spans the full comment width and
+ *     wraps beneath the tag header.
+ * @see https://example.com
+ */
+function explainOptions(name) {}`,
+		},
+		{
+			name: "keeps a second parameter paragraph beside a see tag",
+			code: `/**
+ * Explain the name.
+ *
+ * @param  {string}  name
+ *     The first paragraph explains the name.
+ *
+ *     The second paragraph adds context.
+ * @see https://example.com
+ */
+function explainName(name) {}`,
+		},
+		{
 			name: "keeps every word in a formatted throw description",
 			code: `/**
  * Read the value.
@@ -349,6 +396,108 @@ function formatValue() {}`,
  *     The formatted value.
  */
 function formatValue() {}`,
+		},
+		{
+			name: "keeps an inline parameter description beside a see tag",
+			code: `/**
+ * Explain the name.
+ *
+ * @param {string} name - The name to explain.
+ * @see https://example.com
+ */
+function explainName(name) {}`,
+			errors: [{ message: "Format this comment." }],
+			output: `/**
+ * Explain the name.
+ *
+ * @param  {string}  name
+ *     The name to explain.
+ * @see https://example.com
+ */
+function explainName(name) {}`,
+		},
+		{
+			name: "keeps an inline return description beside a see tag",
+			code: `/**
+ * Format the value.
+ *
+ * @returns {string} The formatted value.
+ * @see https://example.com
+ */
+function formatValue() {}`,
+			errors: [{ message: "Format this comment." }],
+			output: `/**
+ * Format the value.
+ *
+ * @returns  {string}
+ *     The formatted value.
+ * @see https://example.com
+ */
+function formatValue() {}`,
+		},
+		{
+			name: "wraps an inline parameter description beside a see tag in one pass",
+			code: `/**
+ * Explain the options.
+ *
+ * @param {string} name - The description stays prose even when it spans the full comment width and wraps beneath the tag header.
+ * @see https://example.com
+ */
+function explainOptions(name) {}`,
+			errors: [{ message: "Format this comment." }],
+			output: `/**
+ * Explain the options.
+ *
+ * @param  {string}  name
+ *     The description stays prose even when it spans the full comment width and
+ *     wraps beneath the tag header.
+ * @see https://example.com
+ */
+function explainOptions(name) {}`,
+		},
+		{
+			name: "joins an inline parameter description with its continuation beside a see tag",
+			code: `/**
+ * Explain the options.
+ *
+ * @param {string} name - The description stays prose even when it spans
+ * the next source line and keeps a single sentence.
+ * @see https://example.com
+ */
+function explainOptions(name) {}`,
+			errors: [{ message: "Format this comment." }],
+			output: `/**
+ * Explain the options.
+ *
+ * @param  {string}  name
+ *     The description stays prose even when it spans the next source line and
+ *     keeps a single sentence.
+ * @see https://example.com
+ */
+function explainOptions(name) {}`,
+		},
+		{
+			name: "keeps two parameter paragraphs beside a see tag in one pass",
+			code: `/**
+ * Explain the name.
+ *
+ * @param {string} name - The first paragraph explains the name.
+ *
+ * The second paragraph adds context.
+ * @see https://example.com
+ */
+function explainName(name) {}`,
+			errors: [{ message: "Format this comment." }],
+			output: `/**
+ * Explain the name.
+ *
+ * @param  {string}  name
+ *     The first paragraph explains the name.
+ *
+ *     The second paragraph adds context.
+ * @see https://example.com
+ */
+function explainName(name) {}`,
 		},
 		{
 			name: "keeps every word in an inline throw description",
