@@ -51,11 +51,15 @@ function readValue() {}`,
 function readValue() {}`,
 		},
 		{
-			name: "keeps wrapped continuation lines aligned",
+			name: "keeps wrapped continuation lines aligned without refilling them",
 			code: "// Close the dialog when focus moves outside the component and restore focus to\n// the original trigger.\nonClickOutside(dialog, closeDialog);",
 		},
 		{
-			name: "keeps sentence and list boundaries when refilling",
+			name: "keeps an early line break in a line-comment group",
+			code: "// Explain the dialog when opening\n// the panel.\nopenDialog();",
+		},
+		{
+			name: "keeps sentence and list boundaries",
 			code: "// Explain the dialog.\n// - First item\n// - Second item.\nopenDialog();",
 		},
 		{
@@ -71,7 +75,7 @@ function readValue() {}`,
 openDialog();`,
 		},
 		{
-			name: "keeps blank comment lines when refilling",
+			name: "keeps blank comment lines",
 			code: "// Explain the dialog when opening\n//\n// the panel.\nopenDialog();",
 		},
 		{
@@ -624,17 +628,18 @@ function readValue() {}`,
 function readValue() {}`,
 		},
 		{
-			name: "formats a wrapped line comment as one sentence",
+			name: "capitalises a wrapped line comment without moving words",
 			code: "// close the dialog when focus moves outside the component\n// and restore focus to the original trigger.\nonClickOutside(dialog, closeDialog);",
 			errors: [{ message: "Comment text must be a complete sentence.", line: 1, column: 0 }],
 			output:
-				"// Close the dialog when focus moves outside the component and restore focus to\n// the original trigger.\nonClickOutside(dialog, closeDialog);",
+				"// Close the dialog when focus moves outside the component\n// and restore focus to the original trigger.\nonClickOutside(dialog, closeDialog);",
 		},
 		{
-			name: "refills a line-comment group that wraps too early",
-			code: "// Explain the dialog when opening\n// the panel.\nopenDialog();",
-			errors: [{ message: "Format this comment.", line: 1, column: 0 }],
-			output: "// Explain the dialog when opening the panel.\nopenDialog();",
+			name: "wraps only the overlong middle line in a line-comment group",
+			code: "// explain the dialog\n// This middle line explains how the dialog restores focus after it closes and returns to the original trigger\n// then continue\nopenDialog();",
+			errors: [{ message: "Comment text must be a complete sentence.", line: 1, column: 0 }],
+			output:
+				"// Explain the dialog\n// This middle line explains how the dialog restores focus after it closes and\n// returns to the original trigger\n// then continue.\nopenDialog();",
 		},
 		{
 			name: "formats comments separated by an ESLint directive independently",
@@ -1150,7 +1155,7 @@ function moveTab(tab, index) {}`,
 				{ message: "Comment must be immediately before the documented code.", line: 2, column: 1 },
 			],
 			output:
-				"// oxlint-disable-next-line comments/formatting\n// Explain the value across two lines and continue on the second line.\nconst value = 1;",
+				"// oxlint-disable-next-line comments/formatting\n// Explain the value across two lines and\n// continue on the second line.\nconst value = 1;",
 		},
 		{
 			name: "does not treat comments separated by a directive as continuations",
@@ -1162,13 +1167,13 @@ function moveTab(tab, index) {}`,
 				"if (isReady) {\n\t// First comment.\n\t// oxlint-disable-next-line comments/formatting\n\t// Second comment.\n\trunTask();\n}",
 		},
 		{
-			name: "reindents and refills a wrapped continuation comment",
+			name: "reindents a wrapped continuation comment without refilling it",
 			code: "\t// Explain the value across two lines and\n\t// continue on the second line.\nconst value = 1;",
 			errors: [
 				{ message: "Comment must be immediately before the documented code.", line: 1, column: 1 },
 			],
 			output:
-				"// Explain the value across two lines and continue on the second line.\nconst value = 1;",
+				"// Explain the value across two lines and\n// continue on the second line.\nconst value = 1;",
 		},
 	],
 });

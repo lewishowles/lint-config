@@ -16,7 +16,8 @@ test("comment formatting settles comment-formatting collisions in one pass", () 
 			name.endsWith("-wrap-punctuation-collision.js.txt") ||
 			name === "fixer-range-collision.js.txt" ||
 			name === "placement-formatting-convergence.js.txt" ||
-			name === "early-wrap-refill-convergence.js.txt" ||
+			name === "indented-line-comment-convergence.js.txt" ||
+			name === "line-comment-preserved-lines.js.txt" ||
 			name === "jsdoc-markdown-tag-body.js.txt",
 	);
 
@@ -92,6 +93,7 @@ function explainName(name) {}`,
 		const expectedTextByFixture = {
 			"fixer-range-collision.js.txt": /Open the dialog\./,
 			"jsdoc-markdown-tag-body.js.txt": /#### `required`/,
+			"line-comment-preserved-lines.js.txt": /\/\/ endBudget = 7\n\/\/ start: one \(3\), two \(4\)/,
 		};
 
 		for (const fixtureName of fixtureNames) {
@@ -105,6 +107,25 @@ function explainName(name) {}`,
 			const expectedText = expectedTextByFixture[fixtureName] ?? /original\s+(?:\*\s+)?trigger\./;
 
 			assert.match(fixedSource, expectedText, `${fixtureName} lost its comment text.`);
+
+			if (fixtureName === "indented-line-comment-convergence.js.txt") {
+				assert.match(
+					fixedSource,
+					/\/\/ Explain the dialog when opening\n\/\/ the original trigger\./,
+				);
+			}
+
+			if (fixtureName === "line-comment-preserved-lines.js.txt") {
+				assert.match(
+					fixedSource,
+					/\/\/ Explain how the stored values are used\.\n\/\/ endBudget = 7/,
+				);
+
+				assert.match(
+					fixedSource,
+					/\/\/ This final line is deliberately long and wraps only its own words onto a\n\/\/ second line\./,
+				);
+			}
 
 			if (fixtureName === "jsdoc-markdown-tag-body.js.txt") {
 				assert.match(fixedSource, /2024\. /);

@@ -656,13 +656,10 @@ function reportLineCommentGroups(context) {
 			});
 		});
 
-		// The group's lines after refilling words from early-wrapped lines.
-		const refilledLines = refillCommentLines(formattedLines, maximumLineLength);
-
 		// The group's text after applying its final line formatting and
 		// placement gap.
 		const formattedText =
-			refilledLines
+			formattedLines
 				.map(({ prefix, text }) => (text === "" ? prefix.trimEnd() : `${prefix}${text}`))
 				.join(getNewline(context.sourceCode.text)) + (placement?.gap ?? "");
 
@@ -833,9 +830,10 @@ function reportBlockComments(context) {
 }
 
 /**
- * The comment-formatting rule: punctuates comments as sentences, refills
- * early-wrapped lines, reindents line-comment groups and wraps any comment past
- * 80 columns, replacing each comment in one edit.
+ * The comment-formatting rule: punctuates comments as sentences and wraps any
+ * comment past 80 columns, replacing each comment in one edit. Block comments
+ * that wrap too early are refilled. Line-comment groups are reindented, but
+ * words never move between their lines.
  */
 export default {
 	meta: {
