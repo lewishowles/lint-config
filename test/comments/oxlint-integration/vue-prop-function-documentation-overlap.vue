@@ -9,6 +9,8 @@ defineProps({
 /* Document the component. */
 defineProps({
 	// oxlint-disable-next-line comments/vue-prop-documentation, comments/function-documentation
-	onUpdate: () => null,
+	onUpdate() {
+		return null;
+	},
 });
 </script>

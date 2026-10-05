@@ -20,6 +20,15 @@ ruleTester.run("comments/function-documentation", rule, {
 		"/** Open the dialog.\n *\n * @returns {object}\n */\nconst openDialog = () => ({ isOpen: true });",
 		"/** Close the dialog. */\nconst closeDialog = () => { return; };",
 		"const callbacks = [function namedCallback() {}, () => {}];",
+		{
+			name: "allows inline object arrows when enabled",
+			code: "const callbacks = { onOpen: () => {} };",
+			options: [{ ignoreInlineArrows: true }],
+		},
+		{
+			name: "allows call-argument arrows without the option",
+			code: "run(() => {});",
+		},
 		"const dialog = { nested: { close() {} }, value: 1 };",
 		`defineModel({
 	/** Read the model value.
@@ -85,6 +94,29 @@ ruleTester.run("comments/function-documentation", rule, {
 		{
 			name: "requires JSDoc before first-level object methods",
 			code: "const dialog = { open() {} };",
+			errors: [{ message: "Functions require an immediately preceding JSDoc block." }],
+		},
+		{
+			name: "requires JSDoc before inline object arrows by default",
+			code: "const callbacks = { onOpen: () => {} };",
+			errors: [{ message: "Functions require an immediately preceding JSDoc block." }],
+		},
+		{
+			name: "requires JSDoc before method shorthand when inline arrows are ignored",
+			code: "const callbacks = { onOpen() {} };",
+			options: [{ ignoreInlineArrows: true }],
+			errors: [{ message: "Functions require an immediately preceding JSDoc block." }],
+		},
+		{
+			name: "requires JSDoc before function expression properties when inline arrows are ignored",
+			code: "const callbacks = { onOpen: function () {} };",
+			options: [{ ignoreInlineArrows: true }],
+			errors: [{ message: "Functions require an immediately preceding JSDoc block." }],
+		},
+		{
+			name: "requires JSDoc before const arrows when inline arrows are ignored",
+			code: "const onOpen = () => {};",
+			options: [{ ignoreInlineArrows: true }],
 			errors: [{ message: "Functions require an immediately preceding JSDoc block." }],
 		},
 		{

@@ -19,6 +19,7 @@
 		{
 			"files": ["**/*.test.*", "**/*.spec.*", "**/test/**"],
 			"rules": {
+				"comments/function-documentation": ["error", { "ignoreInlineArrows": true }],
 				"comments/variable-declarations": ["error", { "rootOnly": true }]
 			}
 		}

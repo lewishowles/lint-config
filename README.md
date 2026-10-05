@@ -110,6 +110,8 @@ The `comments/variable-declarations` rule accepts a `rootOnly` option to require
 }
 ```
 
+The `comments/function-documentation` rule accepts an `ignoreInlineArrows` option. The comments layer enables it for the same test files, so arrow functions used as object property values do not need JSDoc there. Function declarations, method shorthand, function expression properties, and `const` functions still need JSDoc. Other files keep the default of `false`.
+
 The `comments/class-documentation` rule requires an immediately preceding block comment before class declarations and const-assigned class expressions. Constructors, methods, getters, and setters require full JSDoc; constructors never need an `@returns` tag, and getters and setters need one only when they return a value. Instance and static fields require an immediately preceding line comment.
 
 ### `vp check` configuration

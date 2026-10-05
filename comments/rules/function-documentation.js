@@ -53,6 +53,18 @@ export default {
 	meta: {
 		docs: { description: "Require JSDoc documentation for named functions and methods." },
 		type: "suggestion",
+		schema: [
+			{
+				type: "object",
+				properties: {
+					ignoreInlineArrows: {
+						type: "boolean",
+					},
+				},
+				additionalProperties: false,
+			},
+		],
+		defaultOptions: [{ ignoreInlineArrows: false }],
 	},
 	/**
 	 * Create the rule's node visitors.
@@ -77,13 +89,20 @@ export default {
 				}
 			},
 			/**
-			 * Check a first-level object method for documentation.
+			 * Check a first-level object method for documentation. When the
+			 * ignoreInlineArrows option is on, arrow function values are
+			 * skipped, which suits small inline callbacks.
 			 *
 			 * @param  {object}  node
 			 *     The property node.
 			 */
 			Property(node) {
-				if (!isFirstLevelObjectProperty(node) || !isFunctionValue(node.value)) {
+				if (
+					!isFirstLevelObjectProperty(node) ||
+					!isFunctionValue(node.value) ||
+					(context.options?.[0]?.ignoreInlineArrows &&
+						node.value.type === "ArrowFunctionExpression")
+				) {
 					return;
 				}
 

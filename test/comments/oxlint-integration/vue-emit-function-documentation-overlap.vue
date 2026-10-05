@@ -9,6 +9,8 @@ defineEmits({
 /* Document the component. */
 defineEmits({
 	// oxlint-disable-next-line comments/vue-emit-documentation, comments/function-documentation
-	submit: () => null,
+	submit() {
+		return null;
+	},
 });
 </script>
