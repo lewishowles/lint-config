@@ -37,6 +37,22 @@ ruleTester.run("comments/function-documentation", rule, {
 	},
 });`,
 		"/** Open the dialog.\n *\n * @param {object} options\n * @param {object} options.trigger\n * @param {string} options.trigger.id\n * @param {number} [options.count=1]\n */\nfunction openDialog({ trigger: { id }, count = 1 }) {}",
+		{
+			name: "accepts plain property paths for defaults",
+			code: "/** Check the result.\n *\n * @param {object} result\n * @param {string[]} result.errors\n * @param {boolean} result.validated\n */\nfunction checkResult({ errors = [], validated = true } = {}) {}",
+		},
+		{
+			name: "accepts optional property paths for defaults",
+			code: "/** Check the result.\n *\n * @param {object} [result]\n * @param {string[]} [result.errors]\n * @param {boolean} [result.validated]\n */\nfunction checkResult({ errors = [], validated = true } = {}) {}",
+		},
+		{
+			name: "accepts array and mismatched defaults in bracketed paths",
+			code: "/** Check the result.\n *\n * @param {object} [result={}]\n * @param {string[]} [result.errors=[]]\n * @param {boolean} [result.validated=other]\n */\nfunction checkResult({ errors = [], validated = true } = {}) {}",
+		},
+		{
+			name: "accepts a bracketed default containing a space",
+			code: '/** Set the label.\n *\n * @param {object} options\n * @param {string} [options.label="Hello world"]\n */\nfunction setLabel({ label = "Hello world" }) {}',
+		},
 		"/** Open the dialog.\n *\n * @param {object} options\n * @param {string} options.id\n */\nfunction openDialog({ id: dialogId }) {}",
 		"/** Open the dialog.\n *\n * @param {object} [options]\n */\nfunction openDialog(options) {}",
 		"/** Check the report.\n *\n * @param {object} result\n * @param {object} options\n * @param {object} resultLabels\n * @param {string} resultLabels.failed\n * @param {string} resultLabels.success\n * @param {string} [resultLabels.hintText]\n */\nfunction reportCheckResult(result, options, { failed, success, hintText }) {}",
@@ -93,6 +109,11 @@ ruleTester.run("comments/function-documentation", rule, {
 				{ message: "Functions require an @param for options.trigger.id." },
 				{ message: "Functions require an @param for [options.count=1]." },
 			],
+		},
+		{
+			name: "reports an undocumented defaulted property",
+			code: "/** Check the result.\n *\n * @param {object} [result={}]\n * @param {string[]} [result.errors=[]]\n */\nfunction checkResult({ errors = [], validated = true } = {}) {}",
+			errors: [{ message: "Functions require an @param for [result.validated=true]." }],
 		},
 		{
 			name: "matches a destructured parameter to its documented root",

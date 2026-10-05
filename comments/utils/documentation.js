@@ -187,8 +187,9 @@ function getParameterPaths(sourceCode, node, rootPath = "options") {
  *     The JSDoc comment token.
  *
  * @returns  {object}
- *     An object with names, the set of every documented parameter path, and
- *     topLevelNames, the top-level names in the order they are documented.
+ *     An object with names, the set of every documented parameter path with
+ *     optional brackets and defaults removed, and topLevelNames, the top-level
+ *     names in the order they are documented.
  */
 function getDocumentedParameters(sourceCode, comment) {
 	// Splits the JSDoc block into its individual lines.
@@ -200,21 +201,16 @@ function getDocumentedParameters(sourceCode, comment) {
 
 	for (const line of content) {
 		// Matches an @param tag and captures its documented path.
-		const match = line.trim().match(/^@param(?:\s+\{[^}]+\})?\s+(\[[^\]]+\]|\S+)/);
+		const match = line.trim().match(/^@param(?:\s+\{[^}]+\})?\s+(\S+)/);
 
 		if (match) {
-			// The documented name as written, including optional brackets and
-			// any default value.
-			const name = match[1];
+			// The documented path without optional brackets or a default value.
+			const name = getPlainParameterPath(match[1]);
 
 			names.add(name);
 
-			// Removes optional and default-value syntax before checking for a
-			// nested path.
-			const topLevelName = name.replace(/^\[|\]$/g, "").split("=")[0];
-
-			if (!topLevelName.includes(".")) {
-				topLevelNames.push(topLevelName);
+			if (!name.includes(".")) {
+				topLevelNames.push(name);
 			}
 		}
 	}
@@ -329,10 +325,12 @@ export function reportFunctionDocumentation(context, node, functionNode, options
 	);
 
 	for (const path of parameterPaths) {
-		// The optional JSDoc spelling for this parameter path.
-		const optionalPath = `[${path}]`;
+		// The path without optional brackets or a default. Documented defaults
+		// are not compared with the code, so result.errors, [result.errors] and
+		// [result.errors=[]] all document the same property.
+		const plainPath = getPlainParameterPath(path);
 
-		if (!documentedParameters.has(path) && !documentedParameters.has(optionalPath)) {
+		if (!documentedParameters.has(plainPath)) {
 			context.report({
 				message: `${subject} require an @param for ${path}.`,
 				node,
@@ -360,4 +358,19 @@ export function reportFunctionDocumentation(context, node, functionNode, options
 			node,
 		});
 	}
+}
+
+/**
+ * Reduce a parameter path to its plain name, so a documented path matches the
+ * required one however the documentation spells it.
+ *
+ * @param  {string}  path
+ *     The documented or required parameter path.
+ *
+ * @returns  {string}
+ *     The path with brackets and any default removed, such as result.errors for
+ *     [result.errors=[]].
+ */
+function getPlainParameterPath(path) {
+	return path.replace(/^\[|\]$/g, "").split("=")[0];
 }

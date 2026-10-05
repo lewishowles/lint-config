@@ -64,6 +64,8 @@ Add the comments layer alongside the base or Vue layer to enforce the comment-fo
 
 For functions, variables, configured API calls and classes, a tool directive comment such as `// eslint-disable-next-line` may sit between the documentation comment and the code.
 
+For destructured parameters with defaults, document the parent and each property. Plain names such as `result.errors` and optional names such as `[result.errors]` or `[result.errors=[]]` all match `errors = []`. The parent can likewise be `result`, `[result]` or `[result={}]`. A documented default does not have to match the value in the code.
+
 Lines below a free-form tag such as `@description` or `@note` start at the comment margin so they can be pasted into Markdown without becoming a code block. `@example` content is left as written. Wrapped `@param`, `@returns` and `@throws` descriptions keep a four-space hanging indent so each description is easy to scan beneath its tag. A description written as `name - description` loses the hyphen when it moves onto its own line.
 
 Consecutive `//` comments keep their line breaks, and only a line past 80 columns is wrapped.
