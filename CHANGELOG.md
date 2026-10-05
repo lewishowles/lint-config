@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.8.0: 2026-10-05
+
+### Changes
+
+- Breaking: `vite-plus` 1.0.0 is now required. Put the selected lint layers in a `vite.config.js` `lint` block; `vp check` and `vp lint` ignore a `.oxlintrc.json` on its own. Use `lintConfig` from `@lewishowles/lint-config/layers` to build the block, with an optional `.oxlintrc.json` for local settings. Vite+ 1.0 also adds its own `vite-plus/prefer-vite-plus-imports` rule, which may report new problems after upgrading.
+- New `./layers` export provides `base`, `vue`, `comments`, and `lintConfig`. The Vue layer includes base, and `lintConfig` carries inherited environments and globals into the Vite+ lint block.
+- `comments/function-documentation` adds an `ignoreInlineArrows` option, enabled by `comments.json` for test files. Arrow functions used as object property values no longer need JSDoc there; other function forms and files keep their existing requirements.
+- `comments/formatting` changes the output of `--fix` for comments. Run `--fix` once after upgrading.
+
+### Fixes
+
+- `comments/formatting` keeps code spans, quotes, colons, Markdown blocks, and descriptions in mixed-tag JSDoc blocks as written. It places free-form tag text at the comment margin, removes a separator hyphen when a tag description moves onto its own line, keeps wrapped parameter, return, and throw descriptions indented, and preserves line breaks between adjacent `//` comments.
+- The documentation rules for functions, variables, configured API calls and classes recognise comments across tool directives such as `eslint-disable-next-line`. `comments/function-documentation` accepts plain or optional JSDoc names for destructured parameters with defaults.
+
 ## 0.7.0: 2026-09-30
 
 ### Changes
