@@ -9,9 +9,21 @@ ruleTester.run("comments/class-documentation", rule, {
 	valid: [
 		"/* The dialog component. */\nclass Dialog {}",
 		"/** The dialog component. */\nclass Dialog {}",
+		{
+			name: "accepts class documentation before a directive",
+			code: "/* The dialog component. */\n// eslint-disable-next-line no-empty\nclass Dialog {}",
+		},
+		{
+			name: "accepts method JSDoc before a directive",
+			code: "/** The dialog component. */\nclass Dialog {\n\t/** Open the dialog. */\n\t// eslint-disable-next-line no-empty\n\topen() {}\n}",
+		},
 		"/* The dialog component. */\nexport class Dialog {}",
 		"/* The dialog component. */\nexport default class Dialog {}",
 		"/* The dialog component. */\nconst Dialog = class {}",
+		{
+			name: "accepts const-assigned class documentation before a directive",
+			code: "/* The dialog component. */\n// eslint-disable-next-line no-empty\nconst Dialog = class {}",
+		},
 		"/* The exported dialog component. */\nexport const Dialog = class {}",
 		"const Dialog = class {}, isOpen = false",
 		"if (isReady) {\n\t/* The dialog component. */\n\tclass Dialog {}\n}",
@@ -29,6 +41,10 @@ ruleTester.run("comments/class-documentation", rule, {
 		"/** The dialog component. */\nclass Dialog {\n\t/** Open the dialog.\n\t *\n\t * @param {string} label\n\t */\n\tstatic open(label) {}\n}",
 		"/** The dialog component. */\nclass Dialog {\n\t/** Check whether the dialog is open.\n\t *\n\t * @returns {boolean}\n\t */\n\tisOpen() { return true; }\n}",
 		"/** The dialog component. */\nclass Dialog {\n\t// Whether the dialog is open.\n\tisOpen = false;\n}",
+		{
+			name: "accepts a field comment before a directive",
+			code: "/** The dialog component. */\nclass Dialog {\n\t// Whether the dialog is open.\n\t// oxlint-disable-next-line no-unused-vars\n\tisOpen = false;\n}",
+		},
 		"/** The dialog component. */\nclass Dialog {\n\t// Whether the dialog is open privately.\n\t#isOpen = false;\n}",
 		"/** The dialog component. */\nclass Dialog {\n\t// Whether the dialog is open.\n\tstatic isOpen = false;\n}",
 		"/** The dialog component. */\nclass Dialog {\n\t// Whether the dialog is open privately.\n\tstatic #isOpen = false;\n}",

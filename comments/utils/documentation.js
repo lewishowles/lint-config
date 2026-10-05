@@ -2,7 +2,7 @@ import { getJSDocContent, isJSDoc } from "./jsdoc.js";
 import {
 	getCommentNeighbours,
 	getCommentText,
-	isDirectiveComment,
+	getImmediateNonDirectiveComment,
 	isLeadingComment,
 } from "./source.js";
 import { getPropertyName } from "./vue-macro.js";
@@ -45,8 +45,8 @@ export function isFunctionValue(node) {
 }
 
 /**
- * Return the JSDoc comment immediately preceding a node, when the comment
- * qualifies as that node's documentation.
+ * Return the JSDoc comment directly above a node, when the comment qualifies as
+ * that node's documentation. Tool directive comments may sit between them.
  *
  * @param  {object}  sourceCode
  *     The Oxlint source code object.
@@ -57,26 +57,21 @@ export function isFunctionValue(node) {
  *     The qualifying JSDoc comment, or null when none precedes the node.
  */
 function getDocumentationComment(sourceCode, node) {
-	// Finds the closest preceding comment.
-	const comment = sourceCode
-		.getAllComments()
-		.findLast((candidate) => candidate.range[1] <= node.range[0]);
+	// The closest comment above the node, looking past tool directive comments.
+	const comment = getImmediateNonDirectiveComment(sourceCode, node);
 
-	if (comment?.type !== "Block" || isDirectiveComment(comment)) {
+	if (comment?.type !== "Block") {
 		return null;
 	}
 
 	// Checks the comments immediately around the documented node.
 	const { next, previous } = getCommentNeighbours(sourceCode, comment);
-	// Confirms there is no blank line before the documented node.
-	const gap = sourceCode.text.slice(comment.range[1], node.range[0]);
 
 	if (
 		!next ||
 		next.range[0] > node.range[0] ||
 		next.range[1] > node.range[1] ||
-		!isLeadingComment(sourceCode, comment, previous) ||
-		!/^\r?\n[ \t]*$/.test(gap)
+		!isLeadingComment(sourceCode, comment, previous)
 	) {
 		return null;
 	}

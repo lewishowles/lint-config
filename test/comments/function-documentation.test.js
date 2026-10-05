@@ -8,6 +8,14 @@ const ruleTester = new RuleTester();
 ruleTester.run("comments/function-documentation", rule, {
 	valid: [
 		"/** Open the dialog. */\nfunction openDialog() {}",
+		{
+			name: "accepts JSDoc before an ESLint directive",
+			code: "/** Open the dialog. */\n// eslint-disable-next-line no-empty\nfunction openDialog() {}",
+		},
+		{
+			name: "accepts JSDoc before an Oxlint directive",
+			code: "/** Open the dialog. */\n// oxlint-disable-next-line no-empty\nfunction openDialog() {}",
+		},
 		"/** Open the dialog.\n *\n * @param {string} id\n * @returns {string}\n * @throws {Error}\n */\nexport function openDialog(id) { if (!id) { throw new Error(); } return id; }",
 		"/** Open the dialog.\n *\n * @returns {object}\n */\nconst openDialog = () => ({ isOpen: true });",
 		"/** Close the dialog. */\nconst closeDialog = () => { return; };",
@@ -46,6 +54,11 @@ ruleTester.run("comments/function-documentation", rule, {
 		{
 			name: "requires JSDoc before exported declarations",
 			code: "/** Open the dialog. */\n\nexport function openDialog() {}",
+			errors: [{ message: "Functions require an immediately preceding JSDoc block." }],
+		},
+		{
+			name: "rejects a blank line after an intervening directive",
+			code: "/** Open the dialog. */\n// eslint-disable-next-line no-empty\n\nfunction openDialog() {}",
 			errors: [{ message: "Functions require an immediately preceding JSDoc block." }],
 		},
 		{

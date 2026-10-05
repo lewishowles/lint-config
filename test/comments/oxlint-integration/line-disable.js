@@ -38,6 +38,12 @@ function findTab(id) {}
 function dismissDialog() {}
 
 /**
+ * Find the dialog.
+ */
+// oxlint-disable-next-line comments/function-documentation
+function findDialog(id) {}
+
+/**
  * Hold managed resources that dispose when the function returns.
  */
 async function disposeResources() {

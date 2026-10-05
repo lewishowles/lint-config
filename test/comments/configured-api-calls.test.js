@@ -44,6 +44,10 @@ ruleTester.run("comments/configured-api-calls", rule, {
 			"onClickOutside();",
 		].join("\n"),
 		"// Store the stop handle.\nconst stop = watch();",
+		{
+			name: "accepts a comment before a directive",
+			code: "// Watch the source.\n// oxlint-disable-next-line no-unused-vars\nwatch();",
+		},
 		"// Store the stop handle.\nlet stop = watch();",
 		"// Store the stop handle.\nvar stop = watch();",
 		"// Store the stop handle.\nexport const stop = watch();",

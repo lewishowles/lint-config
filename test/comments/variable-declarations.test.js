@@ -9,6 +9,14 @@ ruleTester.run("comments/variable-declarations", rule, {
 	valid: [
 		"var legacyValue = getLegacyValue();",
 		"// The dialog element.\nconst dialog = getDialog();",
+		{
+			name: "accepts a comment before an ESLint directive",
+			code: "// The dialog element.\n// eslint-disable-next-line no-unused-vars\nconst dialog = getDialog();",
+		},
+		{
+			name: "accepts a comment before an Oxlint directive",
+			code: "// The dialog element.\n// oxlint-disable-next-line no-unused-vars\nconst dialog = getDialog();",
+		},
 		"// The observer used to track dialog size changes.\nlet resizeObserver;",
 		"function useResource() {\n\t// The resource.\n\tusing resource = getResource();\n}",
 		"async function useAsyncResource() {\n\t// The resource.\n\tawait using resource = getResource();\n}",
@@ -86,6 +94,11 @@ ruleTester.run("comments/variable-declarations", rule, {
 		{
 			name: "rejects a comment separated by a blank line",
 			code: "// The dialog element.\n\nconst dialog = getDialog();",
+			errors: [{ message: "Variable declarations require an immediately preceding line comment." }],
+		},
+		{
+			name: "rejects a blank line before an intervening directive",
+			code: "// The dialog element.\n\n// oxlint-disable-next-line no-unused-vars\nconst dialog = getDialog();",
 			errors: [{ message: "Variable declarations require an immediately preceding line comment." }],
 		},
 		{

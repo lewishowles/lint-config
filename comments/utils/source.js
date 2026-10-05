@@ -301,28 +301,68 @@ export function isLeadingComment(sourceCode, comment, previous) {
  *     The source node.
  *
  * @returns  {boolean}
- *     Whether an ordinary line comment immediately precedes the node.
+ *     Whether an ordinary line comment sits directly above the node. Tool
+ *     directive comments may sit between them.
  */
 export function hasImmediateLineComment(sourceCode, node) {
-	// Finds the closest preceding comment.
-	const comment = sourceCode
-		.getAllComments()
-		.findLast((candidate) => candidate.range[1] <= node.range[0]);
+	// The closest comment above the node, looking past tool directive comments.
+	const comment = getImmediateNonDirectiveComment(sourceCode, node);
 
-	if (comment?.type !== "Line" || isDirectiveComment(comment)) {
+	if (comment?.type !== "Line") {
 		return false;
 	}
 
 	// Checks the comments immediately around the node.
 	const { next, previous } = getCommentNeighbours(sourceCode, comment);
-	// Confirms there is no blank line before the node.
-	const gap = sourceCode.text.slice(comment.range[1], node.range[0]);
 
-	return (
-		next?.range[0] === node.range[0] &&
-		isLeadingComment(sourceCode, comment, previous) &&
-		/^\r?\n[ \t]*$/.test(gap)
-	);
+	return next?.range[0] === node.range[0] && isLeadingComment(sourceCode, comment, previous);
+}
+
+/**
+ * Return the closest comment above a node, skipping tool directive comments
+ * such as `// eslint-disable-next-line`. The comment, each directive and the
+ * node must each start on the line after the one before, with no blank lines.
+ *
+ * @param  {object}  sourceCode
+ *     The Oxlint source code object.
+ * @param  {object}  node
+ *     The source node.
+ *
+ * @returns  {object|null}
+ *     The comment above the node, or null when no comment sits directly above
+ *     the node.
+ */
+export function getImmediateNonDirectiveComment(sourceCode, node) {
+	// Comments before the node, in source order.
+	const comments = sourceCode
+		.getAllComments()
+		.filter((comment) => comment.range[1] <= node.range[0]);
+
+	// The position of the closest comment that is not a tool directive.
+	const commentIndex = comments.findLastIndex((comment) => !isDirectiveComment(comment));
+
+	if (commentIndex < 0) {
+		return null;
+	}
+
+	// The comment that may document the node.
+	const comment = comments[commentIndex];
+
+	// Where the comment or directive checked last ends.
+	let previousEnd = comment.range[1];
+
+	for (const next of [...comments.slice(commentIndex + 1), node]) {
+		// The text between the previous item and this one.
+		const gap = sourceCode.text.slice(previousEnd, next.range[0]);
+
+		if (!/^\r?\n[ \t]*$/.test(gap)) {
+			return null;
+		}
+
+		previousEnd = next.range[1];
+	}
+
+	return comment;
 }
 
 /**
@@ -334,26 +374,19 @@ export function hasImmediateLineComment(sourceCode, node) {
  *     The source node.
  *
  * @returns  {boolean}
- *     Whether an ordinary block comment immediately precedes the node.
+ *     Whether an ordinary block comment sits directly above the node. Tool
+ *     directive comments may sit between them.
  */
 export function hasImmediateBlockComment(sourceCode, node) {
-	// Finds the closest preceding comment.
-	const comment = sourceCode
-		.getAllComments()
-		.findLast((candidate) => candidate.range[1] <= node.range[0]);
+	// The closest comment above the node, looking past tool directive comments.
+	const comment = getImmediateNonDirectiveComment(sourceCode, node);
 
-	if (comment?.type !== "Block" || isDirectiveComment(comment)) {
+	if (comment?.type !== "Block") {
 		return false;
 	}
 
 	// Checks the comments immediately around the node.
 	const { next, previous } = getCommentNeighbours(sourceCode, comment);
-	// Confirms there is no blank line before the node.
-	const gap = sourceCode.text.slice(comment.range[1], node.range[0]);
 
-	return (
-		next?.range[0] === node.range[0] &&
-		isLeadingComment(sourceCode, comment, previous) &&
-		/^\r?\n[ \t]*$/.test(gap)
-	);
+	return next?.range[0] === node.range[0] && isLeadingComment(sourceCode, comment, previous);
 }
