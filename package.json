@@ -30,7 +30,8 @@
 	],
 	"type": "module",
 	"imports": {
-		"#comments/*": "./comments/*"
+		"#comments/*": "./comments/*",
+		"#testing/*": "./testing/*"
 	},
 	"exports": {
 		"./base.json": "./base.json",
@@ -48,7 +49,7 @@
 		"lint:fix": "vp check --fix",
 		"prepare": "vp config --no-agent",
 		"publint": "publint",
-		"test:unit": "node --test test/comments/*.test.js test/layers/*.test.js"
+		"test:unit": "node --test test/comments/*.test.js test/layers/*.test.js test/testing/*.test.js"
 	},
 	"devDependencies": {
 		"publint": "^0.3.22",
