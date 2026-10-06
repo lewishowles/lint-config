@@ -62,6 +62,18 @@ ruleTester.run("comments/function-documentation", rule, {
 			name: "accepts a bracketed default containing a space",
 			code: '/** Set the label.\n *\n * @param {object} options\n * @param {string} [options.label="Hello world"]\n */\nfunction setLabel({ label = "Hello world" }) {}',
 		},
+		{
+			name: "accepts plain paths inside a defaulted nested object",
+			code: "/** Check the result.\n *\n * @param {object} result\n * @param {object} result.a\n * @param {number} result.a.b\n */\nfunction checkResult({ a: { b = 1 } = {} }) {}",
+		},
+		{
+			name: "accepts bracketed defaults inside a defaulted nested object",
+			code: "/** Check the result.\n *\n * @param {object} [result={}]\n * @param {object} [result.a={}]\n * @param {number} [result.a.b=1]\n */\nfunction checkResult({ a: { b = 1 } = {} } = {}) {}",
+		},
+		{
+			name: "accepts paths inside two levels of defaulted objects",
+			code: "/** Check the result.\n *\n * @param {object} result\n * @param {object} [result.a={}]\n * @param {object} [result.a.b={}]\n * @param {number} [result.a.b.c=1]\n */\nfunction checkResult({ a: { b: { c = 1 } = {} } = {} }) {}",
+		},
 		"/** Open the dialog.\n *\n * @param {object} options\n * @param {string} options.id\n */\nfunction openDialog({ id: dialogId }) {}",
 		"/** Open the dialog.\n *\n * @param {object} [options]\n */\nfunction openDialog(options) {}",
 		"/** Check the report.\n *\n * @param {object} result\n * @param {object} options\n * @param {object} resultLabels\n * @param {string} resultLabels.failed\n * @param {string} resultLabels.success\n * @param {string} [resultLabels.hintText]\n */\nfunction reportCheckResult(result, options, { failed, success, hintText }) {}",
@@ -146,6 +158,11 @@ ruleTester.run("comments/function-documentation", rule, {
 			name: "reports an undocumented defaulted property",
 			code: "/** Check the result.\n *\n * @param {object} [result={}]\n * @param {string[]} [result.errors=[]]\n */\nfunction checkResult({ errors = [], validated = true } = {}) {}",
 			errors: [{ message: "Functions require an @param for [result.validated=true]." }],
+		},
+		{
+			name: "requires properties inside a defaulted nested object",
+			code: "/** Check the result.\n *\n * @param {object} result\n * @param {object} [result.a={}]\n */\nfunction checkResult({ a: { b = 1 } = {} }) {}",
+			errors: [{ message: "Functions require an @param for [result.a.b=1]." }],
 		},
 		{
 			name: "matches a destructured parameter to its documented root",

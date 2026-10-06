@@ -135,6 +135,14 @@ function getObjectPatternPaths(sourceCode, node, parentPath) {
 
 		if (value.type === "AssignmentPattern") {
 			paths.push(`[${propertyPath}=${getDefaultValue(sourceCode, value.right)}]`);
+
+			// A defaulted nested object still needs its own properties
+			// documented. The first nested path is the object itself, which
+			// is already listed above with its default, so it is skipped.
+			if (value.left.type === "ObjectPattern") {
+				paths.push(...getObjectPatternPaths(sourceCode, value.left, propertyPath).slice(1));
+			}
+
 			continue;
 		}
 
