@@ -89,6 +89,42 @@
 		{
 			"files": ["**/vite.config.*", "**/vitest.config.*", "**/playwright*.config.*"],
 			"env": { "node": true }
+		},
+		{
+			"files": ["**/*.test.*", "**/*.spec.*", "**/*.pw.*", "**/*.cy.*"],
+			"rules": {
+				"@stylistic/padding-line-between-statements": [
+					"error",
+					{ "blankLine": "always", "prev": "*", "next": "break" },
+					{ "blankLine": "always", "prev": ["const", "let"], "next": "*" },
+					{ "blankLine": "always", "prev": "*", "next": ["const", "let"] },
+					{ "blankLine": "always", "prev": "*", "next": "return" },
+					{
+						"blankLine": "always",
+						"prev": [
+							"block-like",
+							"class",
+							"do",
+							"for",
+							"function",
+							"if",
+							"switch",
+							"try",
+							"while"
+						],
+						"next": "*"
+					},
+					{
+						"blankLine": "always",
+						"prev": "*",
+						"next": ["block-like", "class", "do", "for", "function", "if", "switch", "try", "while"]
+					},
+					{ "blankLine": "never", "prev": "const", "next": "const" },
+					{ "blankLine": "never", "prev": "let", "next": "let" },
+					{ "blankLine": "always", "prev": "multiline-const", "next": "*" },
+					{ "blankLine": "always", "prev": "*", "next": "multiline-const" }
+				]
+			}
 		}
 	],
 	"options": {

@@ -10,7 +10,8 @@
 		"build/**",
 		"AGENTS.md",
 		"test/base/parent-imports/**",
-		"test/base/statement-spacing/**"
+		"test/base/statement-spacing/**",
+		"test/base/statement-spacing-tests/**"
 	],
 	"overrides": [
 		{

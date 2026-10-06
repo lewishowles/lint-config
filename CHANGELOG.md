@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixes
+
+- In test files (`*.test.*`, `*.spec.*`, `*.pw.*` and `*.cy.*`), blank lines between calls, awaits, assignments and multiline expressions are now up to you, so you can separate test steps with them. `base` no longer adds or removes those lines in tests. Blank lines around declarations, blocks, `return` and `break` are still checked. If you ran the 0.8 auto-fix on your tests, you may want to restore the blank lines it removed.
+
 ## 0.8.0: 2026-10-05
 
 ### Changes
