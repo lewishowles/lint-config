@@ -190,11 +190,11 @@ Plugins are additive and deduplicated: your local plugins are added to the share
 
 ## Layers
 
-| Layer      | File            | Contents                                                                                        |
-| ---------- | --------------- | ----------------------------------------------------------------------------------------------- |
-| `base`     | `base.json`     | Correctness and formatting rules, import sorting, `import`/`oxc`/`typescript`/`unicorn` plugins |
-| `comments` | `comments.json` | Optional comment-formatting rules, variable-declaration documentation, JSDoc checks             |
-| `vue`      | `vue.json`      | Extends `base`, adds the `vue` plugin, Vue compiler macro globals, Vue-specific rules           |
+| Layer      | File            | Contents                                                                                                                                                                       |
+| ---------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `base`     | `base.json`     | Correctness and formatting rules, import sorting, `import`/`oxc`/`typescript`/`unicorn` plugins; errors when unit tests (`*.test.*`, `*.spec.*`) find elements by visible text |
+| `comments` | `comments.json` | Optional comment-formatting rules, variable-declaration documentation, JSDoc checks                                                                                            |
+| `vue`      | `vue.json`      | Extends `base`, adds the `vue` plugin, Vue compiler macro globals, Vue-specific rules                                                                                          |
 
 ### Import sorting
 
@@ -217,6 +217,23 @@ This puts named imports first, including `import type { … }` and imports with 
 ### Parent-folder imports
 
 The base layer reports imports from a parent folder (`../`), with no automatic fix. Same-folder (`./`), `@/` alias and package `#` subpath imports are allowed. After upgrading, any existing `../` imports fail lint until they move to an `@/` alias or, in a package without one, to [package subpath imports](https://nodejs.org/api/packages.html#subpath-imports).
+
+### Text lookups in unit tests
+
+The base layer's `testing/no-text-lookups` rule reports an array search such as `find`, `filter` or `some` when its inline callback reads `.text()`, `.textContent` or `.innerText`. Find the element by a `data-test` attribute instead. It doesn't report data-test lookups, assertions about the text of an element you have already found, or callbacks passed by name. It applies to `*.test.*` and `*.spec.*` files, not Playwright `*.pw.*` or Cypress `*.cy.*` files.
+
+To turn it off, add an override for unit tests to your project's `.oxlintrc.json`:
+
+```json
+{
+	"overrides": [
+		{
+			"files": ["**/*.test.*", "**/*.spec.*"],
+			"rules": { "testing/no-text-lookups": "off" }
+		}
+	]
+}
+```
 
 ## What stays repo-local
 

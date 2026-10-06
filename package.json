@@ -25,6 +25,7 @@
 		"comments.json",
 		"imports.json",
 		"layers.js",
+		"testing",
 		"vue.json",
 		"README.md"
 	],
@@ -39,6 +40,7 @@
 		"./comments/plugin": "./comments/plugin.js",
 		"./imports.json": "./imports.json",
 		"./layers": "./layers.js",
+		"./testing/plugin": "./testing/plugin.js",
 		"./vue.json": "./vue.json"
 	},
 	"publishConfig": {

@@ -5,6 +5,10 @@
 		{
 			"name": "vite-plus",
 			"specifier": "vite-plus/oxlint-plugin"
+		},
+		{
+			"name": "testing",
+			"specifier": "@lewishowles/lint-config/testing/plugin"
 		}
 	],
 	"categories": {
@@ -124,6 +128,12 @@
 					{ "blankLine": "always", "prev": "multiline-const", "next": "*" },
 					{ "blankLine": "always", "prev": "*", "next": "multiline-const" }
 				]
+			}
+		},
+		{
+			"files": ["**/*.test.*", "**/*.spec.*"],
+			"rules": {
+				"testing/no-text-lookups": "error"
 			}
 		}
 	],
