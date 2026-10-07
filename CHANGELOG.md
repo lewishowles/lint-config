@@ -4,6 +4,7 @@
 
 ### Changes
 
+- `base` now reports an error for TypeScript non-null assertions (`!`) in `.ts` files and Vue `<script lang="ts">` blocks (`typescript/no-non-null-assertion`). Check for `null` or `undefined` before using the value instead. The rule finds nothing in components or helpers, so upgrading needs no fixes there.
 - `vue` now reports an error when a computed property changes state (`vue/no-side-effects-in-computed-properties`) or runs async code (`vue/no-async-in-computed-properties`). Neither rule finds anything in components or helpers, so upgrading needs no fixes there. `vue/no-mutating-props`, `vue/no-use-v-if-with-v-for` and `vue/require-explicit-emits` will follow once Oxlint supports them.
 - `base` now reports an error when a unit test (`*.test.*` or `*.spec.*`) searches an array for an element by reading its visible text (`testing/no-text-lookups`). Find the element by a `data-test` attribute instead. Playwright and Cypress files are unaffected.
 

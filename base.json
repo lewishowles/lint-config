@@ -30,6 +30,7 @@
 		"no-useless-assignment": "error",
 		"preserve-caught-error": "error",
 		"import/no-relative-parent-imports": "error",
+		"typescript/no-non-null-assertion": "error",
 		"sort-imports": [
 			"error",
 			{
