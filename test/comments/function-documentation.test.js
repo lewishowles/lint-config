@@ -78,6 +78,22 @@ ruleTester.run("comments/function-documentation", rule, {
 		"/** Open the dialog.\n *\n * @param {object} [options]\n */\nfunction openDialog(options) {}",
 		"/** Check the report.\n *\n * @param {object} result\n * @param {object} options\n * @param {object} resultLabels\n * @param {string} resultLabels.failed\n * @param {string} resultLabels.success\n * @param {string} [resultLabels.hintText]\n */\nfunction reportCheckResult(result, options, { failed, success, hintText }) {}",
 		"/** Open the dialog.\n *\n * @param {object} options\n * @param {string} options.id\n */\nfunction openDialog({ id }) {}",
+		{
+			name: "accepts one tag for an array-pattern parameter",
+			code: "/** Read the values.\n *\n * @param {unknown[]} values\n */\nfunction readValues([first, second]) {}",
+		},
+		{
+			name: "accepts the tag in the same position for a rest array pattern",
+			code: "/** Read the values.\n *\n * @param {string} label\n * @param {unknown[]} values\n */\nfunction readValues(label, ...[first, second]) {}",
+		},
+		{
+			name: "requires only the containing path for a nested array pattern",
+			code: "/** Read the values.\n *\n * @param {object} options\n * @param {unknown[]} options.a\n */\nfunction readValues({ a: [first, second] }) {}",
+		},
+		{
+			name: "accepts one tag for a defaulted array-pattern parameter",
+			code: "/** Read the values.\n *\n * @param {unknown[]} [values]\n */\nfunction readValues([first, second] = []) {}",
+		},
 		"const dialog = {\n\t/** Open the dialog.\n\t *\n\t * @param {string} id\n\t */\n\topen(id) {},\n};",
 		"const dialog = {\n\t/** Open the dialog.\n\t *\n\t * @param {string} id\n\t */\n\topen: (id) => {},\n};",
 		"const dialog = {\n\t/** Open the dialog.\n\t *\n\t * @param {string} id\n\t */\n\topen(id) {},\n\t/** Close the dialog.\n\t *\n\t * @param {string} reason\n\t */\n\tclose: (reason) => {},\n};",
@@ -144,6 +160,16 @@ ruleTester.run("comments/function-documentation", rule, {
 			name: "requires a tag for every parameter",
 			code: "/** Open the dialog. */\nfunction openDialog(id) {}",
 			errors: [{ message: "Functions require an @param for id." }],
+		},
+		{
+			name: "requires one tag for an array-pattern parameter",
+			code: "/** Read the values. */\nfunction readValues([first, second]) {}",
+			errors: [{ message: "Functions require an @param for options." }],
+		},
+		{
+			name: "requires one tag for a rest array-pattern parameter",
+			code: "/** Read the values. */\nfunction readValues(...[first, second]) {}",
+			errors: [{ message: "Functions require an @param for options." }],
 		},
 		{
 			name: "requires every destructured parameter path",

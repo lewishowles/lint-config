@@ -160,8 +160,8 @@ function getObjectPatternPaths(sourceCode, node, parentPath) {
  * @param  {object}  node
  *     The parameter node.
  * @param  {string}  [rootPath]
- *     The documented name that starts each path for a destructured object
- *     parameter. Defaults to options.
+ *     The documented name that starts each path for a destructured parameter.
+ *     Defaults to options.
  *
  * @returns  {string[]}
  *     The required JSDoc parameter paths.
@@ -173,6 +173,15 @@ function getParameterPaths(sourceCode, node, rootPath = "options") {
 
 	if (node.type === "RestElement" && node.argument.type === "Identifier") {
 		return [node.argument.name];
+	}
+
+	// An array is documented as one value. Its items get no paths of their
+	// own because JSDoc has no standard way to name them.
+	if (
+		node.type === "ArrayPattern" ||
+		(node.type === "RestElement" && node.argument.type === "ArrayPattern")
+	) {
+		return [rootPath];
 	}
 
 	if (node.type === "ObjectPattern") {
