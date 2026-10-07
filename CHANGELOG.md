@@ -8,6 +8,7 @@
 - `vue` now reports an error when a computed property changes state (`vue/no-side-effects-in-computed-properties`) or runs async code (`vue/no-async-in-computed-properties`). Neither rule finds anything in components or helpers, so upgrading needs no fixes there. `vue/no-mutating-props`, `vue/no-use-v-if-with-v-for` and `vue/require-explicit-emits` will follow once Oxlint supports them.
 - `base` now reports an error when a unit test (`*.test.*` or `*.spec.*`) searches an array for an element by reading its visible text (`testing/no-text-lookups`). Find the element by a `data-test` attribute instead. Playwright and Cypress files are unaffected.
 - `comments/function-documentation` is stricter: a parameter written as an array, such as `function f([x, y])` or `function f(...[x, y])`, now needs one `@param` for the whole array. The tag can have any name, as it can for a destructured object, and a missing tag is reported as `options`. The items inside the array still need no `@param` of their own.
+- `comments/function-documentation` is stricter for object rest properties: `{ a, ...rest }` now needs `@param options.rest`, and `{ a: { ...rest } }` needs `@param options.a.rest`. A documented root name replaces `options` in those paths.
 
 ### Fixes
 

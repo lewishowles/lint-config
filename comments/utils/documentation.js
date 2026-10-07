@@ -112,6 +112,13 @@ function getObjectPatternPaths(sourceCode, node, parentPath) {
 	const paths = [parentPath];
 
 	for (const property of node.properties) {
+		// A rest property holds every key not named before it, so it is
+		// documented at its own dotted path, such as options.rest.
+		if (property.type === "RestElement") {
+			paths.push(`${parentPath}.${property.argument.name}`);
+			continue;
+		}
+
 		if (property.type !== "Property") {
 			continue;
 		}

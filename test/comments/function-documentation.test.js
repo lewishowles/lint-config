@@ -94,6 +94,14 @@ ruleTester.run("comments/function-documentation", rule, {
 			name: "accepts one tag for a defaulted array-pattern parameter",
 			code: "/** Read the values.\n *\n * @param {unknown[]} [values]\n */\nfunction readValues([first, second] = []) {}",
 		},
+		{
+			name: "accepts a documented rest property in an object pattern",
+			code: "/** Read the options.\n *\n * @param {object} options\n * @param {string} options.a\n * @param {object} options.rest\n */\nfunction readOptions({ a, ...rest }) {}",
+		},
+		{
+			name: "accepts a documented nested rest property under its own root",
+			code: "/** Read the result.\n *\n * @param {object} result\n * @param {object} result.a\n * @param {object} result.a.rest\n */\nfunction readResult({ a: { ...rest } }) {}",
+		},
 		"const dialog = {\n\t/** Open the dialog.\n\t *\n\t * @param {string} id\n\t */\n\topen(id) {},\n};",
 		"const dialog = {\n\t/** Open the dialog.\n\t *\n\t * @param {string} id\n\t */\n\topen: (id) => {},\n};",
 		"const dialog = {\n\t/** Open the dialog.\n\t *\n\t * @param {string} id\n\t */\n\topen(id) {},\n\t/** Close the dialog.\n\t *\n\t * @param {string} reason\n\t */\n\tclose: (reason) => {},\n};",
@@ -170,6 +178,21 @@ ruleTester.run("comments/function-documentation", rule, {
 			name: "requires one tag for a rest array-pattern parameter",
 			code: "/** Read the values. */\nfunction readValues(...[first, second]) {}",
 			errors: [{ message: "Functions require an @param for options." }],
+		},
+		{
+			name: "requires a tag for a rest property in an object pattern",
+			code: "/** Read the options.\n *\n * @param {object} options\n * @param {string} options.a\n */\nfunction readOptions({ a, ...rest }) {}",
+			errors: [{ message: "Functions require an @param for options.rest." }],
+		},
+		{
+			name: "requires a tag for a nested rest property",
+			code: "/** Read the options.\n *\n * @param {object} options\n * @param {object} options.a\n */\nfunction readOptions({ a: { ...rest } }) {}",
+			errors: [{ message: "Functions require an @param for options.a.rest." }],
+		},
+		{
+			name: "requires a tag for a rest property inside a defaulted nested object",
+			code: "/** Read the result.\n *\n * @param {object} result\n * @param {object} [result.a={}]\n */\nfunction readResult({ a: { ...rest } = {} }) {}",
+			errors: [{ message: "Functions require an @param for result.a.rest." }],
 		},
 		{
 			name: "requires every destructured parameter path",
