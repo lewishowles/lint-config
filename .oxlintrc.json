@@ -12,7 +12,8 @@
 		"test/base/parent-imports/**",
 		"test/base/text-lookups/**",
 		"test/base/statement-spacing/**",
-		"test/base/statement-spacing-tests/**"
+		"test/base/statement-spacing-tests/**",
+		"test/vue/computed-properties/**"
 	],
 	"overrides": [
 		{
