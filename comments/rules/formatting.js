@@ -347,6 +347,10 @@ function getBlockCommentDisplayLines(commentText, indentation) {
  * the fix never edits the directive. When an ordinary comment sits between them
  * instead, only the indentation is fixed and the gap is left alone.
  *
+ * A comment that is the only thing between a pair of braces, such as in an
+ * empty catch block or object literal, has no code to sit above, so it is left
+ * where it is.
+ *
  * @param  {object}  sourceCode
  *     The Oxlint source code object.
  * @param  {object}  comment
@@ -364,7 +368,11 @@ function getLeadingCommentPlacement(sourceCode, comment, lastComment, comments) 
 	// The code token the comment documents, and the token before the comment.
 	const { next, previous } = getCommentNeighbours(sourceCode, comment);
 
-	if (next === null || !isLeadingComment(sourceCode, comment, previous)) {
+	if (
+		next === null ||
+		!isLeadingComment(sourceCode, comment, previous) ||
+		(previous?.value === "{" && next.value === "}")
+	) {
 		return null;
 	}
 

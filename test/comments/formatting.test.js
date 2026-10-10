@@ -274,11 +274,37 @@ function findTab(id) {}`,
 registerDialog();`,
 		},
 		{
+			name: "accepts a comment as the only content of a catch block",
+			code: "try { runTask(); } catch {\n\t// The task can fail safely.\n}",
+		},
+		{
+			name: "accepts a block comment as the only content of a catch block",
+			code: "try { runTask(); } catch {\n\t/* The task can fail safely. */\n}",
+		},
+		{
+			name: "accepts a comment as the only content of a function body",
+			code: "/**\n * Run the task.\n */\nfunction runTask() {\n\t// The task is intentionally idle.\n}",
+		},
+		{
+			name: "accepts comments as the only content of if and else branches",
+			code: "if (isReady) {\n\t// Wait for the next task.\n} else {\n\t// Wait until ready.\n}",
+		},
+		{
+			name: "accepts a comment as the only content of a loop body",
+			code: "while (hasTasks()) {\n\t// Wait for the next task.\n}",
+		},
+		{
 			name: "keeps a directive trailing comment in place",
 			code: "const value = 1; // oxlint-disable-next-line comments/formatting",
 		},
 	],
 	invalid: [
+		{
+			name: "formats the sentence of a comment alone in a block",
+			code: "if (isReady) {\n\t// wait for the next task\n}",
+			errors: [{ message: "Comment text must be a complete sentence.", line: 2, column: 1 }],
+			output: "if (isReady) {\n\t// Wait for the next task.\n}",
+		},
 		{
 			name: "keeps a heading in a note while formatting surrounding prose",
 			code: `/**
@@ -1262,6 +1288,14 @@ function moveTab(tab, index) {}`,
 				{ message: "Comment must be immediately before the documented code.", line: 1, column: 2 },
 			],
 			output: "// Explain the value.\nconst value = 1;",
+		},
+		{
+			name: "removes a blank line before code in the same block",
+			code: "if (isReady) {\n\t// Run the task.\n\n\trunTask();\n}",
+			errors: [
+				{ message: "Comment must be immediately before the documented code.", line: 2, column: 1 },
+			],
+			output: "if (isReady) {\n\t// Run the task.\n\trunTask();\n}",
 		},
 		{
 			name: "removes a blank line before a directive after a block comment",

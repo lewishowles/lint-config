@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.1: 2026-10-10
+
+### Fixes
+
+- `comments/formatting` accepts a comment as the only thing between a pair of braces, such as in an empty catch block, function body or object literal. It still checks the comment's sentence formatting.
+
 ## 0.9.0: 2026-10-07
 
 ### Changes
